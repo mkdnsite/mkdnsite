@@ -28,6 +28,8 @@ function parseArgs (args: string[]): Partial<MkdnSiteConfig> {
       result.client = { enabled: false, mermaid: false, copyButton: false, search: false }
     } else if (arg === '--theme-mode') {
       result.theme = { ...(result.theme as object ?? {}), mode: args[++i] }
+    } else if (arg === '--renderer') {
+      result.renderer = args[++i]
     } else if (arg === '--static') {
       result.staticDir = resolve(args[++i])
     } else if (arg === '--help' || arg === '-h') {
@@ -63,6 +65,7 @@ function printHelp (): void {
     --no-nav              Disable navigation sidebar
     --no-llms-txt         Disable /llms.txt generation
     --no-negotiate        Disable content negotiation
+    --renderer <engine>   Renderer: portable (default) or bun-native (Bun only)
     --no-client-js        Disable client-side JavaScript (mermaid, copy, search)
     -h, --help            Show this help
     -v, --version         Show version

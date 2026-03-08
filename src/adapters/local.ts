@@ -8,6 +8,7 @@ import { createRenderer } from '../render/types.ts'
 
 export class LocalAdapter implements DeploymentAdapter {
   readonly name: string
+  private rendererEngine: string = 'portable'
 
   constructor () {
     this.name = `local (${detectRuntime()})`
@@ -17,12 +18,10 @@ export class LocalAdapter implements DeploymentAdapter {
     return new FilesystemSource(config.contentDir)
   }
 
-  async createRenderer (_config: MkdnSiteConfig): Promise<MarkdownRenderer> {
-    // Use bun-native if available and in Bun environment
-    const engine = (typeof Bun !== 'undefined' && Bun.markdown != null)
-      ? 'bun-native'
-      : 'portable'
-    return await createRenderer(engine)
+  async createRenderer (config: MkdnSiteConfig): Promise<MarkdownRenderer> {
+    const renderer = await createRenderer(config.renderer)
+    this.rendererEngine = renderer.engine
+    return renderer
   }
 
   async start (
@@ -133,6 +132,7 @@ export class LocalAdapter implements DeploymentAdapter {
     console.log('  │                                              │')
     console.log(`  │   Runtime: ${this.name.padEnd(32)} │`)
     console.log(`  │   Content: ${config.contentDir.padEnd(32)} │`)
+    console.log(`  │   Renderer: ${this.rendererEngine.padEnd(30)} │`)
     console.log(`  │   Theme mode: ${config.theme.mode.padEnd(28)} │`)
     console.log(`  │   Client JS: ${(config.client.enabled ? 'on' : 'off').padEnd(29)} │`)
     console.log(`  │   Content negotiation: ${(config.negotiation.enabled ? 'on' : 'off').padEnd(19)} │`)

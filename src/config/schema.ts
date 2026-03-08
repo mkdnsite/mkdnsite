@@ -28,6 +28,9 @@ export interface MkdnSiteConfig {
   /** Client-side enhancement modules */
   client: ClientConfig
 
+  /** Markdown renderer engine (default: 'portable') */
+  renderer: RendererEngine
+
   /** Static files directory for images, videos, etc. */
   staticDir?: string
 }

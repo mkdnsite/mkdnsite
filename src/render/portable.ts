@@ -18,6 +18,8 @@ import { buildComponents } from './components/index.ts'
  * rehype plugins for heading IDs and anchor links.
  */
 export class PortableRenderer implements MarkdownRenderer {
+  readonly engine = 'portable' as const
+
   renderToElement (markdown: string, overrides?: ComponentOverrides): ReactElement {
     const components = buildComponents(overrides)
 

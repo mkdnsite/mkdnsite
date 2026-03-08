@@ -11,6 +11,9 @@ import type { ComponentOverrides, RendererEngine } from '../config/schema.ts'
  * markdown element is rendered (headings, links, code blocks, etc.).
  */
 export interface MarkdownRenderer {
+  /** Which engine is actually in use */
+  readonly engine: RendererEngine
+
   /**
    * Render a markdown string to a React element tree.
    * The returned element can be passed to renderToString().

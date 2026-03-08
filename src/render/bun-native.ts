@@ -14,6 +14,8 @@ import { buildComponents } from './components/index.ts'
  * Falls back gracefully if Bun.markdown is not available.
  */
 export class BunNativeRenderer implements MarkdownRenderer {
+  readonly engine = 'bun-native' as const
+
   renderToElement (markdown: string, overrides?: ComponentOverrides): ReactElement {
     const components = buildComponents(overrides)
 
