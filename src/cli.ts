@@ -1,0 +1,125 @@
+#!/usr/bin/env bun
+import { resolve } from 'node:path'
+import { resolveConfig } from './config/defaults'
+import type { MkdnSiteConfig } from './config/schema'
+import { LocalAdapter } from './adapters/local'
+import { createHandler } from './handler'
+
+function parseArgs (args: string[]): Partial<MkdnSiteConfig> {
+  const result: Record<string, unknown> = {}
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+
+    if (arg === '--port' || arg === '-p') {
+      result.server = { ...(result.server as object ?? {}), port: parseInt(args[++i], 10) }
+    } else if (arg === '--title') {
+      result.site = { ...(result.site as object ?? {}), title: args[++i] }
+    } else if (arg === '--url') {
+      result.site = { ...(result.site as object ?? {}), url: args[++i] }
+    } else if (arg === '--no-nav') {
+      result.theme = { ...(result.theme as object ?? {}), showNav: false }
+    } else if (arg === '--no-llms-txt') {
+      result.llmsTxt = { enabled: false }
+    } else if (arg === '--no-negotiate') {
+      result.negotiation = { enabled: false }
+    } else if (arg === '--no-client-js') {
+      result.client = { enabled: false, mermaid: false, copyButton: false, search: false }
+    } else if (arg === '--theme-mode') {
+      result.theme = { ...(result.theme as object ?? {}), mode: args[++i] }
+    } else if (arg === '--static') {
+      result.staticDir = resolve(args[++i])
+    } else if (arg === '--help' || arg === '-h') {
+      printHelp()
+      process.exit(0)
+    } else if (arg === '--version' || arg === '-v') {
+      console.log('mkdnsite 0.0.1')
+      process.exit(0)
+    } else if (!arg.startsWith('-')) {
+      result.contentDir = resolve(arg)
+    }
+  }
+
+  return result as Partial<MkdnSiteConfig>
+}
+
+function printHelp (): void {
+  console.log(`
+  mkdnsite — Markdown for the web
+
+  Usage:
+    mkdnsite [directory] [options]
+
+  Arguments:
+    directory             Path to markdown content (default: ./content)
+
+  Options:
+    -p, --port <n>        Port to listen on (default: 3000)
+    --title <text>        Site title
+    --url <url>           Base URL for absolute links
+    --static <dir>        Directory for static assets
+    --theme-mode <mode>   Theme mode: prose (default) or components
+    --no-nav              Disable navigation sidebar
+    --no-llms-txt         Disable /llms.txt generation
+    --no-negotiate        Disable content negotiation
+    --no-client-js        Disable client-side JavaScript (mermaid, copy, search)
+    -h, --help            Show this help
+    -v, --version         Show version
+
+  Content Negotiation:
+    Browsers get HTML:    curl http://localhost:3000
+    AI agents get MD:     curl -H "Accept: text/markdown" http://localhost:3000
+    Append .md to URL:    curl http://localhost:3000/page.md
+    AI content index:     curl http://localhost:3000/llms.txt
+
+  https://mkdn.site
+  `)
+}
+
+async function main (): Promise<void> {
+  const args = process.argv.slice(2)
+  const cliConfig = parseArgs(args)
+
+  // Try to load mkdnsite.config.ts from cwd
+  let fileConfig: Partial<MkdnSiteConfig> = {}
+  try {
+    const configPath = resolve('mkdnsite.config.ts')
+    const file = Bun.file(configPath)
+    if (await file.exists()) {
+      const mod = await import(configPath)
+      fileConfig = mod.default ?? mod
+    }
+  } catch {
+    // No config file, that's fine
+  }
+
+  const merged: Partial<MkdnSiteConfig> = {
+    ...fileConfig,
+    ...cliConfig
+  }
+  if (fileConfig.site != null || cliConfig.site != null) {
+    const site: Partial<MkdnSiteConfig['site']> = { ...fileConfig.site, ...cliConfig.site }
+    merged.site = site as MkdnSiteConfig['site']
+  }
+  if (fileConfig.server != null || cliConfig.server != null) {
+    const server: Partial<MkdnSiteConfig['server']> = { ...fileConfig.server, ...cliConfig.server }
+    merged.server = server as MkdnSiteConfig['server']
+  }
+  if (fileConfig.theme != null || cliConfig.theme != null) {
+    const theme: Partial<MkdnSiteConfig['theme']> = { ...fileConfig.theme, ...cliConfig.theme }
+    merged.theme = theme as MkdnSiteConfig['theme']
+  }
+  const config = resolveConfig(merged)
+
+  const adapter = new LocalAdapter()
+  const source = adapter.createContentSource(config)
+  const renderer = adapter.createRenderer(config)
+  const handler = createHandler({ source, renderer, config })
+
+  await adapter.start(handler, config)
+}
+
+main().catch(err => {
+  console.error('Error starting mkdnsite:', err)
+  process.exit(1)
+})

@@ -1,0 +1,64 @@
+{
+  "name": "mkdnsite",
+  "version": "0.0.1",
+  "description": "Markdown for the web. HTML for humans, Markdown for agents.",
+  "type": "module",
+  "main": "src/index.ts",
+  "bin": {
+    "mkdnsite": "src/cli.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./adapters/cloudflare": "./src/adapters/cloudflare.ts",
+    "./adapters/vercel": "./src/adapters/vercel.ts",
+    "./adapters/netlify": "./src/adapters/netlify.ts",
+    "./adapters/fly": "./src/adapters/fly.ts"
+  },
+  "scripts": {
+    "dev": "bun run --watch src/cli.ts ./content",
+    "start": "bun run src/cli.ts",
+    "test": "bun test",
+    "lint": "ts-standard src/ test/",
+    "lint:fix": "ts-standard src/ test/ --fix",
+    "tsc": "tsc --noEmit"
+  },
+  "keywords": [
+    "markdown",
+    "server",
+    "content-negotiation",
+    "ai-agents",
+    "llms-txt",
+    "gfm",
+    "react",
+    "ssr",
+    "tailwind",
+    "bun"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mkdnsite/mkdnsite.git"
+  },
+  "homepage": "https://mkdn.site",
+  "license": "MIT",
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-markdown": "^9.0.0",
+    "rehype-slug": "^6.0.0",
+    "rehype-autolink-headings": "^7.0.0",
+    "remark-gfm": "^4.0.0",
+    "remark-math": "^6.0.0",
+    "shiki": "^3.0.0"
+  },
+  "ts-standard": {
+    "project": "./tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "ts-standard": "^12.0.2",
+    "typescript": "^5.7.0"
+  }
+}

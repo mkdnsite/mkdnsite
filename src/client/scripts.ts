@@ -1,0 +1,89 @@
+import type { ClientConfig } from '../config/schema'
+
+/**
+ * Generate client-side JavaScript for progressive enhancements.
+ * Returns a <script> tag string or empty string if all features are disabled.
+ */
+export function CLIENT_SCRIPTS (client: ClientConfig): string {
+  if (!client.enabled) return ''
+
+  const scripts: string[] = []
+
+  if (client.copyButton) {
+    scripts.push(COPY_BUTTON_SCRIPT)
+  }
+
+  if (client.mermaid) {
+    scripts.push(MERMAID_SCRIPT)
+  }
+
+  if (client.search) {
+    scripts.push(SEARCH_SCRIPT)
+  }
+
+  // Smooth anchor scrolling
+  scripts.push(ANCHOR_SCRIPT)
+
+  if (scripts.length === 0) return ''
+
+  return `<script>${scripts.join('\n')}</script>`
+}
+
+const COPY_BUTTON_SCRIPT = `
+(function(){
+  document.querySelectorAll('.mkdn-code-block, .mkdn-prose pre').forEach(function(block){
+    var code = block.querySelector('code');
+    if(!code) return;
+    if(code.classList.contains('language-mermaid')) return;
+    var btn = document.createElement('button');
+    btn.className = 'mkdn-copy-btn';
+    btn.textContent = 'Copy';
+    btn.addEventListener('click', function(){
+      navigator.clipboard.writeText(code.textContent||'').then(function(){
+        btn.textContent = 'Copied!';
+        setTimeout(function(){ btn.textContent = 'Copy'; }, 2000);
+      });
+    });
+    block.style.position = 'relative';
+    block.appendChild(btn);
+  });
+})();
+`.trim()
+
+const MERMAID_SCRIPT = `
+(function(){
+  var mermaidBlocks = document.querySelectorAll('code.language-mermaid');
+  if(mermaidBlocks.length === 0) return;
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+  s.onload = function(){
+    mermaid.initialize({ startOnLoad: false, theme: 'default' });
+    mermaidBlocks.forEach(function(block){
+      var pre = block.parentElement;
+      var container = document.createElement('div');
+      container.className = 'mkdn-mermaid';
+      var id = 'mermaid-' + Math.random().toString(36).substr(2, 9);
+      mermaid.render(id, block.textContent||'').then(function(result){
+        container.innerHTML = result.svg;
+        pre.parentElement.replaceChild(container, pre);
+      });
+    });
+  };
+  document.head.appendChild(s);
+})();
+`.trim()
+
+const SEARCH_SCRIPT = `
+/* Search: placeholder for client-side search functionality.
+   Will be implemented with a pre-built content index served at /search-index.json.
+   For MVP, this is a no-op that can be activated once the index endpoint exists. */
+`.trim()
+
+const ANCHOR_SCRIPT = `
+document.querySelectorAll('a[href^="#"]').forEach(function(a){
+  a.addEventListener('click',function(e){
+    var t=document.getElementById(a.getAttribute('href').slice(1));
+    if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth'});history.pushState(null,'',a.getAttribute('href'));}
+  });
+});
+`.trim()
