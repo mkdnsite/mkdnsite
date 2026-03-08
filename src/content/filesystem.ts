@@ -1,7 +1,7 @@
-import { readdir, stat } from 'node:fs/promises'
+import { readdir, readFile, stat } from 'node:fs/promises'
 import { join, relative, extname, basename, dirname } from 'node:path'
-import { parseFrontmatter } from './frontmatter'
-import type { ContentSource, ContentPage, NavNode } from './types'
+import { parseFrontmatter } from './frontmatter.ts'
+import type { ContentSource, ContentPage, NavNode } from './types.ts'
 
 export class FilesystemSource implements ContentSource {
   private readonly rootDir: string
@@ -33,24 +33,21 @@ export class FilesystemSource implements ContentSource {
 
     for (const filePath of candidates) {
       try {
-        const file = Bun.file(filePath)
-        if (await file.exists()) {
-          const raw = await file.text()
-          const parsed = parseFrontmatter(raw)
-          const fileStat = await stat(filePath)
+        const raw = await readFile(filePath, 'utf-8')
+        const parsed = parseFrontmatter(raw)
+        const fileStat = await stat(filePath)
 
-          const page: ContentPage = {
-            slug: `/${normalized === 'index' ? '' : normalized}`,
-            sourcePath: filePath,
-            meta: parsed.meta,
-            body: parsed.body,
-            raw: parsed.raw,
-            modifiedAt: fileStat.mtime
-          }
-
-          this.cache.set(normalized, page)
-          return page
+        const page: ContentPage = {
+          slug: `/${normalized === 'index' ? '' : normalized}`,
+          sourcePath: filePath,
+          meta: parsed.meta,
+          body: parsed.body,
+          raw: parsed.raw,
+          modifiedAt: fileStat.mtime
         }
+
+        this.cache.set(normalized, page)
+        return page
       } catch {
         continue
       }
@@ -102,7 +99,7 @@ export class FilesystemSource implements ContentSource {
         const slug = this.filePathToSlug(relPath)
 
         try {
-          const raw = await Bun.file(fullPath).text()
+          const raw = await readFile(fullPath, 'utf-8')
           const parsed = parseFrontmatter(raw)
           const fileStat = await stat(fullPath)
 
@@ -145,7 +142,7 @@ export class FilesystemSource implements ContentSource {
 
     for (const name of ['index.md', 'README.md']) {
       try {
-        const raw = await Bun.file(join(dir, name)).text()
+        const raw = await readFile(join(dir, name), 'utf-8')
         const parsed = parseFrontmatter(raw)
         if (parsed.meta.title != null) dirTitle = parsed.meta.title
         if (parsed.meta.order != null) dirOrder = parsed.meta.order
@@ -170,7 +167,7 @@ export class FilesystemSource implements ContentSource {
         entry.name !== 'index.md' &&
         entry.name !== 'README.md'
       ) {
-        const raw = await Bun.file(fullPath).text()
+        const raw = await readFile(fullPath, 'utf-8')
         const parsed = parseFrontmatter(raw)
 
         if (parsed.meta.draft === true) continue

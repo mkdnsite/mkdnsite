@@ -1,8 +1,8 @@
 import { renderToString } from 'react-dom/server'
 import type { ReactElement } from 'react'
-import type { ComponentOverrides } from '../config/schema'
-import type { MarkdownRenderer } from './types'
-import { buildComponents } from './components/index'
+import type { ComponentOverrides } from '../config/schema.ts'
+import type { MarkdownRenderer } from './types.ts'
+import { buildComponents } from './components/index.ts'
 
 /**
  * High-performance renderer using Bun.markdown.react().

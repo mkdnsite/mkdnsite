@@ -1,4 +1,4 @@
-import type { ContentSignals } from '../config/schema'
+import type { ContentSignals } from '../config/schema.ts'
 
 export function markdownHeaders (
   tokenCount: number | null,

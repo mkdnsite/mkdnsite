@@ -1,4 +1,5 @@
-import type { MarkdownMeta } from './types'
+import matter from 'gray-matter'
+import type { MarkdownMeta } from './types.ts'
 
 export interface ParsedMarkdown {
   meta: MarkdownMeta
@@ -8,7 +9,7 @@ export interface ParsedMarkdown {
 
 /**
  * Parse YAML frontmatter from a markdown string.
- * Uses gray-matter when available, falls back to regex parser.
+ * Uses gray-matter for full YAML support, falls back to regex parser.
  */
 export function parseFrontmatter (raw: string): ParsedMarkdown {
   if (!raw.startsWith('---')) {
@@ -16,8 +17,6 @@ export function parseFrontmatter (raw: string): ParsedMarkdown {
   }
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const matter = require('gray-matter')
     const result = matter(raw)
     return {
       meta: result.data as MarkdownMeta,

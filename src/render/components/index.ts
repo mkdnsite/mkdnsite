@@ -6,7 +6,7 @@ import type {
   CodeBlockProps,
   InlineCodeProps,
   ComponentOverrides
-} from '../../config/schema'
+} from '../../config/schema.ts'
 
 /**
  * Default heading component with anchor link support.

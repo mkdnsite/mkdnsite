@@ -1,4 +1,4 @@
-import type { MkdnSiteConfig } from './schema'
+import type { MkdnSiteConfig } from './schema.ts'
 
 export const DEFAULT_CONFIG: MkdnSiteConfig = {
   contentDir: './content',

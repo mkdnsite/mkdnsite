@@ -1,7 +1,7 @@
-import type { MkdnSiteConfig } from '../config/schema'
-import type { MarkdownMeta, NavNode } from '../content/types'
-import { THEME_CSS } from '../theme/prose-css'
-import { CLIENT_SCRIPTS } from '../client/scripts'
+import type { MkdnSiteConfig } from '../config/schema.ts'
+import type { MarkdownMeta, NavNode } from '../content/types.ts'
+import { THEME_CSS } from '../theme/prose-css.ts'
+import { CLIENT_SCRIPTS } from '../client/scripts.ts'
 
 interface PageShellProps {
   renderedContent: string

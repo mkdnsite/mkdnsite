@@ -1,10 +1,10 @@
-import { parseFrontmatter } from './frontmatter'
+import { parseFrontmatter } from './frontmatter.ts'
 import type {
   ContentSource,
   ContentPage,
   NavNode,
   GitHubSourceConfig
-} from './types'
+} from './types.ts'
 
 /**
  * Content source that reads .md files from a public GitHub repository.

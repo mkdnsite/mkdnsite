@@ -1,6 +1,6 @@
-import type { MkdnSiteConfig } from '../config/schema'
-import type { ContentSource } from '../content/types'
-import type { MarkdownRenderer } from '../render/types'
+import type { MkdnSiteConfig } from '../config/schema.ts'
+import type { ContentSource } from '../content/types.ts'
+import type { MarkdownRenderer } from '../render/types.ts'
 
 /**
  * Deployment adapter interface.
@@ -24,7 +24,7 @@ export interface DeploymentAdapter {
   createContentSource: (config: MkdnSiteConfig) => ContentSource
 
   /** Create the markdown renderer for this environment */
-  createRenderer: (config: MkdnSiteConfig) => MarkdownRenderer
+  createRenderer: (config: MkdnSiteConfig) => Promise<MarkdownRenderer>
 
   /**
    * Start the server (for adapters that manage their own server).

@@ -6,9 +6,9 @@ import remarkMath from 'remark-math'
 import rehypeSlug from 'rehype-slug'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 import type { ReactElement } from 'react'
-import type { ComponentOverrides } from '../config/schema'
-import type { MarkdownRenderer } from './types'
-import { buildComponents } from './components/index'
+import type { ComponentOverrides } from '../config/schema.ts'
+import type { MarkdownRenderer } from './types.ts'
+import { buildComponents } from './components/index.ts'
 
 /**
  * Portable markdown renderer using react-markdown.

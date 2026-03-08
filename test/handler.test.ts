@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'bun:test'
 import { resolve } from 'node:path'
-import { negotiateFormat } from '../src/negotiate/accept'
-import { estimateTokens } from '../src/negotiate/headers'
-import { parseFrontmatter } from '../src/content/frontmatter'
-import { createHandler } from '../src/handler'
-import { FilesystemSource } from '../src/content/filesystem'
-import { PortableRenderer } from '../src/render/portable'
-import { resolveConfig } from '../src/config/defaults'
+import { negotiateFormat } from '../src/negotiate/accept.ts'
+import { estimateTokens } from '../src/negotiate/headers.ts'
+import { parseFrontmatter } from '../src/content/frontmatter.ts'
+import { createHandler } from '../src/handler.ts'
+import { FilesystemSource } from '../src/content/filesystem.ts'
+import { PortableRenderer } from '../src/render/portable.ts'
+import { resolveConfig } from '../src/config/defaults.ts'
 
 // ---- Content Negotiation ----
 

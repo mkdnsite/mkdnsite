@@ -1,4 +1,4 @@
-import type { ClientConfig } from '../config/schema'
+import type { ClientConfig } from '../config/schema.ts'
 
 /**
  * Generate client-side JavaScript for progressive enhancements.

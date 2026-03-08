@@ -1,8 +1,8 @@
-import type { DeploymentAdapter } from './types'
-import type { MkdnSiteConfig } from '../config/schema'
-import type { ContentSource } from '../content/types'
-import type { MarkdownRenderer } from '../render/types'
-import { createRenderer } from '../render/types'
+import type { DeploymentAdapter } from './types.ts'
+import type { MkdnSiteConfig } from '../config/schema.ts'
+import type { ContentSource } from '../content/types.ts'
+import type { MarkdownRenderer } from '../render/types.ts'
+import { createRenderer } from '../render/types.ts'
 
 /**
  * Vercel Edge/Serverless deployment adapter.
@@ -42,7 +42,7 @@ export class VercelAdapter implements DeploymentAdapter {
     )
   }
 
-  createRenderer (_config: MkdnSiteConfig): MarkdownRenderer {
-    return createRenderer('portable')
+  async createRenderer (_config: MkdnSiteConfig): Promise<MarkdownRenderer> {
+    return await createRenderer('portable')
   }
 }

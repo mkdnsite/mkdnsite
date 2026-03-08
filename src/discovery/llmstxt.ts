@@ -1,5 +1,5 @@
-import type { ContentSource, ContentPage } from '../content/types'
-import type { MkdnSiteConfig } from '../config/schema'
+import type { ContentSource, ContentPage } from '../content/types.ts'
+import type { MkdnSiteConfig } from '../config/schema.ts'
 
 export async function generateLlmsTxt (
   source: ContentSource,

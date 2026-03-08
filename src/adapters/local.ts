@@ -1,42 +1,137 @@
-import type { DeploymentAdapter } from './types'
-import type { MkdnSiteConfig } from '../config/schema'
-import type { ContentSource } from '../content/types'
-import type { MarkdownRenderer } from '../render/types'
-import { FilesystemSource } from '../content/filesystem'
-import { createRenderer } from '../render/types'
+import type { DeploymentAdapter } from './types.ts'
+import { detectRuntime } from './types.ts'
+import type { MkdnSiteConfig } from '../config/schema.ts'
+import type { ContentSource } from '../content/types.ts'
+import type { MarkdownRenderer } from '../render/types.ts'
+import { FilesystemSource } from '../content/filesystem.ts'
+import { createRenderer } from '../render/types.ts'
 
 export class LocalAdapter implements DeploymentAdapter {
-  readonly name = 'local (Bun)'
+  readonly name: string
+
+  constructor () {
+    this.name = `local (${detectRuntime()})`
+  }
 
   createContentSource (config: MkdnSiteConfig): ContentSource {
     return new FilesystemSource(config.contentDir)
   }
 
-  createRenderer (config: MkdnSiteConfig): MarkdownRenderer {
+  async createRenderer (_config: MkdnSiteConfig): Promise<MarkdownRenderer> {
     // Use bun-native if available and in Bun environment
     const engine = (typeof Bun !== 'undefined' && Bun.markdown != null)
       ? 'bun-native'
       : 'portable'
-    return createRenderer(engine)
+    return await createRenderer(engine)
   }
 
   async start (
     handler: (request: Request) => Promise<Response>,
     config: MkdnSiteConfig
   ): Promise<() => void> {
+    const runtime = detectRuntime()
+
+    if (runtime === 'bun') {
+      return this.startBun(handler, config)
+    }
+
+    if (runtime === 'deno') {
+      return this.startDeno(handler, config)
+    }
+
+    return await this.startNode(handler, config)
+  }
+
+  private startBun (
+    handler: (request: Request) => Promise<Response>,
+    config: MkdnSiteConfig
+  ): () => void {
     const server = Bun.serve({
       port: config.server.port,
       hostname: config.server.hostname,
       fetch: handler
     })
 
-    const url = `http://localhost:${String(server.port)}`
+    this.printStartup(config, server.port ?? config.server.port)
+    return () => { void server.stop() }
+  }
+
+  private startDeno (
+    handler: (request: Request) => Promise<Response>,
+    config: MkdnSiteConfig
+  ): () => void {
+    const { port, hostname } = config.server
+
+    // Deno.serve is available globally in Deno
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const DenoNs = (globalThis as any).Deno
+    const server = DenoNs.serve({ port, hostname }, handler)
+
+    this.printStartup(config, port)
+    return () => { void server.shutdown() }
+  }
+
+  private async startNode (
+    handler: (request: Request) => Promise<Response>,
+    config: MkdnSiteConfig
+  ): Promise<() => void> {
+    const { port, hostname } = config.server
+    const { createServer } = await import('node:http')
+
+    const server = createServer((req, res) => {
+      const host = req.headers.host ?? `${hostname}:${String(port)}`
+      const url = new URL(req.url ?? '/', `http://${host}`)
+
+      const headers = new Headers()
+      for (const [key, value] of Object.entries(req.headers)) {
+        if (value != null) {
+          if (Array.isArray(value)) {
+            for (const v of value) headers.append(key, v)
+          } else {
+            headers.set(key, value)
+          }
+        }
+      }
+
+      const request = new Request(url.toString(), {
+        method: req.method,
+        headers
+      })
+
+      handler(request)
+        .then(async (response) => {
+          const resHeaders: Record<string, string> = {}
+          response.headers.forEach((value, key) => {
+            resHeaders[key] = value
+          })
+          res.writeHead(response.status, resHeaders)
+          const body = Buffer.from(await response.arrayBuffer())
+          res.end(body)
+        })
+        .catch((err) => {
+          console.error('mkdnsite: request error', err)
+          res.writeHead(500)
+          res.end('Internal Server Error')
+        })
+    })
+
+    await new Promise<void>((resolve) => {
+      server.listen(port, hostname, () => { resolve() })
+    })
+
+    this.printStartup(config, port)
+    return () => { server.close() }
+  }
+
+  private printStartup (config: MkdnSiteConfig, port: number): void {
+    const url = `http://localhost:${String(port)}`
     console.log('')
     console.log('  ┌──────────────────────────────────────────────┐')
     console.log('  │                                              │')
     console.log('  │   mkdnsite is running                       │')
     console.log(`  │   ${url.padEnd(42)} │`)
     console.log('  │                                              │')
+    console.log(`  │   Runtime: ${this.name.padEnd(32)} │`)
     console.log(`  │   Content: ${config.contentDir.padEnd(32)} │`)
     console.log(`  │   Theme mode: ${config.theme.mode.padEnd(28)} │`)
     console.log(`  │   Client JS: ${(config.client.enabled ? 'on' : 'off').padEnd(29)} │`)
@@ -49,7 +144,5 @@ export class LocalAdapter implements DeploymentAdapter {
     console.log(`    curl -H "Accept: text/markdown" ${url}`)
     console.log(`    curl ${url}/llms.txt`)
     console.log('')
-
-    return () => { void server.stop() }
   }
 }

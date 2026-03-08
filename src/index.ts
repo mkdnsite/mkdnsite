@@ -6,11 +6,11 @@
  */
 
 // Core handler
-export { createHandler } from './handler'
-export type { HandlerOptions } from './handler'
+export { createHandler } from './handler.ts'
+export type { HandlerOptions } from './handler.ts'
 
 // Config
-export { resolveConfig, DEFAULT_CONFIG } from './config/defaults'
+export { resolveConfig, DEFAULT_CONFIG } from './config/defaults.ts'
 export type {
   MkdnSiteConfig,
   ThemeConfig,
@@ -23,35 +23,35 @@ export type {
   ImageProps,
   CodeBlockProps,
   InlineCodeProps
-} from './config/schema'
+} from './config/schema.ts'
 
 // Content sources
-export { FilesystemSource } from './content/filesystem'
-export { GitHubSource } from './content/github'
+export { FilesystemSource } from './content/filesystem.ts'
+export { GitHubSource } from './content/github.ts'
 export type {
   ContentSource,
   ContentPage,
   NavNode,
   MarkdownMeta,
   GitHubSourceConfig
-} from './content/types'
-export { parseFrontmatter } from './content/frontmatter'
+} from './content/types.ts'
+export { parseFrontmatter } from './content/frontmatter.ts'
 
 // Rendering
-export { createRenderer } from './render/types'
-export type { MarkdownRenderer } from './render/types'
-export { PortableRenderer } from './render/portable'
-export { buildComponents } from './render/components/index'
+export { createRenderer } from './render/types.ts'
+export type { MarkdownRenderer } from './render/types.ts'
+export { PortableRenderer } from './render/portable.ts'
+export { buildComponents } from './render/components/index.ts'
 
 // Content negotiation
-export { negotiateFormat } from './negotiate/accept'
-export type { ResponseFormat } from './negotiate/accept'
-export { markdownHeaders, htmlHeaders, estimateTokens } from './negotiate/headers'
+export { negotiateFormat } from './negotiate/accept.ts'
+export type { ResponseFormat } from './negotiate/accept.ts'
+export { markdownHeaders, htmlHeaders, estimateTokens } from './negotiate/headers.ts'
 
 // Discovery
-export { generateLlmsTxt } from './discovery/llmstxt'
+export { generateLlmsTxt } from './discovery/llmstxt.ts'
 
 // Adapters
-export type { DeploymentAdapter } from './adapters/types'
-export { detectRuntime } from './adapters/types'
-export { LocalAdapter } from './adapters/local'
+export type { DeploymentAdapter } from './adapters/types.ts'
+export { detectRuntime } from './adapters/types.ts'
+export { LocalAdapter } from './adapters/local.ts'

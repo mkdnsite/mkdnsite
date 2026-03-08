@@ -1,9 +1,10 @@
 #!/usr/bin/env bun
 import { resolve } from 'node:path'
-import { resolveConfig } from './config/defaults'
-import type { MkdnSiteConfig } from './config/schema'
-import { LocalAdapter } from './adapters/local'
-import { createHandler } from './handler'
+import { access } from 'node:fs/promises'
+import { resolveConfig } from './config/defaults.ts'
+import type { MkdnSiteConfig } from './config/schema.ts'
+import { LocalAdapter } from './adapters/local.ts'
+import { createHandler } from './handler.ts'
 
 function parseArgs (args: string[]): Partial<MkdnSiteConfig> {
   const result: Record<string, unknown> = {}
@@ -84,11 +85,9 @@ async function main (): Promise<void> {
   let fileConfig: Partial<MkdnSiteConfig> = {}
   try {
     const configPath = resolve('mkdnsite.config.ts')
-    const file = Bun.file(configPath)
-    if (await file.exists()) {
-      const mod = await import(configPath)
-      fileConfig = mod.default ?? mod
-    }
+    await access(configPath)
+    const mod = await import(configPath)
+    fileConfig = mod.default ?? mod
   } catch {
     // No config file, that's fine
   }
@@ -113,7 +112,7 @@ async function main (): Promise<void> {
 
   const adapter = new LocalAdapter()
   const source = adapter.createContentSource(config)
-  const renderer = adapter.createRenderer(config)
+  const renderer = await adapter.createRenderer(config)
   const handler = createHandler({ source, renderer, config })
 
   await adapter.start(handler, config)

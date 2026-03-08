@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import type { ComponentOverrides, RendererEngine } from '../config/schema'
+import type { ComponentOverrides, RendererEngine } from '../config/schema.ts'
 
 /**
  * Markdown renderer interface.
@@ -27,18 +27,16 @@ export interface MarkdownRenderer {
 /**
  * Create the appropriate renderer for the current runtime and config.
  */
-export function createRenderer (engine: RendererEngine = 'portable'): MarkdownRenderer {
+export async function createRenderer (engine: RendererEngine = 'portable'): Promise<MarkdownRenderer> {
   if (engine === 'bun-native') {
     // Verify Bun.markdown is available
     if (typeof Bun !== 'undefined' && Bun.markdown != null) {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { BunNativeRenderer } = require('./bun-native') as typeof import('./bun-native')
+      const { BunNativeRenderer } = await import('./bun-native.ts')
       return new BunNativeRenderer()
     }
     console.warn('mkdnsite: bun-native renderer requested but Bun.markdown not available. Falling back to portable.')
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { PortableRenderer } = require('./portable') as typeof import('./portable')
+  const { PortableRenderer } = await import('./portable.ts')
   return new PortableRenderer()
 }

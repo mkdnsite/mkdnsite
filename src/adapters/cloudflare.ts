@@ -1,8 +1,8 @@
-import type { DeploymentAdapter } from './types'
-import type { MkdnSiteConfig } from '../config/schema'
-import type { ContentSource } from '../content/types'
-import type { MarkdownRenderer } from '../render/types'
-import { createRenderer } from '../render/types'
+import type { DeploymentAdapter } from './types.ts'
+import type { MkdnSiteConfig } from '../config/schema.ts'
+import type { ContentSource } from '../content/types.ts'
+import type { MarkdownRenderer } from '../render/types.ts'
+import { createRenderer } from '../render/types.ts'
 
 /**
  * Cloudflare Workers deployment adapter.
@@ -47,9 +47,9 @@ export class CloudflareAdapter implements DeploymentAdapter {
     )
   }
 
-  createRenderer (_config: MkdnSiteConfig): MarkdownRenderer {
+  async createRenderer (_config: MkdnSiteConfig): Promise<MarkdownRenderer> {
     // CF Workers don't have Bun.markdown, always use portable
-    return createRenderer('portable')
+    return await createRenderer('portable')
   }
 }
 

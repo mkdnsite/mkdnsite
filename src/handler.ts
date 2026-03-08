@@ -1,10 +1,12 @@
-import type { MkdnSiteConfig } from './config/schema'
-import type { ContentSource } from './content/types'
-import type { MarkdownRenderer } from './render/types'
-import { negotiateFormat } from './negotiate/accept'
-import { markdownHeaders, htmlHeaders, estimateTokens } from './negotiate/headers'
-import { renderPage, render404 } from './render/page-shell'
-import { generateLlmsTxt } from './discovery/llmstxt'
+import { readFile } from 'node:fs/promises'
+import { extname } from 'node:path'
+import type { MkdnSiteConfig } from './config/schema.ts'
+import type { ContentSource } from './content/types.ts'
+import type { MarkdownRenderer } from './render/types.ts'
+import { negotiateFormat } from './negotiate/accept.ts'
+import { markdownHeaders, htmlHeaders, estimateTokens } from './negotiate/headers.ts'
+import { renderPage, render404 } from './render/page-shell.ts'
+import { generateLlmsTxt } from './discovery/llmstxt.ts'
 
 export interface HandlerOptions {
   source: ContentSource
@@ -144,15 +146,43 @@ function hasStaticExtension (pathname: string): boolean {
   return STATIC_EXTENSIONS.has(ext)
 }
 
+const MIME_TYPES: Record<string, string> = {
+  '.html': 'text/html',
+  '.css': 'text/css',
+  '.js': 'application/javascript',
+  '.json': 'application/json',
+  '.xml': 'application/xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
+  '.ogg': 'audio/ogg',
+  '.mp3': 'audio/mpeg',
+  '.wav': 'audio/wav',
+  '.pdf': 'application/pdf',
+  '.zip': 'application/zip',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
+  '.eot': 'application/vnd.ms-fontobject'
+}
+
 async function serveStatic (pathname: string, staticDir: string): Promise<Response> {
   try {
     const filePath = `${staticDir}${pathname}`
-    const file = Bun.file(filePath)
-    if (await file.exists()) {
-      return new Response(file)
-    }
+    const data = await readFile(filePath)
+    const ext = extname(pathname).toLowerCase()
+    const contentType = MIME_TYPES[ext] ?? 'application/octet-stream'
+    return new Response(data, {
+      status: 200,
+      headers: { 'Content-Type': contentType }
+    })
   } catch {
-    // Fall through to 404
+    return new Response('Not Found', { status: 404 })
   }
-  return new Response('Not Found', { status: 404 })
 }
