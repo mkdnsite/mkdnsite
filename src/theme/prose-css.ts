@@ -119,11 +119,14 @@ body {
 .mkdn-prose a { color: var(--mkdn-link); text-decoration: none; }
 .mkdn-prose a:hover { text-decoration: underline; color: var(--mkdn-link-hover); }
 
-.mkdn-heading-anchor {
+.mkdn-prose a.mkdn-heading-anchor {
   color: var(--mkdn-text-muted); text-decoration: none;
   opacity: 0; margin-left: -1.2em; padding-right: 0.2em;
   font-weight: 400; transition: opacity 0.15s;
+  display: inline-flex; align-items: center;
 }
+.mkdn-prose a.mkdn-heading-anchor:hover { text-decoration: none; color: var(--mkdn-text-muted); }
+.mkdn-prose .mkdn-heading-anchor svg { vertical-align: middle; }
 .mkdn-prose h1:hover .mkdn-heading-anchor,
 .mkdn-prose h2:hover .mkdn-heading-anchor,
 .mkdn-prose h3:hover .mkdn-heading-anchor,

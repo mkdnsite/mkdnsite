@@ -4,7 +4,6 @@ import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeSlug from 'rehype-slug'
-import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 import type { ReactElement } from 'react'
 import type { ComponentOverrides } from '../config/schema.ts'
 import type { MarkdownRenderer } from './types.ts'
@@ -29,8 +28,7 @@ export class PortableRenderer implements MarkdownRenderer {
     return React.createElement(Markdown, {
       remarkPlugins: [remarkGfm, remarkMath],
       rehypePlugins: [
-        rehypeSlug,
-        [rehypeAutolinkHeadings, { behavior: 'wrap' }]
+        rehypeSlug
       ],
       components: rmComponents
     }, markdown)

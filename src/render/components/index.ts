@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link as LinkIcon } from 'lucide-react'
 import type {
   HeadingProps,
   LinkProps,
@@ -8,20 +9,32 @@ import type {
   ComponentOverrides
 } from '../../config/schema.ts'
 
+const ICON_SIZES: Record<number, number> = {
+  1: 20,
+  2: 18,
+  3: 16
+}
+
 /**
  * Default heading component with anchor link support.
+ * h1-h3 show a lucide link icon on hover; h4-h6 show a # symbol.
  */
 function Heading ({ children, id, level }: HeadingProps): React.ReactElement {
   const Tag = `h${level}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
   const className = `mkdn-heading mkdn-h${level}`
 
   if (id != null) {
+    const iconSize = ICON_SIZES[level]
+    const anchorChild = iconSize != null
+      ? React.createElement(LinkIcon, { size: iconSize, 'aria-hidden': true })
+      : '#'
+
     return React.createElement(Tag, { id, className },
       React.createElement('a', {
         href: `#${id}`,
         className: 'mkdn-heading-anchor',
         'aria-hidden': 'true'
-      }, '#'),
+      }, anchorChild),
       ' ',
       children
     )
