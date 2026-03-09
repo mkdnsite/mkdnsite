@@ -62,7 +62,7 @@ export const THEME_CSS = `
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
 
 body {
   margin: 0;
@@ -119,7 +119,7 @@ body {
 /* ---- Prose typography (shadcn/Radix-inspired, applied to .mkdn-prose) ---- */
 .mkdn-prose h1, .mkdn-prose h2, .mkdn-prose h3,
 .mkdn-prose h4, .mkdn-prose h5, .mkdn-prose h6 {
-  scroll-margin-top: 5rem;
+  scroll-margin-top: 1rem;
   letter-spacing: -0.025em;
   line-height: 1.2;
 }

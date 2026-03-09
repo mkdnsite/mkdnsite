@@ -25,9 +25,6 @@ export function CLIENT_SCRIPTS (client: ClientConfig): string {
     scripts.push(SEARCH_SCRIPT)
   }
 
-  // Smooth anchor scrolling
-  scripts.push(ANCHOR_SCRIPT)
-
   if (scripts.length === 0) return ''
 
   return `<script>${scripts.join('\n')}</script>`
@@ -106,13 +103,4 @@ const SEARCH_SCRIPT = `
 /* Search: placeholder for client-side search functionality.
    Will be implemented with a pre-built content index served at /search-index.json.
    For MVP, this is a no-op that can be activated once the index endpoint exists. */
-`.trim()
-
-const ANCHOR_SCRIPT = `
-document.querySelectorAll('a[href^="#"]').forEach(function(a){
-  a.addEventListener('click',function(e){
-    var t=document.getElementById(a.getAttribute('href').slice(1));
-    if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth'});history.pushState(null,'',a.getAttribute('href'));}
-  });
-});
 `.trim()
