@@ -193,6 +193,16 @@ body {
 
 .mkdn-prose hr { border: none; border-top: 1px solid var(--mkdn-border); margin: 2em 0; }
 
+/* Shiki syntax highlighting dual-theme support */
+.mkdn-prose pre.shiki { background: var(--mkdn-pre-bg) !important; }
+
+@media (prefers-color-scheme: light) {
+  .shiki span { color: var(--shiki-light) !important; }
+}
+@media (prefers-color-scheme: dark) {
+  .shiki span { color: var(--shiki-dark) !important; }
+}
+
 /* Mermaid diagrams */
 .mkdn-mermaid { margin: 1em 0; text-align: center; }
 .mkdn-mermaid svg { max-width: 100%; }

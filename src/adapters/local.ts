@@ -19,7 +19,11 @@ export class LocalAdapter implements DeploymentAdapter {
   }
 
   async createRenderer (config: MkdnSiteConfig): Promise<MarkdownRenderer> {
-    const renderer = await createRenderer(config.renderer)
+    const renderer = await createRenderer({
+      engine: config.renderer,
+      syntaxTheme: config.theme.syntaxTheme,
+      syntaxThemeDark: config.theme.syntaxThemeDark
+    })
     this.rendererEngine = renderer.engine
     return renderer
   }
