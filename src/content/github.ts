@@ -46,12 +46,17 @@ export class GitHubSource implements ContentSource {
 
     const candidates = [
       `${normalized}.md`,
-      `${normalized}/index.md`
+      `${normalized}/index.md`,
+      `${normalized}/README.md`,
+      `${normalized}/readme.md`
     ]
 
     if (normalized === 'index') {
-      candidates.unshift('index.md')
-      candidates.unshift('README.md')
+      candidates.unshift(
+        'index.md',
+        'README.md',
+        'readme.md'
+      )
     }
 
     for (const filePath of candidates) {
@@ -93,6 +98,7 @@ export class GitHubSource implements ContentSource {
         .replace(/\.md$/, '')
         .replace(/\/index$/, '')
         .replace(/\/README$/, '')
+        .replace(/\/readme$/, '')
       const page = await this.getPage(slug)
       if (page != null) pages.push(page)
     }
@@ -169,7 +175,7 @@ export class GitHubSource implements ContentSource {
     // TODO: Build proper tree structure from flat file list
     // For now, return a flat list
     const children: NavNode[] = entries
-      .filter(e => e.path.endsWith('.md') && e.path !== 'index.md' && e.path !== 'README.md')
+      .filter(e => e.path.endsWith('.md') && e.path !== 'index.md' && e.path !== 'README.md' && e.path !== 'readme.md')
       .map(e => {
         const name = e.path.replace(/\.md$/, '').split('/').pop() ?? e.path
         return {

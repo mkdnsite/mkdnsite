@@ -23,12 +23,17 @@ export class FilesystemSource implements ContentSource {
 
     const candidates = [
       join(this.rootDir, `${normalized}.md`),
-      join(this.rootDir, normalized, 'index.md')
+      join(this.rootDir, normalized, 'index.md'),
+      join(this.rootDir, normalized, 'README.md'),
+      join(this.rootDir, normalized, 'readme.md')
     ]
 
     if (normalized === 'index') {
-      candidates.unshift(join(this.rootDir, 'index.md'))
-      candidates.unshift(join(this.rootDir, 'README.md'))
+      candidates.unshift(
+        join(this.rootDir, 'index.md'),
+        join(this.rootDir, 'README.md'),
+        join(this.rootDir, 'readme.md')
+      )
     }
 
     for (const filePath of candidates) {
@@ -124,7 +129,7 @@ export class FilesystemSource implements ContentSource {
     let slug = relPath.replace(/\.md$/, '')
 
     const base = basename(slug)
-    if (base === 'index' || base === 'README') {
+    if (base === 'index' || base === 'README' || base === 'readme') {
       slug = dirname(slug)
       if (slug === '.') slug = ''
     }
@@ -140,7 +145,7 @@ export class FilesystemSource implements ContentSource {
     let dirTitle = basename(dir)
     let dirOrder = 0
 
-    for (const name of ['index.md', 'README.md']) {
+    for (const name of ['index.md', 'README.md', 'readme.md']) {
       try {
         const raw = await readFile(join(dir, name), 'utf-8')
         const parsed = parseFrontmatter(raw)
@@ -165,7 +170,8 @@ export class FilesystemSource implements ContentSource {
         entry.isFile() &&
         extname(entry.name) === '.md' &&
         entry.name !== 'index.md' &&
-        entry.name !== 'README.md'
+        entry.name !== 'README.md' &&
+        entry.name !== 'readme.md'
       ) {
         const raw = await readFile(fullPath, 'utf-8')
         const parsed = parseFrontmatter(raw)
