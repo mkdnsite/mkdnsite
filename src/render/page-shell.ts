@@ -32,6 +32,26 @@ export function renderPage (props: PageShellProps): string {
     ? CLIENT_SCRIPTS(config.client)
     : ''
 
+  const themeToggleEnabled = config.client.enabled && config.client.themeToggle
+  const colorScheme = config.theme.colorScheme ?? 'system'
+
+  // Blocking script to set data-theme before paint (prevents FOUC)
+  const themeInitScript = colorScheme !== 'system'
+    // Fixed color scheme: always use the configured value
+    ? `<script>document.documentElement.setAttribute("data-theme","${colorScheme}")</script>`
+    : themeToggleEnabled
+      // System default + toggle: check localStorage first, then system preference
+      ? '<script>(function(){var t=localStorage.getItem("mkdn-theme");if(t==="dark"||t==="light"){document.documentElement.setAttribute("data-theme",t)}else{document.documentElement.setAttribute("data-theme",window.matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light")}})()</script>'
+      // System default, no toggle: just respect system preference
+      : '<script>(function(){document.documentElement.setAttribute("data-theme",window.matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light")})()</script>'
+
+  const themeToggleHtml = themeToggleEnabled
+    ? `<button class="mkdn-theme-toggle" type="button" aria-label="Toggle theme">
+      <svg class="mkdn-icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+      <svg class="mkdn-icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+    </button>`
+    : ''
+
   return `<!DOCTYPE html>
 <html lang="${esc(lang)}">
 <head>
@@ -41,8 +61,10 @@ export function renderPage (props: PageShellProps): string {
   ${description !== '' ? `<meta name="description" content="${esc(description)}">` : ''}
   <meta name="generator" content="mkdnsite">
   <style>${THEME_CSS}</style>
+  ${themeInitScript}
 </head>
 <body>
+  ${themeToggleHtml}
   <div class="mkdn-layout">
     ${navHtml !== '' ? `<nav class="mkdn-nav" aria-label="Site navigation">${navHtml}</nav>` : ''}
     <main class="mkdn-main">

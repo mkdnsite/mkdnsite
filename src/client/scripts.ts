@@ -9,6 +9,10 @@ export function CLIENT_SCRIPTS (client: ClientConfig): string {
 
   const scripts: string[] = []
 
+  if (client.themeToggle) {
+    scripts.push(THEME_TOGGLE_SCRIPT)
+  }
+
   if (client.copyButton) {
     scripts.push(COPY_BUTTON_SCRIPT)
   }
@@ -28,6 +32,31 @@ export function CLIENT_SCRIPTS (client: ClientConfig): string {
 
   return `<script>${scripts.join('\n')}</script>`
 }
+
+const THEME_TOGGLE_SCRIPT = `
+(function(){
+  var btn = document.querySelector('.mkdn-theme-toggle');
+  if (!btn) return;
+  btn.addEventListener('click', function(e){
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var next = isDark ? 'light' : 'dark';
+    var rect = btn.getBoundingClientRect();
+    var x = rect.left + rect.width / 2;
+    var y = rect.top + rect.height / 2;
+    document.documentElement.style.setProperty('--mkdn-toggle-x', x + 'px');
+    document.documentElement.style.setProperty('--mkdn-toggle-y', y + 'px');
+    function apply(){
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('mkdn-theme', next);
+    }
+    if (document.startViewTransition) {
+      document.startViewTransition(apply);
+    } else {
+      apply();
+    }
+  });
+})();
+`.trim()
 
 const COPY_BUTTON_SCRIPT = `
 (function(){

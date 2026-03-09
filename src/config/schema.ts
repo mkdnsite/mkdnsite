@@ -70,6 +70,9 @@ export interface ThemeConfig {
   /** Edit URL template (e.g. https://github.com/org/repo/edit/main/{path}) */
   editUrl?: string
 
+  /** Color scheme: 'system' (default), 'light', or 'dark' */
+  colorScheme: 'system' | 'light' | 'dark'
+
   /** Syntax highlighting theme for Shiki */
   syntaxTheme: string
 
@@ -113,6 +116,9 @@ export interface ClientConfig {
 
   /** Enable copy-to-clipboard on code blocks (default: true when client enabled) */
   copyButton: boolean
+
+  /** Enable light/dark theme toggle button (default: true when client enabled) */
+  themeToggle: boolean
 
   /** Enable client-side search (default: true when client enabled) */
   search: boolean

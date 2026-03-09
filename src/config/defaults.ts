@@ -14,6 +14,7 @@ export const DEFAULT_CONFIG: MkdnSiteConfig = {
     mode: 'prose',
     showNav: true,
     showToc: true,
+    colorScheme: 'system',
     syntaxTheme: 'github-light',
     syntaxThemeDark: 'github-dark'
   },
@@ -33,6 +34,7 @@ export const DEFAULT_CONFIG: MkdnSiteConfig = {
     enabled: true,
     mermaid: true,
     copyButton: true,
+    themeToggle: true,
     search: true
   },
   renderer: 'portable'

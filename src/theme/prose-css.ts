@@ -31,8 +31,22 @@ export const THEME_CSS = `
   --mkdn-accent: #0969da;
 }
 
+[data-theme="dark"] {
+  --mkdn-text: #e6edf3;
+  --mkdn-text-muted: #8d96a0;
+  --mkdn-bg: #0d1117;
+  --mkdn-bg-alt: #161b22;
+  --mkdn-border: #30363d;
+  --mkdn-link: #58a6ff;
+  --mkdn-link-hover: #79c0ff;
+  --mkdn-code-bg: rgba(110, 118, 129, 0.4);
+  --mkdn-pre-bg: #161b22;
+  --mkdn-accent: #58a6ff;
+}
+
+/* No-JS fallback: respect system preference */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
     --mkdn-text: #e6edf3;
     --mkdn-text-muted: #8d96a0;
     --mkdn-bg: #0d1117;
@@ -196,11 +210,49 @@ body {
 /* Shiki syntax highlighting dual-theme support */
 .mkdn-prose pre.shiki { background: var(--mkdn-pre-bg) !important; }
 
-@media (prefers-color-scheme: light) {
-  .shiki span { color: var(--shiki-light) !important; }
-}
+.shiki span { color: var(--shiki-light) !important; }
+[data-theme="dark"] .shiki span { color: var(--shiki-dark) !important; }
 @media (prefers-color-scheme: dark) {
-  .shiki span { color: var(--shiki-dark) !important; }
+  :root:not([data-theme]) .shiki span { color: var(--shiki-dark) !important; }
+}
+
+/* ---- Theme toggle button ---- */
+.mkdn-theme-toggle {
+  position: fixed; top: 0.75rem; right: 0.75rem; z-index: 100;
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--mkdn-bg-alt); border: 1px solid var(--mkdn-border);
+  border-radius: 8px; cursor: pointer; color: var(--mkdn-text-muted);
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
+}
+.mkdn-theme-toggle:hover { color: var(--mkdn-text); background: var(--mkdn-code-bg); }
+
+.mkdn-theme-toggle .mkdn-icon-sun,
+.mkdn-theme-toggle .mkdn-icon-moon {
+  position: absolute;
+  transition: opacity 0.4s ease, transform 0.5s ease;
+}
+
+/* Light mode: show sun, hide moon */
+.mkdn-theme-toggle .mkdn-icon-sun { opacity: 1; transform: rotate(0deg) scale(1); }
+.mkdn-theme-toggle .mkdn-icon-moon { opacity: 0; transform: rotate(-90deg) scale(0.5); }
+
+/* Dark mode: show moon, hide sun */
+[data-theme="dark"] .mkdn-theme-toggle .mkdn-icon-sun { opacity: 0; transform: rotate(90deg) scale(0.5); }
+[data-theme="dark"] .mkdn-theme-toggle .mkdn-icon-moon { opacity: 1; transform: rotate(0deg) scale(1); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .mkdn-theme-toggle .mkdn-icon-sun { opacity: 0; transform: rotate(90deg) scale(0.5); }
+  :root:not([data-theme]) .mkdn-theme-toggle .mkdn-icon-moon { opacity: 1; transform: rotate(0deg) scale(1); }
+}
+
+/* View Transition: circular reveal animation */
+::view-transition-old(root) { animation: none; z-index: -1; }
+::view-transition-new(root) {
+  animation: mkdn-theme-reveal 0.5s ease-out;
+}
+@keyframes mkdn-theme-reveal {
+  from { clip-path: circle(0% at var(--mkdn-toggle-x, calc(100% - 30px)) var(--mkdn-toggle-y, 30px)); }
+  to { clip-path: circle(150% at var(--mkdn-toggle-x, calc(100% - 30px)) var(--mkdn-toggle-y, 30px)); }
 }
 
 /* Mermaid diagrams */
