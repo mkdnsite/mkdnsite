@@ -165,12 +165,6 @@ body {
 }
 
 .mkdn-code-block { position: relative; margin-bottom: 1em; }
-.mkdn-code-block[data-language]::before {
-  content: attr(data-language);
-  position: absolute; top: 0.4rem; right: 0.6rem;
-  font-size: 0.7rem; color: var(--mkdn-text-muted);
-  font-family: var(--mkdn-mono); text-transform: uppercase;
-}
 
 .mkdn-prose .mkdn-copy-btn {
   position: absolute; top: 0.4rem; right: 0.4rem;
