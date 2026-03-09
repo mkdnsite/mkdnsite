@@ -35,6 +35,7 @@ export const DEFAULT_CONFIG: MkdnSiteConfig = {
     mermaid: true,
     copyButton: true,
     themeToggle: true,
+    math: true,
     search: true
   },
   renderer: 'portable'

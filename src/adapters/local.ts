@@ -22,7 +22,8 @@ export class LocalAdapter implements DeploymentAdapter {
     const renderer = await createRenderer({
       engine: config.renderer,
       syntaxTheme: config.theme.syntaxTheme,
-      syntaxThemeDark: config.theme.syntaxThemeDark
+      syntaxThemeDark: config.theme.syntaxThemeDark,
+      math: config.client.math
     })
     this.rendererEngine = renderer.engine
     return renderer

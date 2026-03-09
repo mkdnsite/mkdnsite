@@ -60,6 +60,7 @@ export function renderPage (props: PageShellProps): string {
   <title>${esc(title)}</title>
   ${description !== '' ? `<meta name="description" content="${esc(description)}">` : ''}
   <meta name="generator" content="mkdnsite">
+  ${config.client.math ? '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css" crossorigin="anonymous">' : ''}
   <style>${THEME_CSS}</style>
   ${themeInitScript}
 </head>

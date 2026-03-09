@@ -32,6 +32,7 @@ export interface RendererOptions {
   engine?: RendererEngine
   syntaxTheme?: string
   syntaxThemeDark?: string
+  math?: boolean
 }
 
 /**
@@ -69,5 +70,5 @@ export async function createRenderer (engineOrOpts: RendererEngine | RendererOpt
   }
 
   const { PortableRenderer } = await import('./portable.ts')
-  return new PortableRenderer(highlighter, opts.syntaxTheme, opts.syntaxThemeDark)
+  return new PortableRenderer(highlighter, opts.syntaxTheme, opts.syntaxThemeDark, opts.math)
 }

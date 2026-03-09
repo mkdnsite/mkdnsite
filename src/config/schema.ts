@@ -120,6 +120,9 @@ export interface ClientConfig {
   /** Enable light/dark theme toggle button (default: true when client enabled) */
   themeToggle: boolean
 
+  /** Enable KaTeX math rendering (default: true when client enabled) */
+  math: boolean
+
   /** Enable client-side search (default: true when client enabled) */
   search: boolean
 }

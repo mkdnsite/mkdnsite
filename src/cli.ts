@@ -25,9 +25,11 @@ function parseArgs (args: string[]): Partial<MkdnSiteConfig> {
     } else if (arg === '--no-negotiate') {
       result.negotiation = { enabled: false }
     } else if (arg === '--no-client-js') {
-      result.client = { enabled: false, mermaid: false, copyButton: false, themeToggle: false, search: false }
+      result.client = { enabled: false, mermaid: false, copyButton: false, themeToggle: false, math: false, search: false }
     } else if (arg === '--no-theme-toggle') {
       result.client = { ...(result.client as object ?? {}), themeToggle: false }
+    } else if (arg === '--no-math') {
+      result.client = { ...(result.client as object ?? {}), math: false }
     } else if (arg === '--color-scheme') {
       result.theme = { ...(result.theme as object ?? {}), colorScheme: args[++i] }
     } else if (arg === '--theme-mode') {
@@ -73,6 +75,7 @@ function printHelp (): void {
     --renderer <engine>   Renderer: portable (default) or bun-native (Bun only)
     --no-client-js        Disable client-side JavaScript (mermaid, copy, search, theme toggle)
     --no-theme-toggle     Disable light/dark theme toggle button
+    --no-math             Disable KaTeX math rendering
     -h, --help            Show this help
     -v, --version         Show version
 

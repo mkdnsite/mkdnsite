@@ -206,6 +206,28 @@ graph LR
     D --> F[MD Response]
 ```
 
+## Math Expressions
+
+Inline math: The quadratic formula is $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$ and Euler's identity is $e^{i\pi} + 1 = 0$.
+
+Display math (block):
+
+$$
+\int_{-\infty}^{\infty} e^{-x^2} \, dx = \sqrt{\pi}
+$$
+
+A summation:
+
+$$
+\sum_{n=1}^{\infty} \frac{1}{n^2} = \frac{\pi^2}{6}
+$$
+
+Maxwell's equations in differential form:
+
+$$
+\nabla \cdot \mathbf{E} = \frac{\rho}{\varepsilon_0}, \quad \nabla \times \mathbf{B} = \mu_0 \mathbf{J} + \mu_0 \varepsilon_0 \frac{\partial \mathbf{E}}{\partial t}
+$$
+
 ## Emphasis and Inline Formatting
 
 This paragraph exercises all inline formatting: **bold**, *italic*, ***bold italic***, ~~strikethrough~~, `inline code`, and [a link](#emphasis-and-inline-formatting).

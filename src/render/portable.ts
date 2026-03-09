@@ -4,6 +4,7 @@ import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeSlug from 'rehype-slug'
+import rehypeKatex from 'rehype-katex'
 import type { ReactElement } from 'react'
 import type { Highlighter } from 'shiki'
 import type { ComponentOverrides } from '../config/schema.ts'
@@ -22,11 +23,13 @@ export class PortableRenderer implements MarkdownRenderer {
   private readonly highlighter?: Highlighter
   private readonly syntaxTheme?: string
   private readonly syntaxThemeDark?: string
+  private readonly math: boolean
 
-  constructor (highlighter?: Highlighter, syntaxTheme?: string, syntaxThemeDark?: string) {
+  constructor (highlighter?: Highlighter, syntaxTheme?: string, syntaxThemeDark?: string, math?: boolean) {
     this.highlighter = highlighter
     this.syntaxTheme = syntaxTheme
     this.syntaxThemeDark = syntaxThemeDark
+    this.math = math !== false
   }
 
   renderToElement (markdown: string, overrides?: ComponentOverrides): ReactElement {
@@ -40,11 +43,19 @@ export class PortableRenderer implements MarkdownRenderer {
       this.syntaxThemeDark
     )
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const remarkPlugins: any[] = [remarkGfm]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rehypePlugins: any[] = [rehypeSlug]
+
+    if (this.math) {
+      remarkPlugins.push(remarkMath)
+      rehypePlugins.push(rehypeKatex)
+    }
+
     return React.createElement(Markdown, {
-      remarkPlugins: [remarkGfm, remarkMath],
-      rehypePlugins: [
-        rehypeSlug
-      ],
+      remarkPlugins,
+      rehypePlugins,
       components: rmComponents
     }, markdown)
   }
