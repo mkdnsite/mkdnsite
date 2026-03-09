@@ -184,6 +184,54 @@ Content below the rule.
 
 Another rule style.
 
+## Alerts (GFM)
+
+> [!NOTE]
+> Useful information that users should know, even when skimming content.
+
+> [!TIP]
+> Helpful advice for doing things better or more easily.
+
+> [!IMPORTANT]
+> Key information users need to know to achieve their goal.
+
+> [!WARNING]
+> Urgent info that needs immediate user attention to avoid problems.
+
+> [!CAUTION]
+> Advises about risks or negative outcomes of certain actions.
+
+## Collapsible Sections
+
+<details>
+<summary>Click to expand</summary>
+
+This content is hidden by default. It can contain **markdown formatting**, `inline code`, and other elements.
+
+- Item one
+- Item two
+- Item three
+
+</details>
+
+<details>
+<summary>Another collapsible with a code block</summary>
+
+```typescript
+const config = resolveConfig({
+  site: { title: 'Hidden Config' }
+})
+```
+
+</details>
+
+<details open>
+<summary>This section is open by default</summary>
+
+Use the `open` attribute on the `<details>` element to have it expanded initially.
+
+</details>
+
 ## Blockquote with Multiple Elements
 
 > ### Blockquote heading

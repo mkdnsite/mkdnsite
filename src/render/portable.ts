@@ -3,13 +3,40 @@ import { renderToString } from 'react-dom/server'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
+import { remarkAlert } from 'remark-github-blockquote-alert'
 import rehypeSlug from 'rehype-slug'
 import rehypeKatex from 'rehype-katex'
+import rehypeRaw from 'rehype-raw'
+import rehypeSanitize from 'rehype-sanitize'
+import { defaultSchema } from 'hast-util-sanitize'
 import type { ReactElement } from 'react'
 import type { Highlighter } from 'shiki'
 import type { ComponentOverrides } from '../config/schema.ts'
 import type { MarkdownRenderer } from './types.ts'
 import { buildComponents } from './components/index.ts'
+
+/**
+ * Extended sanitization schema.
+ * Starts from the GitHub-style default and adds support for:
+ * - className on div, span, p, svg, path (alerts, KaTeX)
+ * - SVG elements and attributes (alert icons)
+ * - KaTeX attributes (style, aria)
+ */
+const sanitizeSchema = {
+  ...defaultSchema,
+  tagNames: [
+    ...(defaultSchema.tagNames ?? []),
+    'svg', 'path', 'span'
+  ],
+  attributes: {
+    ...defaultSchema.attributes,
+    div: [...(defaultSchema.attributes?.div ?? []), 'className', 'dir'],
+    span: [...(defaultSchema.attributes?.span ?? []), 'className', 'style'],
+    p: [...(defaultSchema.attributes?.p ?? []), 'className'],
+    svg: ['viewBox', 'width', 'height', 'ariaHidden', 'fill', 'xmlns', 'className'],
+    path: ['d', 'fill', 'fillRule']
+  }
+}
 
 /**
  * Portable markdown renderer using react-markdown.
@@ -44,13 +71,14 @@ export class PortableRenderer implements MarkdownRenderer {
     )
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const remarkPlugins: any[] = [remarkGfm]
+    const remarkPlugins: any[] = [remarkGfm, remarkAlert]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const rehypePlugins: any[] = [rehypeSlug]
+    const rehypePlugins: any[] = [rehypeSlug, rehypeRaw, [rehypeSanitize, sanitizeSchema]]
 
     if (this.math) {
       remarkPlugins.push(remarkMath)
-      rehypePlugins.push(rehypeKatex)
+      // rehype-katex must run before rehype-raw
+      rehypePlugins.splice(1, 0, rehypeKatex)
     }
 
     return React.createElement(Markdown, {

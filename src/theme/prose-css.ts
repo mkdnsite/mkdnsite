@@ -239,6 +239,80 @@ body {
 
 .mkdn-prose > :first-child { margin-top: 0; }
 
+/* ---- GFM Alerts ---- */
+.mkdn-prose .markdown-alert {
+  margin: 1.5rem 0; padding: 0.75rem 1rem;
+  border-left: 4px solid var(--mkdn-border);
+  border-radius: 4px;
+}
+.mkdn-prose .markdown-alert > :last-child { margin-bottom: 0; }
+.mkdn-prose .markdown-alert-title {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-weight: 600; margin-bottom: 0.25rem;
+}
+.mkdn-prose .markdown-alert-title svg { flex-shrink: 0; fill: currentColor; }
+
+.mkdn-prose .markdown-alert-note { border-left-color: #0969da; }
+.mkdn-prose .markdown-alert-note .markdown-alert-title { color: #0969da; }
+[data-theme="dark"] .mkdn-prose .markdown-alert-note { border-left-color: #58a6ff; }
+[data-theme="dark"] .mkdn-prose .markdown-alert-note .markdown-alert-title { color: #58a6ff; }
+
+.mkdn-prose .markdown-alert-tip { border-left-color: #1a7f37; }
+.mkdn-prose .markdown-alert-tip .markdown-alert-title { color: #1a7f37; }
+[data-theme="dark"] .mkdn-prose .markdown-alert-tip { border-left-color: #3fb950; }
+[data-theme="dark"] .mkdn-prose .markdown-alert-tip .markdown-alert-title { color: #3fb950; }
+
+.mkdn-prose .markdown-alert-important { border-left-color: #8250df; }
+.mkdn-prose .markdown-alert-important .markdown-alert-title { color: #8250df; }
+[data-theme="dark"] .mkdn-prose .markdown-alert-important { border-left-color: #a371f7; }
+[data-theme="dark"] .mkdn-prose .markdown-alert-important .markdown-alert-title { color: #a371f7; }
+
+.mkdn-prose .markdown-alert-warning { border-left-color: #9a6700; }
+.mkdn-prose .markdown-alert-warning .markdown-alert-title { color: #9a6700; }
+[data-theme="dark"] .mkdn-prose .markdown-alert-warning { border-left-color: #d29922; }
+[data-theme="dark"] .mkdn-prose .markdown-alert-warning .markdown-alert-title { color: #d29922; }
+
+.mkdn-prose .markdown-alert-caution { border-left-color: #cf222e; }
+.mkdn-prose .markdown-alert-caution .markdown-alert-title { color: #cf222e; }
+[data-theme="dark"] .mkdn-prose .markdown-alert-caution { border-left-color: #f85149; }
+[data-theme="dark"] .mkdn-prose .markdown-alert-caution .markdown-alert-title { color: #f85149; }
+
+/* No-JS fallback for alert colors */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .mkdn-prose .markdown-alert-note { border-left-color: #58a6ff; }
+  :root:not([data-theme]) .mkdn-prose .markdown-alert-note .markdown-alert-title { color: #58a6ff; }
+  :root:not([data-theme]) .mkdn-prose .markdown-alert-tip { border-left-color: #3fb950; }
+  :root:not([data-theme]) .mkdn-prose .markdown-alert-tip .markdown-alert-title { color: #3fb950; }
+  :root:not([data-theme]) .mkdn-prose .markdown-alert-important { border-left-color: #a371f7; }
+  :root:not([data-theme]) .mkdn-prose .markdown-alert-important .markdown-alert-title { color: #a371f7; }
+  :root:not([data-theme]) .mkdn-prose .markdown-alert-warning { border-left-color: #d29922; }
+  :root:not([data-theme]) .mkdn-prose .markdown-alert-warning .markdown-alert-title { color: #d29922; }
+  :root:not([data-theme]) .mkdn-prose .markdown-alert-caution { border-left-color: #f85149; }
+  :root:not([data-theme]) .mkdn-prose .markdown-alert-caution .markdown-alert-title { color: #f85149; }
+}
+
+/* ---- Collapsible sections ---- */
+.mkdn-prose details {
+  margin: 1.5rem 0; padding: 0.75rem 1rem;
+  border: 1px solid var(--mkdn-border); border-radius: 8px;
+}
+.mkdn-prose details > summary {
+  cursor: pointer; font-weight: 600;
+  list-style: none; display: flex; align-items: center; gap: 0.5rem;
+}
+.mkdn-prose details > summary::before {
+  content: ''; display: inline-block;
+  width: 0; height: 0;
+  border-left: 6px solid var(--mkdn-text-muted);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform 0.2s;
+}
+.mkdn-prose details > summary::-webkit-details-marker { display: none; }
+.mkdn-prose details[open] > summary::before { transform: rotate(90deg); }
+.mkdn-prose details[open] > summary { margin-bottom: 0.75rem; }
+.mkdn-prose details > :last-child { margin-bottom: 0; }
+
 /* Shiki syntax highlighting dual-theme support */
 .mkdn-prose pre.shiki { background: var(--mkdn-pre-bg) !important; }
 
