@@ -47,6 +47,44 @@ export interface ServerConfig {
   hostname: string
 }
 
+/** CSS color token overrides for the built-in theme */
+export interface ColorTokens {
+  /** Primary accent color (links, highlights) */
+  accent?: string
+  /** Main text color */
+  text?: string
+  /** Muted text color */
+  textMuted?: string
+  /** Page background color */
+  bg?: string
+  /** Alternate background (nav, code blocks) */
+  bgAlt?: string
+  /** Border color */
+  border?: string
+}
+
+/** Font stack overrides for the built-in theme */
+export interface FontTokens {
+  /** Body/prose font stack */
+  body?: string
+  /** Monospace font stack */
+  mono?: string
+  /** Heading font stack (defaults to body font) */
+  heading?: string
+}
+
+/** Logo image configuration */
+export interface LogoConfig {
+  /** Path or URL to the logo image */
+  src: string
+  /** Alt text for the logo image */
+  alt?: string
+  /** Logo display width in pixels (default: 32) */
+  width?: number
+  /** Logo display height in pixels (default: 32) */
+  height?: number
+}
+
 export interface ThemeConfig {
   /**
    * Rendering mode for markdown content.
@@ -58,8 +96,35 @@ export interface ThemeConfig {
   /** Custom React components to override default element rendering */
   components?: ComponentOverrides
 
-  /** Custom CSS file path or URL to use instead of default theme */
+  /**
+   * Inline CSS string appended after the built-in theme styles.
+   * Use this for small tweaks. For full replacement, set builtinCss: false.
+   */
   customCss?: string
+
+  /** URL to an external stylesheet loaded via <link rel="stylesheet"> */
+  customCssUrl?: string
+
+  /**
+   * Include the built-in theme CSS. Set to false to strip all default
+   * styles and start from a blank slate. (default: true)
+   */
+  builtinCss?: boolean
+
+  /** Light mode CSS color token overrides */
+  colors?: ColorTokens
+
+  /** Dark mode CSS color token overrides */
+  colorsDark?: ColorTokens
+
+  /** Font stack overrides */
+  fonts?: FontTokens
+
+  /** Logo image displayed in the nav header */
+  logo?: LogoConfig
+
+  /** Site name / text logo displayed in the nav header */
+  logoText?: string
 
   /** Show navigation sidebar */
   showNav: boolean

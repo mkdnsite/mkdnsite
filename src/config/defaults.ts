@@ -12,6 +12,7 @@ export const DEFAULT_CONFIG: MkdnSiteConfig = {
   },
   theme: {
     mode: 'prose',
+    builtinCss: true,
     showNav: true,
     showToc: true,
     colorScheme: 'system',

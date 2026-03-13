@@ -34,6 +34,18 @@ function parseArgs (args: string[]): Partial<MkdnSiteConfig> {
       result.theme = { ...(result.theme as object ?? {}), colorScheme: args[++i] }
     } else if (arg === '--theme-mode') {
       result.theme = { ...(result.theme as object ?? {}), mode: args[++i] }
+    } else if (arg === '--accent') {
+      result.theme = { ...(result.theme as object ?? {}), colors: { ...((result.theme as Record<string, unknown>)?.colors as object ?? {}), accent: args[++i] } }
+    } else if (arg === '--logo') {
+      result.theme = { ...(result.theme as object ?? {}), logo: { ...((result.theme as Record<string, unknown>)?.logo as object ?? {}), src: args[++i] } }
+    } else if (arg === '--logo-text') {
+      result.theme = { ...(result.theme as object ?? {}), logoText: args[++i] }
+    } else if (arg === '--custom-css') {
+      result.theme = { ...(result.theme as object ?? {}), customCss: args[++i] }
+    } else if (arg === '--custom-css-url') {
+      result.theme = { ...(result.theme as object ?? {}), customCssUrl: args[++i] }
+    } else if (arg === '--no-builtin-css') {
+      result.theme = { ...(result.theme as object ?? {}), builtinCss: false }
     } else if (arg === '--renderer') {
       result.renderer = args[++i]
     } else if (arg === '--static') {
@@ -69,6 +81,12 @@ function printHelp (): void {
     --static <dir>        Directory for static assets
     --color-scheme <val>  Color scheme: system (default), light, or dark
     --theme-mode <mode>   Theme mode: prose (default) or components
+    --accent <color>      Accent color CSS value (sets theme.colors.accent)
+    --logo <path>         Logo image path or URL (sets theme.logo.src)
+    --logo-text <text>    Site name / text logo in nav header
+    --custom-css <css>    Inline CSS appended after built-in styles
+    --custom-css-url <url> External stylesheet URL loaded via <link>
+    --no-builtin-css      Strip built-in CSS (start from blank slate)
     --no-nav              Disable navigation sidebar
     --no-llms-txt         Disable /llms.txt generation
     --no-negotiate        Disable content negotiation

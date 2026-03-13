@@ -1,5 +1,5 @@
 /**
- * Default theme CSS for mkdnsite.
+ * Base theme CSS for mkdnsite.
  *
  * Inspired by @tailwindcss/typography prose styles and GitHub's
  * markdown rendering. Designed to look beautiful out of the box
@@ -9,13 +9,13 @@
  * child elements rendered from markdown. The layout classes
  * (.mkdn-layout, .mkdn-nav, .mkdn-main) handle the page chrome.
  *
- * Users can override this entirely via config.theme.customCss.
- * Users on the 'components' theme mode can provide their own
- * Tailwind build with custom component styling.
+ * Users can extend this via config.theme.colors/fonts/customCss or
+ * replace it entirely via config.theme.builtinCss: false.
  */
-export const THEME_CSS = `
+export const BASE_THEME_CSS = `
 :root {
   --mkdn-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  --mkdn-font-heading: var(--mkdn-font);
   --mkdn-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --mkdn-text: #1f2328;
   --mkdn-text-muted: #656d76;
@@ -116,9 +116,22 @@ body {
 }
 .mkdn-footer a { color: var(--mkdn-link); }
 
+/* ---- Nav header (logo + site name) ---- */
+.mkdn-nav-header {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0 1rem 1rem; margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--mkdn-border);
+  text-decoration: none; color: var(--mkdn-text);
+}
+.mkdn-nav-header:hover { color: var(--mkdn-text); }
+.mkdn-nav-logo { display: block; flex-shrink: 0; }
+.mkdn-nav-logo img { display: block; border-radius: 4px; }
+.mkdn-nav-title { font-weight: 700; font-size: 0.95rem; line-height: 1.2; }
+
 /* ---- Prose typography (shadcn/Radix-inspired, applied to .mkdn-prose) ---- */
 .mkdn-prose h1, .mkdn-prose h2, .mkdn-prose h3,
 .mkdn-prose h4, .mkdn-prose h5, .mkdn-prose h6 {
+  font-family: var(--mkdn-font-heading);
   scroll-margin-top: 1rem;
   letter-spacing: -0.025em;
   line-height: 1.2;

@@ -22,8 +22,15 @@ export type {
   LinkProps,
   ImageProps,
   CodeBlockProps,
-  InlineCodeProps
+  InlineCodeProps,
+  ColorTokens,
+  FontTokens,
+  LogoConfig
 } from './config/schema.ts'
+
+// Theme utilities
+export { buildThemeCss } from './theme/build-css.ts'
+export { BASE_THEME_CSS } from './theme/base-css.ts'
 
 // Content sources
 export { FilesystemSource } from './content/filesystem.ts'

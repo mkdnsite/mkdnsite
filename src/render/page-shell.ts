@@ -1,6 +1,6 @@
 import type { MkdnSiteConfig } from '../config/schema.ts'
 import type { MarkdownMeta, NavNode } from '../content/types.ts'
-import { THEME_CSS } from '../theme/prose-css.ts'
+import { buildThemeCss } from '../theme/build-css.ts'
 import { CLIENT_SCRIPTS } from '../client/scripts.ts'
 
 interface PageShellProps {
@@ -25,7 +25,7 @@ export function renderPage (props: PageShellProps): string {
   const lang = config.site.lang ?? 'en'
 
   const navHtml = (config.theme.showNav && nav != null)
-    ? renderNav(nav, currentSlug)
+    ? renderNav(nav, currentSlug, config)
     : ''
 
   const clientScripts = config.client.enabled
@@ -61,7 +61,8 @@ export function renderPage (props: PageShellProps): string {
   ${description !== '' ? `<meta name="description" content="${esc(description)}">` : ''}
   <meta name="generator" content="mkdnsite">
   ${config.client.math ? '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css" crossorigin="anonymous">' : ''}
-  <style>${THEME_CSS}</style>
+  <style>${buildThemeCss(config)}</style>
+  ${config.theme.customCssUrl != null ? `<link rel="stylesheet" href="${esc(config.theme.customCssUrl)}">` : ''}
   ${themeInitScript}
 </head>
 <body>
@@ -91,17 +92,32 @@ export function render404 (config: MkdnSiteConfig): string {
   })
 }
 
-function renderNav (node: NavNode, currentSlug: string, depth = 0): string {
+function renderNavHeader (config: MkdnSiteConfig): string {
+  const { logo, logoText } = config.theme
+  if (logo == null && (logoText == null || logoText === '')) return ''
+
+  const imgHtml = logo != null
+    ? `<span class="mkdn-nav-logo"><img src="${esc(logo.src)}" alt="${esc(logo.alt ?? '')}" width="${logo.width ?? 32}" height="${logo.height ?? 32}"></span>`
+    : ''
+  const textHtml = logoText != null && logoText !== ''
+    ? `<span class="mkdn-nav-title">${esc(logoText)}</span>`
+    : ''
+
+  return `<a href="/" class="mkdn-nav-header">${imgHtml}${textHtml}</a>`
+}
+
+function renderNav (node: NavNode, currentSlug: string, config: MkdnSiteConfig, depth = 0): string {
   if (depth === 0) {
-    const items = node.children.map(c => renderNav(c, currentSlug, 1)).join('\n')
-    return `<div class="mkdn-nav-inner"><ul class="mkdn-nav-list">${items}</ul></div>`
+    const header = renderNavHeader(config)
+    const items = node.children.map(c => renderNav(c, currentSlug, config, 1)).join('\n')
+    return `<div class="mkdn-nav-inner">${header}<ul class="mkdn-nav-list">${items}</ul></div>`
   }
 
   const isActive = currentSlug === node.slug
 
   if (node.isSection && node.children.length > 0) {
     const childItems = node.children
-      .map(c => renderNav(c, currentSlug, depth + 1))
+      .map(c => renderNav(c, currentSlug, config, depth + 1))
       .join('\n')
     return `<li class="mkdn-nav-section">
       <span class="mkdn-nav-section-title">${esc(node.title)}</span>
