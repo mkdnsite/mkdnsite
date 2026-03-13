@@ -58,6 +58,10 @@ function renderColorTokens (colors: ColorTokens): string {
   if (colors.bg != null) lines.push(`  --mkdn-bg: ${colors.bg};`)
   if (colors.bgAlt != null) lines.push(`  --mkdn-bg-alt: ${colors.bgAlt};`)
   if (colors.border != null) lines.push(`  --mkdn-border: ${colors.border};`)
+  if (colors.link != null) lines.push(`  --mkdn-link: ${colors.link};`)
+  if (colors.linkHover != null) lines.push(`  --mkdn-link-hover: ${colors.linkHover};`)
+  if (colors.codeBg != null) lines.push(`  --mkdn-code-bg: ${colors.codeBg};`)
+  if (colors.preBg != null) lines.push(`  --mkdn-pre-bg: ${colors.preBg};`)
   return lines.join('\n')
 }
 

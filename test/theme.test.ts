@@ -2,6 +2,7 @@ import { describe, it, expect } from 'bun:test'
 import { buildThemeCss } from '../src/theme/build-css.ts'
 import { BASE_THEME_CSS } from '../src/theme/base-css.ts'
 import { resolveConfig } from '../src/config/defaults.ts'
+import { renderPage } from '../src/render/page-shell.ts'
 
 function makeConfig (theme: object): ReturnType<typeof resolveConfig> {
   return resolveConfig({ theme: theme as never })
@@ -103,7 +104,11 @@ describe('buildThemeCss', () => {
         textMuted: '#c',
         bg: '#d',
         bgAlt: '#e',
-        border: '#f'
+        border: '#f',
+        link: '#1a1a1a',
+        linkHover: '#2b2b2b',
+        codeBg: 'rgba(0,0,0,0.1)',
+        preBg: '#fafafa'
       }
     }))
     expect(css).toContain('--mkdn-accent: #a;')
@@ -112,5 +117,57 @@ describe('buildThemeCss', () => {
     expect(css).toContain('--mkdn-bg: #d;')
     expect(css).toContain('--mkdn-bg-alt: #e;')
     expect(css).toContain('--mkdn-border: #f;')
+    expect(css).toContain('--mkdn-link: #1a1a1a;')
+    expect(css).toContain('--mkdn-link-hover: #2b2b2b;')
+    expect(css).toContain('--mkdn-code-bg: rgba(0,0,0,0.1);')
+    expect(css).toContain('--mkdn-pre-bg: #fafafa;')
+  })
+})
+
+describe('renderPage', () => {
+  const baseConfig = resolveConfig({})
+  const baseMeta = { title: 'Test Page' }
+  const rootNav = { title: 'root', slug: '/', order: 0, children: [], isSection: false }
+
+  it('renders logo and logoText in nav header', () => {
+    const config = makeConfig({
+      logo: { src: '/static/logo.png', alt: 'My Site', width: 40, height: 40 },
+      logoText: 'My Site'
+    })
+    const html = renderPage({ renderedContent: '<p>hello</p>', meta: baseMeta, config, nav: rootNav, currentSlug: '/' })
+    expect(html).toContain('class="mkdn-nav-header"')
+    expect(html).toContain('<img src="/static/logo.png"')
+    expect(html).toContain('alt="My Site"')
+    expect(html).toContain('width="40"')
+    expect(html).toContain('height="40"')
+    expect(html).toContain('<span class="mkdn-nav-title">My Site</span>')
+  })
+
+  it('escapes logo src and logoText in nav header', () => {
+    const config = makeConfig({
+      logo: { src: '/img?a=1&b=2', alt: '<Logo>' },
+      logoText: '<script>alert(1)</script>'
+    })
+    const html = renderPage({ renderedContent: '', meta: baseMeta, config, nav: rootNav, currentSlug: '/' })
+    expect(html).toContain('src="/img?a=1&amp;b=2"')
+    expect(html).toContain('alt="&lt;Logo&gt;"')
+    expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
+  })
+
+  it('emits customCssUrl as a <link rel="stylesheet"> tag', () => {
+    const config = makeConfig({ customCssUrl: 'https://example.com/theme.css' })
+    const html = renderPage({ renderedContent: '', meta: baseMeta, config, currentSlug: '/' })
+    expect(html).toContain('<link rel="stylesheet" href="https://example.com/theme.css">')
+  })
+
+  it('escapes customCssUrl in the link tag', () => {
+    const config = makeConfig({ customCssUrl: 'https://example.com/theme.css?a=1&b=2' })
+    const html = renderPage({ renderedContent: '', meta: baseMeta, config, currentSlug: '/' })
+    expect(html).toContain('href="https://example.com/theme.css?a=1&amp;b=2"')
+  })
+
+  it('omits customCssUrl link when not configured', () => {
+    const html = renderPage({ renderedContent: '', meta: baseMeta, config: baseConfig, currentSlug: '/' })
+    expect(html).not.toContain('customCssUrl')
   })
 })

@@ -46,6 +46,12 @@ function parseArgs (args: string[]): Partial<MkdnSiteConfig> {
       result.theme = { ...(result.theme as object ?? {}), customCssUrl: args[++i] }
     } else if (arg === '--no-builtin-css') {
       result.theme = { ...(result.theme as object ?? {}), builtinCss: false }
+    } else if (arg === '--font-body') {
+      result.theme = { ...(result.theme as object ?? {}), fonts: { ...((result.theme as Record<string, unknown>)?.fonts as object ?? {}), body: args[++i] } }
+    } else if (arg === '--font-mono') {
+      result.theme = { ...(result.theme as object ?? {}), fonts: { ...((result.theme as Record<string, unknown>)?.fonts as object ?? {}), mono: args[++i] } }
+    } else if (arg === '--font-heading') {
+      result.theme = { ...(result.theme as object ?? {}), fonts: { ...((result.theme as Record<string, unknown>)?.fonts as object ?? {}), heading: args[++i] } }
     } else if (arg === '--renderer') {
       result.renderer = args[++i]
     } else if (arg === '--static') {
@@ -87,6 +93,9 @@ function printHelp (): void {
     --custom-css <css>    Inline CSS appended after built-in styles
     --custom-css-url <url> External stylesheet URL loaded via <link>
     --no-builtin-css      Strip built-in CSS (start from blank slate)
+    --font-body <family>  Body/prose font stack (sets theme.fonts.body)
+    --font-mono <family>  Monospace font stack (sets theme.fonts.mono)
+    --font-heading <family> Heading font stack (sets theme.fonts.heading)
     --no-nav              Disable navigation sidebar
     --no-llms-txt         Disable /llms.txt generation
     --no-negotiate        Disable content negotiation

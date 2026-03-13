@@ -61,6 +61,14 @@ export interface ColorTokens {
   bgAlt?: string
   /** Border color */
   border?: string
+  /** Link color */
+  link?: string
+  /** Link hover color */
+  linkHover?: string
+  /** Inline code background */
+  codeBg?: string
+  /** Code block (pre) background */
+  preBg?: string
 }
 
 /** Font stack overrides for the built-in theme */
