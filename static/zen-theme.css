@@ -23,8 +23,8 @@
   --mkdn-bg-alt: #f0e8d5;
   --mkdn-border: #d8c8a0;
   --mkdn-link-hover: #8b4a08;
-  --mkdn-code-bg: rgba(181, 133, 26, 0.10);
-  --mkdn-pre-bg: #1e1710;
+  --mkdn-code-bg: rgba(181, 133, 26, 0.08);
+  --mkdn-pre-bg: #f5f0e6;
   --mkdn-nav-w: 280px;
 }
 

@@ -27,8 +27,8 @@ const config: Partial<MkdnSiteConfig> = {
       border: '#d8c8a0',
       link: '#b5851a',
       linkHover: '#8b4a08',
-      codeBg: 'rgba(181, 133, 26, 0.10)',
-      preBg: '#1e1710'
+      codeBg: 'rgba(181, 133, 26, 0.08)',
+      preBg: '#f5f0e6'
     },
     // Dark mode: deep charcoal with burnished gold
     colorsDark: {
