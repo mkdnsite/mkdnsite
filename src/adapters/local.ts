@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer'
 import type { DeploymentAdapter } from './types.ts'
 import { detectRuntime } from './types.ts'
 import type { MkdnSiteConfig } from '../config/schema.ts'
