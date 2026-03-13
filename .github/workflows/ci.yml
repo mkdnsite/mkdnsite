@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Job 1: Lint, type-check, and test on Bun ────────────────────────────
+  check:
+    name: Lint, Type Check & Test (Bun)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Type check
+        run: bun run tsc
+
+      - name: Test
+        run: bun test
+
+  # ── Job 2: Verify the CLI entry point loads on Node.js 22 ───────────────
+  test-node:
+    name: Verify on Node.js 22
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Verify CLI loads on Node
+        # --experimental-strip-types lets Node run .ts files directly.
+        # --help exits 0 after printing usage, confirming the module graph
+        # parses and imports correctly on Node 22.
+        run: node --experimental-strip-types src/cli.ts --help
+
+  # ── Job 3: Verify type compatibility on Deno 2 ──────────────────────────
+  test-deno:
+    name: Verify on Deno 2
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Verify types on Deno
+        # --unstable-sloppy-imports allows Deno to resolve bare npm specifiers
+        # from node_modules installed by bun. Checks the public API surface.
+        run: deno check --unstable-sloppy-imports src/index.ts
