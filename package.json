@@ -15,7 +15,7 @@
     "./adapters/fly": "./src/adapters/fly.ts"
   },
   "scripts": {
-    "dev": "bun run --watch src/cli.ts ./content",
+    "dev": "bun run --watch src/cli.ts ./content --static ./static --logo /mkdnsite-logo.png --logo-text mkdnsite",
     "dev:themed": "bun run --watch src/cli.ts --config themed.config.ts",
     "dev:light": "bun run --watch src/cli.ts --config themed.config.ts --color-scheme light",
     "dev:dark": "bun run --watch src/cli.ts --config themed.config.ts --color-scheme dark",

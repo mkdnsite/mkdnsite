@@ -1,0 +1,318 @@
+/*
+ * Zen Theme for mkdnsite
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Warm charcoal, gold accents, Playfair Display headings. Same HTML, whole
+ * different soul — proving that CSS custom properties + a bit of craft can
+ * transform a site completely.
+ *
+ * Works with builtinCss: true (layers on top of the base layout).
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
+
+/* ── Light mode token overrides ─────────────────────────────────────────── */
+:root {
+  --mkdn-font: 'Source Sans 3', Georgia, serif;
+  --mkdn-font-heading: 'Playfair Display', Georgia, serif;
+
+  --mkdn-accent: #b5851a;
+  --mkdn-text: #2c1f0f;
+  --mkdn-text-muted: #8a7055;
+  --mkdn-bg: #faf6ee;
+  --mkdn-bg-alt: #f0e8d5;
+  --mkdn-border: #d8c8a0;
+  --mkdn-link-hover: #8b4a08;
+  --mkdn-code-bg: rgba(181, 133, 26, 0.10);
+  --mkdn-pre-bg: #1e1710;
+  --mkdn-nav-w: 280px;
+}
+
+/* ── Dark mode token overrides ──────────────────────────────────────────── */
+[data-theme="dark"] {
+  --mkdn-accent: #d4a82a;
+  --mkdn-text: #ede0c8;
+  --mkdn-text-muted: #9e8868;
+  --mkdn-bg: #17120b;
+  --mkdn-bg-alt: #100d07;
+  --mkdn-border: #3a2e1c;
+  --mkdn-link-hover: #f0c84a;
+  --mkdn-code-bg: rgba(212, 168, 42, 0.12);
+  --mkdn-pre-bg: #0c0904;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --mkdn-accent: #d4a82a;
+    --mkdn-text: #ede0c8;
+    --mkdn-text-muted: #9e8868;
+    --mkdn-bg: #17120b;
+    --mkdn-bg-alt: #100d07;
+    --mkdn-border: #3a2e1c;
+    --mkdn-link-hover: #f0c84a;
+    --mkdn-code-bg: rgba(212, 168, 42, 0.12);
+    --mkdn-pre-bg: #0c0904;
+  }
+}
+
+/* ── Body ───────────────────────────────────────────────────────────────── */
+body {
+  font-size: 17px;
+  font-weight: 300;
+  letter-spacing: 0.01em;
+}
+
+/* ── Nav sidebar ────────────────────────────────────────────────────────── */
+.mkdn-nav {
+  border-right: none;
+  box-shadow: inset -1px 0 0 var(--mkdn-border), 4px 0 24px rgba(0,0,0,0.08);
+}
+
+[data-theme="dark"] .mkdn-nav {
+  box-shadow: inset -1px 0 0 var(--mkdn-border), 4px 0 32px rgba(0,0,0,0.4);
+}
+
+/* Nav header logo area */
+.mkdn-nav-header {
+  padding: 1.25rem 1rem 1rem;
+  border-bottom-color: var(--mkdn-border);
+  font-family: var(--mkdn-font-heading);
+}
+
+.mkdn-nav-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+
+/* Nav links */
+.mkdn-nav-list a {
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+  font-weight: 400;
+  border-radius: 2px;
+  transition: color 0.2s, background 0.2s, border-left-color 0.2s;
+}
+
+.mkdn-nav-list a:hover {
+  color: var(--mkdn-accent);
+  background: transparent;
+}
+
+.mkdn-nav-list li.active > a,
+.mkdn-nav-list a[aria-current="page"] {
+  color: var(--mkdn-accent);
+  background: transparent;
+  font-weight: 600;
+  border-left-color: var(--mkdn-accent);
+}
+
+.mkdn-nav-section-title {
+  font-family: var(--mkdn-font-heading);
+  font-style: italic;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--mkdn-accent);
+  opacity: 0.8;
+  text-transform: none;
+  font-weight: 400;
+}
+
+/* ── Main content ───────────────────────────────────────────────────────── */
+.mkdn-main {
+  padding: 3rem 3.5rem;
+}
+
+@media (max-width: 768px) {
+  .mkdn-main { padding: 2rem 1.25rem; }
+}
+
+/* ── Headings ───────────────────────────────────────────────────────────── */
+.mkdn-prose h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  font-style: italic;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--mkdn-accent);
+  color: var(--mkdn-text);
+}
+
+.mkdn-prose h2 {
+  font-size: 2rem;
+  font-weight: 600;
+  font-style: italic;
+  letter-spacing: -0.02em;
+  margin-top: 3rem;
+  padding-bottom: 0;
+  border-bottom: none;
+  position: relative;
+}
+
+.mkdn-prose h2::after {
+  content: '';
+  display: block;
+  margin-top: 0.4rem;
+  height: 2px;
+  width: 3rem;
+  background: var(--mkdn-accent);
+  border-radius: 1px;
+}
+
+.mkdn-prose h3 {
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--mkdn-accent);
+}
+
+.mkdn-prose h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-style: normal;
+  font-family: var(--mkdn-font);
+  font-size: 0.85rem;
+  color: var(--mkdn-text-muted);
+}
+
+/* ── Prose body text ────────────────────────────────────────────────────── */
+.mkdn-prose p {
+  line-height: 1.85;
+  font-weight: 300;
+}
+
+/* ── Links ──────────────────────────────────────────────────────────────── */
+.mkdn-prose a {
+  text-decoration-color: var(--mkdn-accent);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: color 0.15s, text-decoration-color 0.15s;
+}
+
+.mkdn-prose a:hover {
+  color: var(--mkdn-accent);
+  text-decoration-color: currentColor;
+}
+
+/* ── Blockquotes: pull-quote style ─────────────────────────────────────── */
+.mkdn-prose blockquote {
+  border-left: none;
+  font-style: italic;
+  font-family: var(--mkdn-font-heading);
+  font-size: 1.25rem;
+  line-height: 1.6;
+  font-weight: 400;
+  color: var(--mkdn-text);
+  padding: 1.25rem 2rem 1.25rem 3.5rem;
+  margin: 2.5rem 0;
+  position: relative;
+  background: var(--mkdn-bg-alt);
+  border-radius: 4px;
+  box-shadow: inset 4px 0 0 var(--mkdn-accent);
+}
+
+.mkdn-prose blockquote::before {
+  content: '\201C';
+  font-family: var(--mkdn-font-heading);
+  font-size: 5rem;
+  line-height: 1;
+  color: var(--mkdn-accent);
+  opacity: 0.35;
+  position: absolute;
+  top: -0.25rem;
+  left: 0.5rem;
+  font-style: normal;
+}
+
+/* ── Code blocks ────────────────────────────────────────────────────────── */
+.mkdn-prose code {
+  font-size: 0.85rem;
+  font-weight: 400;
+  background: var(--mkdn-code-bg);
+  border: 1px solid var(--mkdn-border);
+  border-radius: 3px;
+  padding: 0.15rem 0.35rem;
+}
+
+.mkdn-prose pre {
+  border-radius: 6px;
+  border: 1px solid var(--mkdn-border);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15), 0 1px 4px rgba(0,0,0,0.1);
+  margin: 2rem 0;
+  padding: 1.25rem 1.5rem;
+}
+
+[data-theme="dark"] .mkdn-prose pre {
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.mkdn-prose pre code {
+  font-size: 0.875rem;
+}
+
+/* ── Tables ─────────────────────────────────────────────────────────────── */
+.mkdn-table-wrapper {
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.08);
+}
+
+.mkdn-prose th {
+  background: var(--mkdn-accent);
+  color: #fff;
+  font-family: var(--mkdn-font);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.7rem 1rem;
+}
+
+[data-theme="dark"] .mkdn-prose th {
+  color: #1a1208;
+}
+
+.mkdn-prose tbody tr:nth-child(even) {
+  background: var(--mkdn-bg-alt);
+}
+
+/* ── Horizontal rule ────────────────────────────────────────────────────── */
+.mkdn-prose hr {
+  border: none;
+  height: 2px;
+  background: linear-gradient(to right, transparent, var(--mkdn-accent), transparent);
+  margin: 3rem auto;
+  max-width: 80%;
+  opacity: 0.5;
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────────── */
+.mkdn-footer {
+  font-family: var(--mkdn-font-heading);
+  font-style: italic;
+  font-size: 0.85rem;
+  border-top-color: var(--mkdn-accent);
+  border-top-width: 1px;
+  opacity: 0.7;
+}
+
+/* ── Theme toggle ───────────────────────────────────────────────────────── */
+.mkdn-theme-toggle {
+  border-radius: 50%;
+  border-color: var(--mkdn-border);
+  transition: color 0.2s, background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.mkdn-theme-toggle:hover {
+  box-shadow: 0 0 0 3px rgba(181, 133, 26, 0.25);
+  border-color: var(--mkdn-accent);
+}
+
+[data-theme="dark"] .mkdn-theme-toggle:hover {
+  box-shadow: 0 0 0 3px rgba(212, 168, 42, 0.25);
+}

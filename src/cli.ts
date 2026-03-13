@@ -97,7 +97,7 @@ function printHelp (): void {
     --color-scheme <val>  Color scheme: system (default), light, or dark
     --theme-mode <mode>   Theme mode: prose (default) or components
     --accent <color>      Accent color CSS value (sets theme.colors.accent)
-    --logo <path>         Logo image path or URL (sets theme.logo.src)
+    --logo <url-path>     Logo image URL path, e.g. /logo.svg (sets theme.logo.src)
     --logo-text <text>    Site name / text logo in nav header
     --custom-css <css>    Inline CSS appended after built-in styles
     --custom-css-url <url> External stylesheet URL loaded via <link>

@@ -9,6 +9,7 @@ const config: Partial<MkdnSiteConfig> = {
   staticDir: './static',
   theme: {
     mode: 'prose',
+    builtinCss: true,
     logo: {
       src: '/mkdnsite-logo.png',
       alt: 'mkdnsite',
@@ -16,20 +17,38 @@ const config: Partial<MkdnSiteConfig> = {
       height: 32
     },
     logoText: 'mkdnsite',
+    // Light mode: warm parchment with gold/amber accent
     colors: {
-      accent: '#7c3aed',
-      text: '#1c1917',
-      bg: '#ffffff',
-      bgAlt: '#fafaf9',
-      border: '#e7e5e4'
+      accent: '#b5851a',
+      text: '#2c1f0f',
+      textMuted: '#8a7055',
+      bg: '#faf6ee',
+      bgAlt: '#f0e8d5',
+      border: '#d8c8a0',
+      link: '#b5851a',
+      linkHover: '#8b4a08',
+      codeBg: 'rgba(181, 133, 26, 0.10)',
+      preBg: '#1e1710'
     },
+    // Dark mode: deep charcoal with burnished gold
     colorsDark: {
-      accent: '#a78bfa',
-      text: '#f5f5f4',
-      bg: '#0c0a09',
-      bgAlt: '#1c1917',
-      border: '#292524'
+      accent: '#d4a82a',
+      text: '#ede0c8',
+      textMuted: '#9e8868',
+      bg: '#17120b',
+      bgAlt: '#100d07',
+      border: '#3a2e1c',
+      link: '#d4a82a',
+      linkHover: '#f0c84a',
+      codeBg: 'rgba(212, 168, 42, 0.12)',
+      preBg: '#0c0904'
     },
+    fonts: {
+      body: "'Source Sans 3', Georgia, serif",
+      heading: "'Playfair Display', Georgia, serif",
+      mono: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace"
+    },
+    customCssUrl: '/zen-theme.css',
     showNav: true,
     showToc: true,
     colorScheme: 'system'
