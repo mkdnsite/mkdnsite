@@ -147,7 +147,7 @@ export interface ThemeConfig {
   colorScheme: 'system' | 'light' | 'dark'
 
   /** Syntax highlighting theme for Shiki */
-  syntaxTheme: string
+  syntaxTheme?: string
 
   /** Dark mode syntax highlighting theme */
   syntaxThemeDark?: string

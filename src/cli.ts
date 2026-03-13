@@ -6,13 +6,21 @@ import type { MkdnSiteConfig } from './config/schema.ts'
 import { LocalAdapter } from './adapters/local.ts'
 import { createHandler } from './handler.ts'
 
-function parseArgs (args: string[]): Partial<MkdnSiteConfig> {
+interface ParsedArgs {
+  config: Partial<MkdnSiteConfig>
+  configPath?: string
+}
+
+function parseArgs (args: string[]): ParsedArgs {
   const result: Record<string, unknown> = {}
+  let configPath: string | undefined
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]
 
-    if (arg === '--port' || arg === '-p') {
+    if (arg === '--config') {
+      configPath = args[++i]
+    } else if (arg === '--port' || arg === '-p') {
       result.server = { ...(result.server as object ?? {}), port: parseInt(args[++i], 10) }
     } else if (arg === '--title') {
       result.site = { ...(result.site as object ?? {}), title: args[++i] }
@@ -67,7 +75,7 @@ function parseArgs (args: string[]): Partial<MkdnSiteConfig> {
     }
   }
 
-  return result as Partial<MkdnSiteConfig>
+  return { config: result as Partial<MkdnSiteConfig>, configPath }
 }
 
 function printHelp (): void {
@@ -81,6 +89,7 @@ function printHelp (): void {
     directory             Path to markdown content (default: ./content)
 
   Options:
+    --config <path>       Path to config file (default: mkdnsite.config.ts)
     -p, --port <n>        Port to listen on (default: 3000)
     --title <text>        Site title
     --url <url>           Base URL for absolute links
@@ -118,13 +127,16 @@ function printHelp (): void {
 
 async function main (): Promise<void> {
   const args = process.argv.slice(2)
-  const cliConfig = parseArgs(args)
+  const { config: cliConfig, configPath: cliConfigPath } = parseArgs(args)
 
-  // Try to load mkdnsite.config.ts from cwd
+  // Try to load config file: use --config path if provided, else auto-detect mkdnsite.config.ts
   let fileConfig: Partial<MkdnSiteConfig> = {}
   try {
-    const configPath = resolve('mkdnsite.config.ts')
-    await access(configPath)
+    const configPath = cliConfigPath != null ? resolve(cliConfigPath) : resolve('mkdnsite.config.ts')
+    if (cliConfigPath == null) {
+      // Only auto-detect if file exists; don't error if absent
+      await access(configPath)
+    }
     const mod = await import(configPath)
     fileConfig = mod.default ?? mod
   } catch {

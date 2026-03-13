@@ -16,9 +16,9 @@
   },
   "scripts": {
     "dev": "bun run --watch src/cli.ts ./content",
-    "dev:themed": "bun run --watch src/cli.ts",
-    "dev:light": "bun run --watch src/cli.ts --color-scheme light",
-    "dev:dark": "bun run --watch src/cli.ts --color-scheme dark",
+    "dev:themed": "bun run --watch src/cli.ts --config themed.config.ts",
+    "dev:light": "bun run --watch src/cli.ts --config themed.config.ts --color-scheme light",
+    "dev:dark": "bun run --watch src/cli.ts --config themed.config.ts --color-scheme dark",
     "start": "bun run src/cli.ts",
     "test": "bun test",
     "lint": "ts-standard src/ test/",

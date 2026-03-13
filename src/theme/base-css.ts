@@ -17,46 +17,46 @@ export const BASE_THEME_CSS = `
   --mkdn-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
   --mkdn-font-heading: var(--mkdn-font);
   --mkdn-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --mkdn-accent: #0969da;
   --mkdn-text: #1f2328;
   --mkdn-text-muted: #656d76;
   --mkdn-bg: #ffffff;
   --mkdn-bg-alt: #f6f8fa;
   --mkdn-border: #d0d7de;
-  --mkdn-link: #0969da;
+  --mkdn-link: var(--mkdn-accent);
   --mkdn-link-hover: #0550ae;
   --mkdn-code-bg: rgba(175, 184, 193, 0.2);
   --mkdn-pre-bg: #f6f8fa;
   --mkdn-nav-w: 260px;
   --mkdn-content-max: 880px;
-  --mkdn-accent: #0969da;
 }
 
 [data-theme="dark"] {
+  --mkdn-accent: #58a6ff;
   --mkdn-text: #e6edf3;
   --mkdn-text-muted: #8d96a0;
   --mkdn-bg: #0d1117;
   --mkdn-bg-alt: #161b22;
   --mkdn-border: #30363d;
-  --mkdn-link: #58a6ff;
+  --mkdn-link: var(--mkdn-accent);
   --mkdn-link-hover: #79c0ff;
   --mkdn-code-bg: rgba(110, 118, 129, 0.4);
   --mkdn-pre-bg: #161b22;
-  --mkdn-accent: #58a6ff;
 }
 
 /* No-JS fallback: respect system preference */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
+    --mkdn-accent: #58a6ff;
     --mkdn-text: #e6edf3;
     --mkdn-text-muted: #8d96a0;
     --mkdn-bg: #0d1117;
     --mkdn-bg-alt: #161b22;
     --mkdn-border: #30363d;
-    --mkdn-link: #58a6ff;
+    --mkdn-link: var(--mkdn-accent);
     --mkdn-link-hover: #79c0ff;
     --mkdn-code-bg: rgba(110, 118, 129, 0.4);
     --mkdn-pre-bg: #161b22;
-    --mkdn-accent: #58a6ff;
   }
 }
 
@@ -70,6 +70,11 @@ body {
   color: var(--mkdn-text);
   background: var(--mkdn-bg);
   line-height: 1.6;
+}
+
+:focus-visible {
+  outline: 2px solid var(--mkdn-accent);
+  outline-offset: 2px;
 }
 
 /* ---- Layout ---- */
@@ -94,6 +99,8 @@ body {
 .mkdn-nav-list li.active > a,
 .mkdn-nav-list a[aria-current="page"] {
   color: var(--mkdn-text); background: var(--mkdn-code-bg); font-weight: 600;
+  border-left: 2px solid var(--mkdn-accent);
+  padding-left: calc(0.75rem - 2px);
 }
 .mkdn-nav-section-title {
   display: block; padding: 0.5rem 0.75rem 0.2rem;
