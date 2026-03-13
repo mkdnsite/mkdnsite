@@ -125,6 +125,18 @@ export class FilesystemSource implements ContentSource {
     }
   }
 
+  private async dirHasIndex (dir: string): Promise<boolean> {
+    for (const name of ['index.md', 'README.md', 'readme.md']) {
+      try {
+        await stat(join(dir, name))
+        return true
+      } catch {
+        continue
+      }
+    }
+    return false
+  }
+
   private filePathToSlug (relPath: string): string {
     let slug = relPath.replace(/\.md$/, '')
 
@@ -165,7 +177,11 @@ export class FilesystemSource implements ContentSource {
 
       if (entry.isDirectory()) {
         const subtree = await this.buildNavTree(fullPath, childSlug)
-        children.push(subtree)
+        // Only include directories that have navigable content:
+        // either at least one child page/section, or their own index.md
+        if (subtree.children.length > 0 || await this.dirHasIndex(fullPath)) {
+          children.push(subtree)
+        }
       } else if (
         entry.isFile() &&
         extname(entry.name) === '.md' &&

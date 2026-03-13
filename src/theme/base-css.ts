@@ -1,5 +1,5 @@
 /**
- * Default theme CSS for mkdnsite.
+ * Base theme CSS for mkdnsite.
  *
  * Inspired by @tailwindcss/typography prose styles and GitHub's
  * markdown rendering. Designed to look beautiful out of the box
@@ -9,54 +9,54 @@
  * child elements rendered from markdown. The layout classes
  * (.mkdn-layout, .mkdn-nav, .mkdn-main) handle the page chrome.
  *
- * Users can override this entirely via config.theme.customCss.
- * Users on the 'components' theme mode can provide their own
- * Tailwind build with custom component styling.
+ * Users can extend this via config.theme.colors/fonts/customCss or
+ * replace it entirely via config.theme.builtinCss: false.
  */
-export const THEME_CSS = `
+export const BASE_THEME_CSS = `
 :root {
   --mkdn-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  --mkdn-font-heading: var(--mkdn-font);
   --mkdn-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --mkdn-accent: #0969da;
   --mkdn-text: #1f2328;
   --mkdn-text-muted: #656d76;
   --mkdn-bg: #ffffff;
   --mkdn-bg-alt: #f6f8fa;
   --mkdn-border: #d0d7de;
-  --mkdn-link: #0969da;
+  --mkdn-link: var(--mkdn-accent);
   --mkdn-link-hover: #0550ae;
   --mkdn-code-bg: rgba(175, 184, 193, 0.2);
   --mkdn-pre-bg: #f6f8fa;
   --mkdn-nav-w: 260px;
   --mkdn-content-max: 880px;
-  --mkdn-accent: #0969da;
 }
 
 [data-theme="dark"] {
+  --mkdn-accent: #58a6ff;
   --mkdn-text: #e6edf3;
   --mkdn-text-muted: #8d96a0;
   --mkdn-bg: #0d1117;
   --mkdn-bg-alt: #161b22;
   --mkdn-border: #30363d;
-  --mkdn-link: #58a6ff;
+  --mkdn-link: var(--mkdn-accent);
   --mkdn-link-hover: #79c0ff;
   --mkdn-code-bg: rgba(110, 118, 129, 0.4);
   --mkdn-pre-bg: #161b22;
-  --mkdn-accent: #58a6ff;
 }
 
 /* No-JS fallback: respect system preference */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
+    --mkdn-accent: #58a6ff;
     --mkdn-text: #e6edf3;
     --mkdn-text-muted: #8d96a0;
     --mkdn-bg: #0d1117;
     --mkdn-bg-alt: #161b22;
     --mkdn-border: #30363d;
-    --mkdn-link: #58a6ff;
+    --mkdn-link: var(--mkdn-accent);
     --mkdn-link-hover: #79c0ff;
     --mkdn-code-bg: rgba(110, 118, 129, 0.4);
     --mkdn-pre-bg: #161b22;
-    --mkdn-accent: #58a6ff;
   }
 }
 
@@ -70,6 +70,11 @@ body {
   color: var(--mkdn-text);
   background: var(--mkdn-bg);
   line-height: 1.6;
+}
+
+:focus-visible {
+  outline: 2px solid var(--mkdn-accent);
+  outline-offset: 2px;
 }
 
 /* ---- Layout ---- */
@@ -94,6 +99,8 @@ body {
 .mkdn-nav-list li.active > a,
 .mkdn-nav-list a[aria-current="page"] {
   color: var(--mkdn-text); background: var(--mkdn-code-bg); font-weight: 600;
+  border-left: 2px solid var(--mkdn-accent);
+  padding-left: calc(0.75rem - 2px);
 }
 .mkdn-nav-section-title {
   display: block; padding: 0.5rem 0.75rem 0.2rem;
@@ -116,9 +123,22 @@ body {
 }
 .mkdn-footer a { color: var(--mkdn-link); }
 
+/* ---- Nav header (logo + site name) ---- */
+.mkdn-nav-header {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0 1rem 1rem; margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--mkdn-border);
+  text-decoration: none; color: var(--mkdn-text);
+}
+.mkdn-nav-header:hover { color: var(--mkdn-text); }
+.mkdn-nav-logo { display: block; flex-shrink: 0; }
+.mkdn-nav-logo img { display: block; border-radius: 4px; }
+.mkdn-nav-title { font-weight: 700; font-size: 0.95rem; line-height: 1.2; }
+
 /* ---- Prose typography (shadcn/Radix-inspired, applied to .mkdn-prose) ---- */
 .mkdn-prose h1, .mkdn-prose h2, .mkdn-prose h3,
 .mkdn-prose h4, .mkdn-prose h5, .mkdn-prose h6 {
+  font-family: var(--mkdn-font-heading);
   scroll-margin-top: 1rem;
   letter-spacing: -0.025em;
   line-height: 1.2;

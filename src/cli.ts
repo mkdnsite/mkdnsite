@@ -6,13 +6,21 @@ import type { MkdnSiteConfig } from './config/schema.ts'
 import { LocalAdapter } from './adapters/local.ts'
 import { createHandler } from './handler.ts'
 
-function parseArgs (args: string[]): Partial<MkdnSiteConfig> {
+interface ParsedArgs {
+  config: Partial<MkdnSiteConfig>
+  configPath?: string
+}
+
+function parseArgs (args: string[]): ParsedArgs {
   const result: Record<string, unknown> = {}
+  let configPath: string | undefined
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]
 
-    if (arg === '--port' || arg === '-p') {
+    if (arg === '--config') {
+      configPath = args[++i]
+    } else if (arg === '--port' || arg === '-p') {
       result.server = { ...(result.server as object ?? {}), port: parseInt(args[++i], 10) }
     } else if (arg === '--title') {
       result.site = { ...(result.site as object ?? {}), title: args[++i] }
@@ -34,6 +42,24 @@ function parseArgs (args: string[]): Partial<MkdnSiteConfig> {
       result.theme = { ...(result.theme as object ?? {}), colorScheme: args[++i] }
     } else if (arg === '--theme-mode') {
       result.theme = { ...(result.theme as object ?? {}), mode: args[++i] }
+    } else if (arg === '--accent') {
+      result.theme = { ...(result.theme as object ?? {}), colors: { ...((result.theme as Record<string, unknown>)?.colors as object ?? {}), accent: args[++i] } }
+    } else if (arg === '--logo') {
+      result.theme = { ...(result.theme as object ?? {}), logo: { ...((result.theme as Record<string, unknown>)?.logo as object ?? {}), src: args[++i] } }
+    } else if (arg === '--logo-text') {
+      result.theme = { ...(result.theme as object ?? {}), logoText: args[++i] }
+    } else if (arg === '--custom-css') {
+      result.theme = { ...(result.theme as object ?? {}), customCss: args[++i] }
+    } else if (arg === '--custom-css-url') {
+      result.theme = { ...(result.theme as object ?? {}), customCssUrl: args[++i] }
+    } else if (arg === '--no-builtin-css') {
+      result.theme = { ...(result.theme as object ?? {}), builtinCss: false }
+    } else if (arg === '--font-body') {
+      result.theme = { ...(result.theme as object ?? {}), fonts: { ...((result.theme as Record<string, unknown>)?.fonts as object ?? {}), body: args[++i] } }
+    } else if (arg === '--font-mono') {
+      result.theme = { ...(result.theme as object ?? {}), fonts: { ...((result.theme as Record<string, unknown>)?.fonts as object ?? {}), mono: args[++i] } }
+    } else if (arg === '--font-heading') {
+      result.theme = { ...(result.theme as object ?? {}), fonts: { ...((result.theme as Record<string, unknown>)?.fonts as object ?? {}), heading: args[++i] } }
     } else if (arg === '--renderer') {
       result.renderer = args[++i]
     } else if (arg === '--static') {
@@ -49,7 +75,7 @@ function parseArgs (args: string[]): Partial<MkdnSiteConfig> {
     }
   }
 
-  return result as Partial<MkdnSiteConfig>
+  return { config: result as Partial<MkdnSiteConfig>, configPath }
 }
 
 function printHelp (): void {
@@ -63,12 +89,22 @@ function printHelp (): void {
     directory             Path to markdown content (default: ./content)
 
   Options:
+    --config <path>       Path to config file (default: mkdnsite.config.ts)
     -p, --port <n>        Port to listen on (default: 3000)
     --title <text>        Site title
     --url <url>           Base URL for absolute links
     --static <dir>        Directory for static assets
     --color-scheme <val>  Color scheme: system (default), light, or dark
     --theme-mode <mode>   Theme mode: prose (default) or components
+    --accent <color>      Accent color CSS value (sets theme.colors.accent)
+    --logo <url-path>     Logo image URL path, e.g. /logo.svg (sets theme.logo.src)
+    --logo-text <text>    Site name / text logo in nav header
+    --custom-css <css>    Inline CSS appended after built-in styles
+    --custom-css-url <url> External stylesheet URL loaded via <link>
+    --no-builtin-css      Strip built-in CSS (start from blank slate)
+    --font-body <family>  Body/prose font stack (sets theme.fonts.body)
+    --font-mono <family>  Monospace font stack (sets theme.fonts.mono)
+    --font-heading <family> Heading font stack (sets theme.fonts.heading)
     --no-nav              Disable navigation sidebar
     --no-llms-txt         Disable /llms.txt generation
     --no-negotiate        Disable content negotiation
@@ -91,13 +127,16 @@ function printHelp (): void {
 
 async function main (): Promise<void> {
   const args = process.argv.slice(2)
-  const cliConfig = parseArgs(args)
+  const { config: cliConfig, configPath: cliConfigPath } = parseArgs(args)
 
-  // Try to load mkdnsite.config.ts from cwd
+  // Try to load config file: use --config path if provided, else auto-detect mkdnsite.config.ts
   let fileConfig: Partial<MkdnSiteConfig> = {}
   try {
-    const configPath = resolve('mkdnsite.config.ts')
-    await access(configPath)
+    const configPath = cliConfigPath != null ? resolve(cliConfigPath) : resolve('mkdnsite.config.ts')
+    if (cliConfigPath == null) {
+      // Only auto-detect if file exists; don't error if absent
+      await access(configPath)
+    }
     const mod = await import(configPath)
     fileConfig = mod.default ?? mod
   } catch {
