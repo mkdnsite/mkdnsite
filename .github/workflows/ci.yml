@@ -76,3 +76,9 @@ jobs:
         # --unstable-sloppy-imports allows Deno to resolve bare npm specifiers
         # from node_modules installed by bun. Checks the public API surface.
         run: deno check --unstable-sloppy-imports src/index.ts
+
+      - name: Verify CLI runs on Deno
+        # --help exits 0 after printing usage, confirming the full module
+        # graph loads and executes on Deno. --no-prompt prevents interactive
+        # permission prompts in CI.
+        run: deno run --allow-read --allow-net --allow-env --allow-sys --unstable-sloppy-imports --no-prompt src/cli.ts --help
