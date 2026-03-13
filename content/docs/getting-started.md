@@ -12,7 +12,11 @@ order: 1
 bun add -g mkdnsite
 ```
 
-## Quick Start
+Also works with Node 22+ and Deno 2.
+
+## Quick start
+
+Create a directory of Markdown files:
 
 ```
 my-site/
@@ -23,24 +27,53 @@ my-site/
     └── api.md        → /docs/api
 ```
 
+Start the server:
+
 ```bash
 mkdnsite ./my-site
 ```
 
-Visit `http://localhost:3000`.
+Visit `http://localhost:3000`. Your Markdown is live, with nav sidebar, dark mode, and syntax highlighting — zero configuration needed.
 
-## Content Negotiation
+## Content negotiation
+
+mkdnsite serves different formats from the same URL based on the `Accept` header:
 
 ```bash
-curl http://localhost:3000                              # HTML
-curl -H "Accept: text/markdown" http://localhost:3000   # Markdown
-curl http://localhost:3000/docs/getting-started.md       # Markdown via .md
+curl http://localhost:3000                              # HTML (browser)
+curl -H "Accept: text/markdown" http://localhost:3000   # Markdown (AI agent)
+curl http://localhost:3000/docs/getting-started.md       # Markdown via .md suffix
 curl http://localhost:3000/llms.txt                      # AI content index
 ```
 
-## Mermaid Diagrams
+See [Content Negotiation](/docs/content-negotiation) for details.
 
-Fenced code blocks with `mermaid` language are rendered as diagrams:
+## Configuration
+
+Create `mkdnsite.config.ts` for persistent settings:
+
+```typescript
+import type { MkdnSiteConfig } from 'mkdnsite'
+
+const config: Partial<MkdnSiteConfig> = {
+  site: {
+    title: 'My Docs',
+    description: 'Documentation for my project.'
+  },
+  theme: {
+    colors: { accent: '#7c3aed' },
+    colorsDark: { accent: '#a78bfa' }
+  }
+}
+
+export default config
+```
+
+See [Configuration](/docs/configuration) for the full reference, or [CLI Reference](/docs/cli) for all command-line flags.
+
+## Mermaid diagrams
+
+Fenced code blocks with the `mermaid` language tag are rendered as diagrams:
 
 ```mermaid
 graph TD
@@ -50,3 +83,25 @@ graph TD
     C --> E[Browser]
     D --> F[AI Agent]
 ```
+
+## Custom theming
+
+Quick accent color override:
+
+```bash
+mkdnsite ./content --accent "#e11d48"
+```
+
+For full control — custom colors, fonts, logo, and external stylesheets — see [Theming](/docs/theming).
+
+## Next steps
+
+| | |
+|---|---|
+| [Configuration](/docs/configuration) | All config options explained |
+| [CLI Reference](/docs/cli) | Every flag with examples |
+| [Content Negotiation](/docs/content-negotiation) | How HTTP negotiation works |
+| [Theming](/docs/theming) | Colors, fonts, logos, CSS overrides |
+| [Frontmatter](/docs/frontmatter) | Page metadata reference |
+| [Architecture](/docs/architecture) | Design and extension points |
+| [Element Examples](/docs/elements) | Visual showcase of all Markdown elements |
