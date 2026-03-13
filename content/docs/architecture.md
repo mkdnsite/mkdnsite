@@ -26,10 +26,10 @@ Where content comes from. The handler doesn't care about filesystems or APIs —
 
 ```typescript
 interface ContentSource {
-  getPage(slug: string): Promise<ContentPage | null>
-  getNavTree(): Promise<NavNode>
-  listPages(): Promise<ContentPage[]>
-  refresh(): Promise<void>
+  getPage: (slug: string) => Promise<ContentPage | null>
+  getNavTree: () => Promise<NavNode>
+  listPages: () => Promise<ContentPage[]>
+  refresh: () => Promise<void>
 }
 ```
 
@@ -46,9 +46,13 @@ How Markdown becomes React elements. Swap the rendering engine without touching 
 
 ```typescript
 interface MarkdownRenderer {
-  render(markdown: string, options: RendererOptions): Promise<ReactElement>
+  readonly engine: RendererEngine
+  renderToElement: (markdown: string, overrides?: ComponentOverrides) => ReactElement
+  renderToHtml: (markdown: string, overrides?: ComponentOverrides) => string
 }
 ```
+
+`renderToElement` returns a React element tree for use with `renderToString()`. `renderToHtml` is a convenience method that combines both steps. Both are synchronous.
 
 | Implementation | Status | Description |
 |----------------|--------|-------------|
@@ -61,12 +65,17 @@ Environment-specific wiring. Creates the content source, configures the renderer
 
 ```typescript
 interface DeploymentAdapter {
-  name: string
-  createContentSource(config: MkdnSiteConfig): ContentSource
-  createRenderer(config: MkdnSiteConfig): Promise<MarkdownRenderer>
-  start(handler: FetchHandler, config: MkdnSiteConfig): Promise<void>
+  readonly name: string
+  createContentSource: (config: MkdnSiteConfig) => ContentSource
+  createRenderer: (config: MkdnSiteConfig) => Promise<MarkdownRenderer>
+  start?: (
+    handler: (request: Request) => Promise<Response>,
+    config: MkdnSiteConfig
+  ) => Promise<(() => void) | undefined>
 }
 ```
+
+`start` is optional — serverless adapters (Cloudflare, Vercel) omit it and export the handler directly. Local and Fly adapters implement it to bind a port.
 
 | Implementation | Status | Description |
 |----------------|--------|-------------|
@@ -220,11 +229,19 @@ class MySource implements ContentSource {
 Then pass it to `createHandler`:
 
 ```typescript
-import { createHandler, resolveConfig } from 'mkdnsite'
+import { createHandler, createRenderer, resolveConfig } from 'mkdnsite'
 
 const config = resolveConfig({ site: { title: 'My Site' } })
 const source = new MySource()
-const renderer = await createRenderer(config)
+
+// createRenderer takes a RendererEngine string or RendererOptions object
+const renderer = await createRenderer({
+  engine: 'portable',
+  syntaxTheme: 'github-light',
+  syntaxThemeDark: 'github-dark',
+  math: true
+})
+
 const handler = createHandler({ source, renderer, config })
 ```
 

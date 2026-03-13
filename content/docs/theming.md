@@ -97,7 +97,7 @@ theme: {
 
 ### Dark mode selectors
 
-Dark mode overrides use three selectors to ensure correctness:
+Dark mode overrides use two selectors to ensure correctness:
 
 ```css
 /* 1. Primary: user has set data-theme="dark" (JS-enabled) */
