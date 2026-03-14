@@ -34,6 +34,26 @@ function parseArgs (args: string[]): ParsedArgs {
       result.site = { ...(result.site as object ?? {}), og: { ...((result.site as Record<string, unknown>)?.og as object ?? {}), twitterCard: args[++i] } }
     } else if (arg === '--twitter-site') {
       result.site = { ...(result.site as object ?? {}), og: { ...((result.site as Record<string, unknown>)?.og as object ?? {}), twitterSite: args[++i] } }
+    } else if (arg === '--preset') {
+      result.preset = args[++i]
+    } else if (arg === '--page-title') {
+      result.theme = { ...(result.theme as object ?? {}), pageTitle: true }
+    } else if (arg === '--no-page-title') {
+      result.theme = { ...(result.theme as object ?? {}), pageTitle: false }
+    } else if (arg === '--page-date') {
+      result.theme = { ...(result.theme as object ?? {}), pageDate: true }
+    } else if (arg === '--no-page-date') {
+      result.theme = { ...(result.theme as object ?? {}), pageDate: false }
+    } else if (arg === '--prev-next') {
+      result.theme = { ...(result.theme as object ?? {}), prevNext: true }
+    } else if (arg === '--no-prev-next') {
+      result.theme = { ...(result.theme as object ?? {}), prevNext: false }
+    } else if (arg === '--reading-time') {
+      result.theme = { ...(result.theme as object ?? {}), readingTime: true }
+    } else if (arg === '--no-reading-time') {
+      result.theme = { ...(result.theme as object ?? {}), readingTime: false }
+    } else if (arg === '--no-toc') {
+      result.theme = { ...(result.theme as object ?? {}), showToc: false }
     } else if (arg === '--no-nav') {
       result.theme = { ...(result.theme as object ?? {}), showNav: false }
     } else if (arg === '--no-llms-txt') {
@@ -117,6 +137,16 @@ function printHelp (): void {
     --font-body <family>  Body/prose font stack (sets theme.fonts.body)
     --font-mono <family>  Monospace font stack (sets theme.fonts.mono)
     --font-heading <family> Heading font stack (sets theme.fonts.heading)
+    --preset <name>       Apply preset: docs or blog
+    --page-title          Render frontmatter title as <h1> above content
+    --no-page-title       Disable page title rendering
+    --page-date           Render publish/update date from frontmatter
+    --no-page-date        Disable page date rendering
+    --prev-next           Show prev/next page navigation links
+    --no-prev-next        Disable prev/next links
+    --reading-time        Show estimated reading time
+    --no-reading-time     Disable reading time display
+    --no-toc              Disable table of contents sidebar
     --no-nav              Disable navigation sidebar
     --no-llms-txt         Disable /llms.txt generation
     --no-negotiate        Disable content negotiation

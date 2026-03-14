@@ -94,7 +94,7 @@ The page is still accessible at its URL — it's just hidden from navigation and
 date: 2024-01-15
 ```
 
-Publish date. Not currently used in rendering, but available to custom components and future features (sorting by date, "Last updated" display, RSS feeds).
+Publish date. Displayed below the page title when `theme.pageDate` is enabled (via `--page-date` or `--preset blog`). Uses `Intl.DateTimeFormat` with the site's `lang` for locale-aware formatting — so `2024-03-01` renders as "March 1, 2024" for English sites.
 
 ### `updated`
 
@@ -102,7 +102,7 @@ Publish date. Not currently used in rendering, but available to custom component
 updated: 2024-06-01
 ```
 
-Last updated date. Same as `date` — available for use but not currently rendered automatically.
+Last updated date. When `theme.pageDate` is enabled and both `date` and `updated` are present, the rendered output shows both: the publish date followed by "Updated [date]". If only `date` is set, only the publish date appears.
 
 ### `tags`
 
