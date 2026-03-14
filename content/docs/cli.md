@@ -182,9 +182,59 @@ mkdnsite --static ./static --custom-css-url /my-theme.css
 mkdnsite --no-builtin-css --custom-css-url /my-complete-theme.css
 ```
 
+## `mkdnsite mcp` — stdio MCP server
+
+Run mkdnsite as a standalone MCP server over stdio, without starting a web server. Use this to connect AI clients like Claude Desktop directly to your documentation.
+
+```bash
+# Local content directory
+mkdnsite mcp ./content
+
+# GitHub repository
+mkdnsite mcp --github owner/repo
+
+# GitHub repo with specific branch and subdirectory
+mkdnsite mcp --github owner/repo --github-ref v2.0 --github-path docs
+
+# Use a config file
+mkdnsite mcp --config my-docs.config.ts
+```
+
+All the same content source flags work (`--github`, `--github-ref`, `--github-path`, `--github-token`, positional directory argument).
+
+### Claude Desktop configuration
+
+Add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "my-docs": {
+      "command": "mkdnsite",
+      "args": ["mcp", "./path/to/content"]
+    }
+  }
+}
+```
+
+For a GitHub-hosted repo:
+
+```json
+{
+  "mcpServers": {
+    "mkdnsite-docs": {
+      "command": "mkdnsite",
+      "args": ["mcp", "--github", "mkdnsite/mkdnsite"]
+    }
+  }
+}
+```
+
+---
+
 ## MCP server
 
-Controls the built-in [MCP (Model Context Protocol)](/docs/mcp) server.
+Controls the built-in [MCP (Model Context Protocol)](/docs/mcp) server (HTTP endpoint).
 
 | Flag | Description |
 |------|-------------|
