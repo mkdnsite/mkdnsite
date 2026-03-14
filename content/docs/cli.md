@@ -182,6 +182,25 @@ mkdnsite --static ./static --custom-css-url /my-theme.css
 mkdnsite --no-builtin-css --custom-css-url /my-complete-theme.css
 ```
 
+## MCP server
+
+Controls the built-in [MCP (Model Context Protocol)](/docs/mcp) server.
+
+| Flag | Description |
+|------|-------------|
+| `--no-mcp` | Disable the built-in MCP server |
+| `--mcp-endpoint <path>` | Custom MCP endpoint path (default: `/mcp`) |
+
+```bash
+# Disable MCP (e.g. public-facing site)
+mkdnsite --no-mcp
+
+# Custom endpoint path
+mkdnsite --mcp-endpoint /api/mcp
+```
+
+---
+
 ## GitHub source
 
 Serve content from a public GitHub repository instead of a local directory.
@@ -387,6 +406,8 @@ Every CLI flag maps to a field in `mkdnsite.config.ts`. CLI flags take precedenc
 | `--font-body` | `theme.fonts.body` |
 | `--font-mono` | `theme.fonts.mono` |
 | `--font-heading` | `theme.fonts.heading` |
+| `--no-mcp` | `mcp.enabled` |
+| `--mcp-endpoint` | `mcp.endpoint` |
 | `--github` | `github.owner` + `github.repo` |
 | `--github-ref` | `github.ref` |
 | `--github-path` | `github.path` |

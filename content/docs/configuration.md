@@ -405,6 +405,30 @@ client: {
 
 ---
 
+## `mcp`
+
+Built-in MCP (Model Context Protocol) server for AI agent access to your documentation.
+
+```typescript
+mcp: {
+  enabled: true,
+  endpoint: '/mcp'   // MCP server URL path
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enabled` | `boolean` | `true` | Enable the built-in MCP server |
+| `endpoint` | `string` | `'/mcp'` | URL path for the MCP endpoint |
+
+When enabled, AI clients (Claude Desktop, Cursor, etc.) can connect at `http://localhost:3000/mcp` and use the built-in tools: `search_docs`, `get_page`, `list_pages`, and `get_nav`.
+
+CLI flags: `--no-mcp`, `--mcp-endpoint <path>`
+
+See the [MCP guide](/docs/mcp) for full details.
+
+---
+
 ## Complete example
 
 ```typescript

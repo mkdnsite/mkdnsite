@@ -44,6 +44,17 @@ export interface MkdnSiteConfig {
 
   /** GitHub repository source (alternative to local contentDir) */
   github?: import('../content/types.ts').GitHubSourceConfig
+
+  /** MCP (Model Context Protocol) server configuration */
+  mcp: McpConfig
+}
+
+/** MCP (Model Context Protocol) server configuration */
+export interface McpConfig {
+  /** Enable the built-in MCP server (default: true) */
+  enabled: boolean
+  /** MCP endpoint path (default: '/mcp') */
+  endpoint?: string
 }
 
 /** OpenGraph / social sharing meta tag configuration */

@@ -43,7 +43,11 @@ export const DEFAULT_CONFIG: MkdnSiteConfig = {
     math: true,
     search: true
   },
-  renderer: 'portable'
+  renderer: 'portable',
+  mcp: {
+    enabled: true,
+    endpoint: '/mcp'
+  }
 }
 
 /**
@@ -97,6 +101,7 @@ export function resolveConfig (
     },
     llmsTxt: { ...DEFAULT_CONFIG.llmsTxt, ...userConfig.llmsTxt },
     client: { ...DEFAULT_CONFIG.client, ...userConfig.client },
-    github: userConfig.github
+    github: userConfig.github,
+    mcp: { ...DEFAULT_CONFIG.mcp, ...userConfig.mcp }
   }
 }
