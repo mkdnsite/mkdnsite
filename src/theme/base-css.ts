@@ -568,4 +568,12 @@ body {
   }
   .mkdn-search-trigger { right: 3rem; }
 }
+
+/* ---- Search result highlighting (on target page) ---- */
+.mkdn-search-highlight {
+  background: color-mix(in srgb, var(--mkdn-accent) 20%, transparent);
+  border-radius: 2px; padding: 1px 2px;
+  transition: background 0.5s ease;
+}
+.mkdn-search-highlight--fading { background: transparent; }
 `.trim()
