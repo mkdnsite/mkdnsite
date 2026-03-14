@@ -56,6 +56,15 @@ export function parseArgs (args: string[]): ParsedArgs {
       result.theme = { ...(result.theme as object ?? {}), showToc: false }
     } else if (arg === '--no-nav') {
       result.theme = { ...(result.theme as object ?? {}), showNav: false }
+    } else if (arg === '--no-mcp') {
+      result.mcp = { ...(result.mcp ?? {}), enabled: false }
+    } else if (arg === '--mcp-endpoint') {
+      const ep = args[++i]
+      if (ep == null || !ep.startsWith('/')) {
+        console.error('Error: --mcp-endpoint must start with / (e.g. /mcp)')
+        process.exit(1)
+      }
+      result.mcp = { ...(result.mcp ?? {}), endpoint: ep }
     } else if (arg === '--no-llms-txt') {
       result.llmsTxt = { enabled: false }
     } else if (arg === '--no-negotiate') {
@@ -161,6 +170,8 @@ function printHelp (): void {
     --no-reading-time     Disable reading time display
     --no-toc              Disable table of contents sidebar
     --no-nav              Disable navigation sidebar
+    --no-mcp              Disable the built-in MCP server
+    --mcp-endpoint <path> Custom MCP endpoint path (default: /mcp)
     --no-llms-txt         Disable /llms.txt generation
     --no-negotiate        Disable content negotiation
     --renderer <engine>   Renderer: portable (default) or bun-native (Bun only)

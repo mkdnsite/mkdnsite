@@ -7,6 +7,10 @@ import { negotiateFormat } from './negotiate/accept.ts'
 import { markdownHeaders, htmlHeaders, estimateTokens } from './negotiate/headers.ts'
 import { renderPage, render404 } from './render/page-shell.ts'
 import { generateLlmsTxt } from './discovery/llmstxt.ts'
+import { createSearchIndex } from './search/index.ts'
+import type { SearchIndex } from './search/index.ts'
+import { createMcpServer } from './mcp/server.ts'
+import { createMcpHandler } from './mcp/transport.ts'
 
 export interface HandlerOptions {
   source: ContentSource
@@ -29,6 +33,22 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
   const { source, renderer, config } = opts
 
   let llmsTxtCache: string | null = null
+  let mcpHandlerFn: ((req: Request) => Promise<Response>) | null = null
+  let mcpInitPromise: Promise<(req: Request) => Promise<Response>> | null = null
+  let searchIndex: SearchIndex | null = null
+
+  async function ensureMcpHandler (): Promise<(req: Request) => Promise<Response>> {
+    if (mcpInitPromise != null) return await mcpInitPromise
+    mcpInitPromise = (async () => {
+      const si = createSearchIndex()
+      await si.rebuild(source)
+      searchIndex = si
+      const mcpServer = createMcpServer({ source, searchIndex: si })
+      return createMcpHandler(mcpServer)
+    })()
+    mcpHandlerFn = await mcpInitPromise
+    return mcpHandlerFn
+  }
 
   return async function handler (request: Request): Promise<Response> {
     const url = new URL(request.url)
@@ -56,7 +76,21 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
     if (pathname === '/_refresh' && request.method === 'POST') {
       await source.refresh()
       llmsTxtCache = null
+      // Rebuild search index on refresh
+      if (searchIndex != null) {
+        await searchIndex.rebuild(source)
+      }
       return new Response('cache cleared', { status: 200 })
+    }
+
+    // ---- MCP endpoint ----
+    if (
+      config.mcp.enabled &&
+      (pathname === (config.mcp.endpoint ?? '/mcp') ||
+        pathname.startsWith((config.mcp.endpoint ?? '/mcp') + '/'))
+    ) {
+      const mcp = await ensureMcpHandler()
+      return await mcp(request)
     }
 
     // ---- Static files passthrough ----

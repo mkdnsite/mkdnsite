@@ -64,3 +64,12 @@ export { generateLlmsTxt } from './discovery/llmstxt.ts'
 export type { DeploymentAdapter } from './adapters/types.ts'
 export { detectRuntime } from './adapters/types.ts'
 export { LocalAdapter } from './adapters/local.ts'
+
+// Search
+export { createSearchIndex } from './search/index.ts'
+export type { SearchIndex, SearchResult } from './search/index.ts'
+
+// MCP
+export { createMcpServer } from './mcp/server.ts'
+export { createMcpHandler } from './mcp/transport.ts'
+export type { McpConfig } from './config/schema.ts'
