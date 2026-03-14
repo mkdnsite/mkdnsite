@@ -208,8 +208,8 @@ mkdnsite --no-theme-toggle
 | `--renderer <engine>` | `portable`, `bun-native` | Markdown rendering engine |
 
 ```bash
-mkdnsite --renderer bun-native   # Bun only, faster
-mkdnsite --renderer portable     # works everywhere (default)
+mkdnsite --renderer bun-native   # Bun only, faster but no full GFM support
+mkdnsite --renderer portable     # works everywhere, full GFM support (default)
 ```
 
 ## Help and version

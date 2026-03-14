@@ -57,7 +57,7 @@ interface MarkdownRenderer {
 | Implementation | Status | Description |
 |----------------|--------|-------------|
 | `PortableRenderer` | ✅ Default | react-markdown + remark/rehype plugins. Works everywhere. |
-| `BunNativeRenderer` | ✅ Bun only | `Bun.markdown.react()`. Faster, Bun only. |
+| `BunNativeRenderer` | ✅ Bun only | `Bun.markdown.react()`. Faster, but **no full GFM support** (task list checkboxes stripped, other GFM features may differ). |
 
 ### `DeploymentAdapter`
 
@@ -154,7 +154,7 @@ Caches pages in memory. Call `source.refresh()` to invalidate (done automaticall
 
 **No `.tsx` files** — Node's native TypeScript type-stripping doesn't handle `.tsx`. All React code uses `React.createElement()` instead of JSX syntax. This keeps the codebase compatible with all three runtimes without a build step.
 
-**`remark-gfm` over `Bun.markdown`** — `Bun.markdown.react()` strips GFM task list checkboxes. The portable renderer is the default and handles all GFM features correctly.
+**`remark-gfm` over `Bun.markdown`** — `Bun.markdown.react()` does not fully support GitHub-Flavored Markdown. Task list checkboxes are stripped, and other GFM features may behave differently. The portable renderer (react-markdown + remark-gfm) is the default because it handles all GFM features correctly. Choose `bun-native` only when you need the speed gain and don't depend on full GFM rendering.
 
 **Shiki dual themes via CSS variables** — uses `defaultColor: false` with `--shiki-light`/`--shiki-dark` CSS variables. Switching color scheme doesn't require re-rendering HTML — the CSS handles it at zero cost.
 

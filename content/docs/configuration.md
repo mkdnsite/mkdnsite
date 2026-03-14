@@ -60,8 +60,8 @@ Also settable with: `--static <dir>`
 
 ### `renderer`
 
-- `'portable'` — uses react-markdown + remark/rehype plugins. Works on Bun, Node, and Deno.
-- `'bun-native'` — uses `Bun.markdown.react()`. Faster, but Bun only. Note: strips GFM task list checkboxes.
+- `'portable'` — uses react-markdown + remark/rehype plugins. Works on Bun, Node, and Deno. Full GFM support.
+- `'bun-native'` — uses `Bun.markdown.react()`. Faster, but Bun only. **Does not fully support GFM** — task list checkboxes are stripped, and other GFM features may behave differently. Use this when you need raw speed and don't rely on full GFM rendering.
 
 Also settable with: `--renderer <engine>`
 
