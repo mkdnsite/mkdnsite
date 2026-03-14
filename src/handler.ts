@@ -114,7 +114,7 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
 
     // ---- Render HTML via React SSR ----
     const renderedHtml = renderer.renderToHtml(page.body, config.theme.components)
-    const nav = config.theme.showNav
+    const nav = (config.theme.showNav || config.theme.prevNext === true)
       ? await source.getNavTree()
       : undefined
 
@@ -123,7 +123,8 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
       meta: page.meta,
       config,
       nav,
-      currentSlug: page.slug
+      currentSlug: page.slug,
+      body: page.body
     })
 
     return new Response(fullPage, {

@@ -9,6 +9,8 @@ interface PageShellProps {
   config: MkdnSiteConfig
   nav?: NavNode
   currentSlug: string
+  /** Raw markdown body — used for reading time calculation */
+  body?: string
 }
 
 /**
@@ -16,7 +18,7 @@ interface PageShellProps {
  * This is pure SSR — no client-side React hydration required.
  */
 export function renderPage (props: PageShellProps): string {
-  const { renderedContent, meta, config, nav, currentSlug } = props
+  const { renderedContent, meta, config, nav, currentSlug, body } = props
 
   const title = meta.title != null
     ? `${meta.title} — ${config.site.title}`
@@ -27,6 +29,22 @@ export function renderPage (props: PageShellProps): string {
   const navHtml = (config.theme.showNav && nav != null)
     ? renderNav(nav, currentSlug, config)
     : ''
+
+  const pageTitleHtml = (config.theme.pageTitle === true && meta.title != null)
+    ? `<h1 class="mkdn-page-title">${esc(meta.title)}</h1>`
+    : ''
+
+  const pageMetaHtml = buildPageMetaHtml(meta, config, body)
+
+  const tocHtml = config.theme.showToc
+    ? buildTocHtml(renderedContent)
+    : ''
+
+  const prevNextHtml = (config.theme.prevNext === true && nav != null)
+    ? buildPrevNextHtml(nav, currentSlug)
+    : ''
+
+  const hasToc = tocHtml !== ''
 
   const clientScripts = config.client.enabled
     ? CLIENT_SCRIPTS(config.client)
@@ -71,12 +89,18 @@ export function renderPage (props: PageShellProps): string {
   <div class="mkdn-layout">
     ${navHtml !== '' ? `<nav class="mkdn-nav" aria-label="Site navigation">${navHtml}</nav>` : ''}
     <main class="mkdn-main">
+      ${hasToc ? '<div class="mkdn-content-area">' : ''}
       <article class="mkdn-article mkdn-prose">
+        ${pageTitleHtml}
+        ${pageMetaHtml}
         ${renderedContent}
       </article>
+      ${prevNextHtml}
       <footer class="mkdn-footer">
         <p>Powered by <a href="https://mkdn.site">mkdnsite</a></p>
       </footer>
+      ${hasToc ? '</div>' : ''}
+      ${tocHtml}
     </main>
   </div>
   ${clientScripts}
@@ -127,6 +151,95 @@ function renderNav (node: NavNode, currentSlug: string, config: MkdnSiteConfig, 
   }
 
   return `<li${isActive ? ' class="active"' : ''}><a href="${node.slug}"${isActive ? ' aria-current="page"' : ''}>${esc(node.title)}</a></li>`
+}
+
+function buildPageMetaHtml (meta: MarkdownMeta, config: MkdnSiteConfig, body?: string): string {
+  const parts: string[] = []
+  const showDate = config.theme.pageDate === true
+  const showReading = config.theme.readingTime === true
+
+  if (showDate && meta.date != null) {
+    const lang = config.site.lang ?? 'en'
+    const formatter = new Intl.DateTimeFormat(lang, {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+    const dateVal = meta.date
+    const dateStr = formatter.format(new Date(dateVal))
+    let datePart = `<time datetime="${esc(dateVal)}">${esc(dateStr)}</time>`
+    if (meta.updated != null) {
+      const updatedVal = meta.updated
+      const updatedStr = formatter.format(new Date(updatedVal))
+      datePart += ` · Updated <time datetime="${esc(updatedVal)}">${esc(updatedStr)}</time>`
+    }
+    parts.push(datePart)
+  }
+
+  if (showReading && body != null) {
+    parts.push(buildReadingTimeHtml(body))
+  }
+
+  if (parts.length === 0) return ''
+  return `<div class="mkdn-page-meta">${parts.join(' · ')}</div>`
+}
+
+function buildReadingTimeHtml (body: string): string {
+  const trimmed = body.trim()
+  const wordCount = trimmed === '' ? 0 : trimmed.split(/\s+/).length
+  const minutes = Math.max(1, Math.ceil(wordCount / 238))
+  return `<span class="mkdn-reading-time">${minutes} min read</span>`
+}
+
+function buildTocHtml (renderedContent: string): string {
+  const headingRegex = /<h([2-4])\s+id="([^"]+)"[^>]*>([\s\S]+?)<\/h[2-4]>/g
+  const headings: Array<{ level: number, id: string, text: string }> = []
+
+  let match = headingRegex.exec(renderedContent)
+  while (match !== null) {
+    const text = match[3].replace(/<[^>]+>/g, '').trim()
+    headings.push({ level: parseInt(match[1], 10), id: match[2], text })
+    match = headingRegex.exec(renderedContent)
+  }
+
+  if (headings.length === 0) return ''
+
+  const items = headings
+    .map(h => `<li class="mkdn-toc-${h.level}"><a href="#${esc(h.id)}">${esc(h.text)}</a></li>`)
+    .join('')
+
+  return `<nav class="mkdn-toc" aria-label="Table of contents"><p class="mkdn-toc-title">On this page</p><ul>${items}</ul></nav>`
+}
+
+function flattenNav (node: NavNode): Array<{ title: string, slug: string }> {
+  const result: Array<{ title: string, slug: string }> = []
+  for (const child of node.children) {
+    if (child.isSection) {
+      result.push(...flattenNav(child))
+    } else {
+      result.push({ title: child.title, slug: child.slug })
+    }
+  }
+  return result
+}
+
+function buildPrevNextHtml (nav: NavNode, currentSlug: string): string {
+  const pages = flattenNav(nav)
+  const idx = pages.findIndex(p => p.slug === currentSlug)
+  if (idx === -1) return ''
+
+  const prev = idx > 0 ? pages[idx - 1] : null
+  const next = idx < pages.length - 1 ? pages[idx + 1] : null
+  if (prev == null && next == null) return ''
+
+  const prevHtml = prev != null
+    ? `<a href="${esc(prev.slug)}" class="mkdn-prev"><span class="mkdn-pn-label">← Previous</span><span class="mkdn-pn-title">${esc(prev.title)}</span></a>`
+    : '<span></span>'
+  const nextHtml = next != null
+    ? `<a href="${esc(next.slug)}" class="mkdn-next"><span class="mkdn-pn-label">Next →</span><span class="mkdn-pn-title">${esc(next.title)}</span></a>`
+    : '<span></span>'
+
+  return `<nav class="mkdn-prev-next" aria-label="Page navigation">${prevHtml}${nextHtml}</nav>`
 }
 
 function buildOgTags (props: PageShellProps): string {

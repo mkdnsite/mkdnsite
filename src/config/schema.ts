@@ -28,6 +28,14 @@ export interface MkdnSiteConfig {
   /** Client-side enhancement modules */
   client: ClientConfig
 
+  /**
+   * Preset that configures sensible defaults for common use cases.
+   * Applied before user config — any explicit user setting overrides the preset.
+   * - 'docs': nav + TOC + prev/next (default-like, best for documentation sites)
+   * - 'blog': page title + date + reading time + prev/next, no nav sidebar
+   */
+  preset?: 'docs' | 'blog'
+
   /** Markdown renderer engine (default: 'portable') */
   renderer: RendererEngine
 
@@ -147,6 +155,18 @@ export interface ThemeConfig {
 
   /** Site name / text logo displayed in the nav header */
   logoText?: string
+
+  /** Render page title from frontmatter as <h1> above article content */
+  pageTitle?: boolean
+
+  /** Render publish/update date from frontmatter below the page title */
+  pageDate?: boolean
+
+  /** Show prev/next page navigation links at the bottom of the article */
+  prevNext?: boolean
+
+  /** Show estimated reading time near the page date */
+  readingTime?: boolean
 
   /** Show navigation sidebar */
   showNav: boolean
