@@ -161,6 +161,9 @@ async function main (): Promise<void> {
   }
   if (fileConfig.site != null || cliConfig.site != null) {
     const site: Partial<MkdnSiteConfig['site']> = { ...fileConfig.site, ...cliConfig.site }
+    if (fileConfig.site?.og != null || cliConfig.site?.og != null) {
+      site.og = { ...fileConfig.site?.og, ...cliConfig.site?.og }
+    }
     merged.site = site as MkdnSiteConfig['site']
   }
   if (fileConfig.server != null || cliConfig.server != null) {
