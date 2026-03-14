@@ -35,19 +35,33 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
   let llmsTxtCache: string | null = null
   let mcpHandlerFn: ((req: Request) => Promise<Response>) | null = null
   let mcpInitPromise: Promise<(req: Request) => Promise<Response>> | null = null
-  let searchIndex: SearchIndex | null = null
+  let searchIndexPromise: Promise<SearchIndex> | null = null
+
+  // Shared search index used by both /api/search and MCP
+  async function ensureSearchIndex (): Promise<SearchIndex> {
+    if (searchIndexPromise != null) return await searchIndexPromise
+    searchIndexPromise = (async () => {
+      const si = createSearchIndex()
+      await si.rebuild(source)
+      return si
+    })()
+    return await searchIndexPromise
+  }
 
   async function ensureMcpHandler (): Promise<(req: Request) => Promise<Response>> {
     if (mcpInitPromise != null) return await mcpInitPromise
     mcpInitPromise = (async () => {
-      const si = createSearchIndex()
-      await si.rebuild(source)
-      searchIndex = si
+      const si = await ensureSearchIndex()
       const mcpServer = createMcpServer({ source, searchIndex: si })
       return createMcpHandler(mcpServer)
     })()
     mcpHandlerFn = await mcpInitPromise
     return mcpHandlerFn
+  }
+
+  // Eagerly init search index when client search is enabled
+  if (config.client.search) {
+    void ensureSearchIndex()
   }
 
   return async function handler (request: Request): Promise<Response> {
@@ -76,11 +90,25 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
     if (pathname === '/_refresh' && request.method === 'POST') {
       await source.refresh()
       llmsTxtCache = null
-      // Rebuild search index on refresh
-      if (searchIndex != null) {
-        await searchIndex.rebuild(source)
+      // Reset and rebuild shared search index on refresh
+      if (searchIndexPromise != null) {
+        const si = await searchIndexPromise
+        await si.rebuild(source)
       }
       return new Response('cache cleared', { status: 200 })
+    }
+
+    // ---- Search API ----
+    if (pathname === '/api/search' && config.client.search) {
+      const query = (url.searchParams.get('q') ?? '').slice(0, 200)
+      const rawLimit = parseInt(url.searchParams.get('limit') ?? '10', 10)
+      const limit = Math.min(isNaN(rawLimit) ? 10 : rawLimit, 50)
+      const si = await ensureSearchIndex()
+      const results = si.search(query, limit)
+      return new Response(JSON.stringify(results), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
     }
 
     // ---- MCP endpoint ----

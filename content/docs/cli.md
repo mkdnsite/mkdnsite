@@ -301,6 +301,7 @@ mkdnsite --no-negotiate --no-llms-txt
 | `--no-client-js` | Disable all client-side JavaScript (pure static HTML/CSS) |
 | `--no-theme-toggle` | Disable the light/dark toggle button |
 | `--no-math` | Disable KaTeX math rendering |
+| `--no-search` | Disable the ⌘K search modal and `/api/search` endpoint |
 
 ```bash
 # Maximum performance / accessibility
@@ -308,6 +309,9 @@ mkdnsite --no-client-js
 
 # Keep mermaid and copy but remove theme toggle
 mkdnsite --no-theme-toggle
+
+# Disable search (e.g. public-facing site without search UI)
+mkdnsite --no-search
 ```
 
 > **Note:** `--no-client-js` disables everything including Mermaid diagrams, copy buttons, and the theme toggle. For granular control, use individual flags.
@@ -429,3 +433,4 @@ Every CLI flag maps to a field in `mkdnsite.config.ts`. CLI flags take precedenc
 | `--no-client-js` | `client.enabled: false` |
 | `--no-theme-toggle` | `client.themeToggle: false` |
 | `--no-math` | `client.math: false` |
+| `--no-search` | `client.search: false` |

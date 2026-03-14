@@ -75,6 +75,8 @@ export function parseArgs (args: string[]): ParsedArgs {
       result.client = { ...(result.client as object ?? {}), themeToggle: false }
     } else if (arg === '--no-math') {
       result.client = { ...(result.client as object ?? {}), math: false }
+    } else if (arg === '--no-search') {
+      result.client = { ...(result.client as object ?? {}), search: false }
     } else if (arg === '--color-scheme') {
       result.theme = { ...(result.theme as object ?? {}), colorScheme: args[++i] }
     } else if (arg === '--theme-mode') {
@@ -187,6 +189,7 @@ function printHelp (): void {
     --no-client-js        Disable client-side JavaScript (mermaid, copy, search, theme toggle)
     --no-theme-toggle     Disable light/dark theme toggle button
     --no-math             Disable KaTeX math rendering
+    --no-search           Disable search functionality (UI and /api/search endpoint)
     -h, --help            Show this help
     -v, --version         Show version
 
