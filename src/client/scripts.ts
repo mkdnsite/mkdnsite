@@ -100,7 +100,140 @@ const MERMAID_SCRIPT = `
 `.trim()
 
 const SEARCH_SCRIPT = `
-/* Search: placeholder for client-side search functionality.
-   Will be implemented with a pre-built content index served at /search-index.json.
-   For MVP, this is a no-op that can be activated once the index endpoint exists. */
+(function(){
+  // ── Search modal ──────────────────────────────────────────────────────────
+  var overlay, input, resultsEl, activeIdx = -1, debounceTimer, lastQuery = '';
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function boldTerms(excerpt, terms) {
+    var safe = escHtml(excerpt);
+    terms.forEach(function(t){
+      if (t.length < 2) return;
+      var escaped = t.replace(new RegExp('[.*+?^' + '$' + '{}()|[\\]\\\\]','g'),'\\$&');
+      var re = new RegExp('(' + escaped + ')', 'gi');
+      safe = safe.replace(re, '<mark>$1</mark>');
+    });
+    return safe;
+  }
+
+  function buildModal() {
+    overlay = document.createElement('div');
+    overlay.className = 'mkdn-search-overlay';
+    overlay.setAttribute('role','dialog');
+    overlay.setAttribute('aria-modal','true');
+    overlay.setAttribute('aria-label','Search');
+    overlay.innerHTML =
+      '<div class="mkdn-search-modal">' +
+        '<div class="mkdn-search-input-wrap">' +
+          '<svg class="mkdn-search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>' +
+          '<input type="text" class="mkdn-search-input" placeholder="Search documentation..." autocomplete="off" spellcheck="false">' +
+          '<kbd class="mkdn-search-kbd">Esc</kbd>' +
+        '</div>' +
+        '<div class="mkdn-search-results"><p class="mkdn-search-hint">Type to search\u2026</p></div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    input = overlay.querySelector('.mkdn-search-input');
+    resultsEl = overlay.querySelector('.mkdn-search-results');
+
+    // Close on overlay click (outside modal)
+    overlay.addEventListener('click', function(e){ if (e.target === overlay) closeModal(); });
+    input.addEventListener('input', onInput);
+    input.addEventListener('keydown', onKeydown);
+  }
+
+  function openModal() {
+    if (!overlay) buildModal();
+    overlay.classList.add('mkdn-search-overlay--open');
+    input.value = '';
+    lastQuery = '';
+    activeIdx = -1;
+    resultsEl.innerHTML = '<p class="mkdn-search-hint">Type to search\u2026</p>';
+    requestAnimationFrame(function(){ input.focus(); });
+  }
+
+  function closeModal() {
+    if (overlay) overlay.classList.remove('mkdn-search-overlay--open');
+    clearTimeout(debounceTimer);
+  }
+
+  function onInput() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(doSearch, 500);
+  }
+
+  function doSearch() {
+    var q = input.value.trim();
+    if (q === lastQuery) return;
+    lastQuery = q;
+    activeIdx = -1;
+    if (!q) { resultsEl.innerHTML = '<p class="mkdn-search-hint">Type to search\u2026</p>'; return; }
+    resultsEl.innerHTML = '<p class="mkdn-search-hint mkdn-search-hint--loading">Searching\u2026</p>';
+    var url = '/api/search?q=' + encodeURIComponent(q) + '&limit=10';
+    fetch(url).then(function(r){ return r.json(); }).then(function(results){
+      renderResults(results, q);
+    }).catch(function(){
+      resultsEl.innerHTML = '<p class="mkdn-search-hint">Search unavailable</p>';
+    });
+  }
+
+  function renderResults(results, q) {
+    if (!results.length) {
+      resultsEl.innerHTML = '<p class="mkdn-search-hint">No results found</p>';
+      return;
+    }
+    var terms = q.toLowerCase().split(/\\s+/).filter(function(t){ return t.length >= 2; });
+    var html = results.map(function(r, i){
+      var href = r.slug + '?q=' + encodeURIComponent(q);
+      return '<a href="' + href + '" class="mkdn-search-result' + (i === 0 ? ' mkdn-search-result--active' : '') + '" data-idx="' + i + '">' +
+        '<div class="mkdn-search-result-title">' + escHtml(r.title || r.slug) + '</div>' +
+        '<div class="mkdn-search-result-excerpt">' + boldTerms(r.excerpt || '', terms) + '</div>' +
+        '<div class="mkdn-search-result-slug">' + escHtml(r.slug) + '</div>' +
+      '</a>';
+    }).join('');
+    resultsEl.innerHTML = html;
+    activeIdx = 0;
+    resultsEl.querySelectorAll('.mkdn-search-result').forEach(function(el){
+      el.addEventListener('mouseenter', function(){
+        setActive(parseInt(el.getAttribute('data-idx')));
+      });
+    });
+  }
+
+  function setActive(idx) {
+    var items = resultsEl.querySelectorAll('.mkdn-search-result');
+    if (!items.length) return;
+    idx = Math.max(0, Math.min(idx, items.length - 1));
+    items.forEach(function(el, i){
+      el.classList.toggle('mkdn-search-result--active', i === idx);
+    });
+    items[idx].scrollIntoView({ block: 'nearest' });
+    activeIdx = idx;
+  }
+
+  function onKeydown(e) {
+    var items = resultsEl.querySelectorAll('.mkdn-search-result');
+    if (e.key === 'Escape') { closeModal(); return; }
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActive(activeIdx + 1); return; }
+    if (e.key === 'ArrowUp') { e.preventDefault(); setActive(activeIdx - 1); return; }
+    if (e.key === 'Enter' && items.length) {
+      e.preventDefault();
+      var target = items[Math.max(0, activeIdx)];
+      if (target) { closeModal(); window.location.href = target.getAttribute('href'); }
+    }
+  }
+
+  // Keyboard shortcut: Cmd+K / Ctrl+K
+  document.addEventListener('keydown', function(e){
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openModal(); }
+    if (e.key === 'Escape' && overlay && overlay.classList.contains('mkdn-search-overlay--open')) closeModal();
+  });
+
+  // Search trigger button
+  document.addEventListener('click', function(e){
+    if (e.target && e.target.closest && e.target.closest('.mkdn-search-trigger')) openModal();
+  });
+})();
 `.trim()
