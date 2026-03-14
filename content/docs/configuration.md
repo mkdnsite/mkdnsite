@@ -86,8 +86,39 @@ site: {
 | `description` | `string` | — | Meta description, also used in `/llms.txt` |
 | `url` | `string` | — | Base URL for absolute links and sitemaps |
 | `lang` | `string` | `'en'` | HTML `lang` attribute |
+| `og` | `OgConfig` | — | OpenGraph / social sharing configuration (see below) |
 
 CLI flags: `--title`, `--url`
+
+### `site.og` — OpenGraph / social meta tags
+
+Controls the `og:*` and `twitter:*` meta tags that generate rich preview cards in Slack, Discord, iMessage, and social platforms.
+
+```typescript
+site: {
+  title: 'My Docs',
+  url: 'https://docs.example.com',
+  og: {
+    image: 'https://docs.example.com/og-image.png',
+    type: 'website',
+    twitterCard: 'summary_large_image',
+    twitterSite: '@myproject'
+  }
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `og.image` | `string` | — | Default OG image URL. Override per-page via `og_image` frontmatter. |
+| `og.type` | `string` | `'website'` for `/`, `'article'` for other pages | Default `og:type` value |
+| `og.twitterCard` | `'summary' \| 'summary_large_image'` | `'summary'` | Twitter card display style |
+| `og.twitterSite` | `string` | — | Twitter `@handle` for the site |
+
+**Tags always emitted:** `og:title`, `og:type`, `og:site_name`, `twitter:card`, `twitter:title`
+
+**Tags emitted when data is available:** `og:description`, `og:url` (requires `site.url`), `og:image`, `twitter:description`, `twitter:image`, `twitter:site`
+
+CLI flags: `--og-image`, `--og-type`, `--twitter-card`, `--twitter-site`
 
 ---
 

@@ -59,6 +59,7 @@ export function renderPage (props: PageShellProps): string {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${esc(title)}</title>
   ${description !== '' ? `<meta name="description" content="${esc(description)}">` : ''}
+  ${buildOgTags(props)}
   <meta name="generator" content="mkdnsite">
   ${config.client.math ? '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css" crossorigin="anonymous">' : ''}
   <style>${buildThemeCss(config)}</style>
@@ -126,6 +127,49 @@ function renderNav (node: NavNode, currentSlug: string, config: MkdnSiteConfig, 
   }
 
   return `<li${isActive ? ' class="active"' : ''}><a href="${node.slug}"${isActive ? ' aria-current="page"' : ''}>${esc(node.title)}</a></li>`
+}
+
+function buildOgTags (props: PageShellProps): string {
+  const { meta, config, currentSlug } = props
+  const tags: string[] = []
+
+  const ogTitle = meta.title ?? config.site.title
+  const ogDescription = meta.description ?? config.site.description ?? ''
+  const ogType = (meta as Record<string, unknown>).og_type as string ??
+    config.site.og?.type ??
+    (currentSlug === '/' || currentSlug === '' ? 'website' : 'article')
+  const ogImage = (meta as Record<string, unknown>).og_image as string ??
+    config.site.og?.image
+  const twitterCard = config.site.og?.twitterCard ?? 'summary'
+  const twitterSite = config.site.og?.twitterSite
+
+  tags.push(`<meta property="og:title" content="${esc(ogTitle)}">`)
+  if (ogDescription !== '') {
+    tags.push(`<meta property="og:description" content="${esc(ogDescription)}">`)
+  }
+  tags.push(`<meta property="og:type" content="${esc(ogType)}">`)
+  if (config.site.url != null && config.site.url !== '') {
+    const baseUrl = config.site.url.replace(/\/$/, '')
+    const slug = currentSlug === '' || currentSlug === '/' ? '' : currentSlug
+    tags.push(`<meta property="og:url" content="${esc(baseUrl + slug)}">`)
+  }
+  tags.push(`<meta property="og:site_name" content="${esc(config.site.title)}">`)
+  if (ogImage != null && ogImage !== '') {
+    tags.push(`<meta property="og:image" content="${esc(ogImage)}">`)
+  }
+  tags.push(`<meta name="twitter:card" content="${esc(twitterCard)}">`)
+  tags.push(`<meta name="twitter:title" content="${esc(ogTitle)}">`)
+  if (ogDescription !== '') {
+    tags.push(`<meta name="twitter:description" content="${esc(ogDescription)}">`)
+  }
+  if (ogImage != null && ogImage !== '') {
+    tags.push(`<meta name="twitter:image" content="${esc(ogImage)}">`)
+  }
+  if (twitterSite != null && twitterSite !== '') {
+    tags.push(`<meta name="twitter:site" content="${esc(twitterSite)}">`)
+  }
+
+  return tags.join('\n  ')
 }
 
 function esc (str: string): string {

@@ -52,7 +52,11 @@ export function resolveConfig (
   return {
     ...DEFAULT_CONFIG,
     ...userConfig,
-    site: { ...DEFAULT_CONFIG.site, ...userConfig.site },
+    site: {
+      ...DEFAULT_CONFIG.site,
+      ...userConfig.site,
+      og: { ...userConfig.site?.og }
+    },
     server: { ...DEFAULT_CONFIG.server, ...userConfig.server },
     theme: { ...DEFAULT_CONFIG.theme, ...userConfig.theme },
     negotiation: {

@@ -26,6 +26,14 @@ function parseArgs (args: string[]): ParsedArgs {
       result.site = { ...(result.site as object ?? {}), title: args[++i] }
     } else if (arg === '--url') {
       result.site = { ...(result.site as object ?? {}), url: args[++i] }
+    } else if (arg === '--og-image') {
+      result.site = { ...(result.site as object ?? {}), og: { ...((result.site as Record<string, unknown>)?.og as object ?? {}), image: args[++i] } }
+    } else if (arg === '--og-type') {
+      result.site = { ...(result.site as object ?? {}), og: { ...((result.site as Record<string, unknown>)?.og as object ?? {}), type: args[++i] } }
+    } else if (arg === '--twitter-card') {
+      result.site = { ...(result.site as object ?? {}), og: { ...((result.site as Record<string, unknown>)?.og as object ?? {}), twitterCard: args[++i] } }
+    } else if (arg === '--twitter-site') {
+      result.site = { ...(result.site as object ?? {}), og: { ...((result.site as Record<string, unknown>)?.og as object ?? {}), twitterSite: args[++i] } }
     } else if (arg === '--no-nav') {
       result.theme = { ...(result.theme as object ?? {}), showNav: false }
     } else if (arg === '--no-llms-txt') {
@@ -93,6 +101,10 @@ function printHelp (): void {
     -p, --port <n>        Port to listen on (default: 3000)
     --title <text>        Site title
     --url <url>           Base URL for absolute links
+    --og-image <url>      Default OpenGraph image URL
+    --og-type <type>      Default OpenGraph type (website or article)
+    --twitter-card <type> Twitter card type: summary or summary_large_image
+    --twitter-site <handle> Twitter @handle for the site
     --static <dir>        Directory for static assets
     --color-scheme <val>  Color scheme: system (default), light, or dark
     --theme-mode <mode>   Theme mode: prose (default) or components
