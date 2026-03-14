@@ -120,6 +120,22 @@ layout: blog-post
 
 Layout template identifier. Planned feature — will allow different page templates. Currently not implemented.
 
+### `og_image`
+
+```yaml
+og_image: https://example.com/this-page-image.png
+```
+
+Overrides the site-level `og.image` config for this page. Use for pages that have a specific image (e.g. a blog post hero image, a product screenshot).
+
+### `og_type`
+
+```yaml
+og_type: product
+```
+
+Overrides the default `og:type` for this page. The default is `'website'` for the root (`/`) and `'article'` for all other pages. Common values: `website`, `article`, `product`, `profile`.
+
 ### Custom fields
 
 Any additional frontmatter fields are preserved in the `meta` object and accessible to custom components:

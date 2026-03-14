@@ -35,11 +35,25 @@ export interface MkdnSiteConfig {
   staticDir?: string
 }
 
+/** OpenGraph / social sharing meta tag configuration */
+export interface OgConfig {
+  /** Default OG image URL (can be overridden per-page via frontmatter `og_image`) */
+  image?: string
+  /** Default OG type (default: 'website' for index, 'article' for other pages) */
+  type?: string
+  /** Twitter card type: 'summary' or 'summary_large_image' (default: 'summary') */
+  twitterCard?: 'summary' | 'summary_large_image'
+  /** Twitter @handle for the site (e.g. '@mkdnsite') */
+  twitterSite?: string
+}
+
 export interface SiteConfig {
   title: string
   description?: string
   url?: string
   lang?: string
+  /** OpenGraph / social sharing meta tag configuration */
+  og?: OgConfig
 }
 
 export interface ServerConfig {

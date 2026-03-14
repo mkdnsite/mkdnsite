@@ -73,6 +73,27 @@ mkdnsite --port 4000
 mkdnsite --title "My Docs" --url "https://docs.example.com"
 ```
 
+## OpenGraph / social meta tags
+
+Controls the `og:*` and `twitter:*` meta tags for rich preview cards in Slack, Discord, iMessage, and social platforms.
+
+| Flag | Description |
+|------|-------------|
+| `--og-image <url>` | Default OpenGraph image URL |
+| `--og-type <type>` | Default OpenGraph type (`website` or `article`) |
+| `--twitter-card <type>` | Twitter card type: `summary` or `summary_large_image` |
+| `--twitter-site <handle>` | Twitter `@handle` for the site |
+
+```bash
+mkdnsite ./content \
+  --url "https://docs.example.com" \
+  --og-image "https://docs.example.com/og-image.png" \
+  --twitter-card summary_large_image \
+  --twitter-site "@myproject"
+```
+
+Individual pages can override `og:image` and `og:type` via frontmatter (`og_image`, `og_type`). See [Frontmatter](/docs/frontmatter).
+
 ## Theme
 
 ### Color scheme
@@ -273,6 +294,10 @@ Every CLI flag maps to a field in `mkdnsite.config.ts`. CLI flags take precedenc
 | `--port` | `server.port` |
 | `--title` | `site.title` |
 | `--url` | `site.url` |
+| `--og-image` | `site.og.image` |
+| `--og-type` | `site.og.type` |
+| `--twitter-card` | `site.og.twitterCard` |
+| `--twitter-site` | `site.og.twitterSite` |
 | `--static` | `staticDir` |
 | `--color-scheme` | `theme.colorScheme` |
 | `--theme-mode` | `theme.mode` |

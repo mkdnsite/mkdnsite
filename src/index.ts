@@ -13,6 +13,8 @@ export type { HandlerOptions } from './handler.ts'
 export { resolveConfig, DEFAULT_CONFIG } from './config/defaults.ts'
 export type {
   MkdnSiteConfig,
+  SiteConfig,
+  OgConfig,
   ThemeConfig,
   NegotiationConfig,
   ClientConfig,
