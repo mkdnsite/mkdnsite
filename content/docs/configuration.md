@@ -388,7 +388,7 @@ client: {
   math: true,         // KaTeX math rendering
   mermaid: true,      // Mermaid diagram rendering
   copyButton: true,   // copy-to-clipboard on code blocks
-  search: true        // client-side search (planned)
+  search: true        // ⌘K search modal + /api/search endpoint
 }
 ```
 
@@ -399,7 +399,17 @@ client: {
 | `math` | `true` | `--no-math` |
 | `mermaid` | `true` | — |
 | `copyButton` | `true` | — |
-| `search` | `true` | — |
+| `search` | `true` | `--no-search` |
+
+### `client.search`
+
+When `true` (default), enables:
+
+- **⌘K modal** — press `⌘K` (Mac) or `Ctrl+K` (Windows/Linux) to open a search modal. Also accessible via the magnifying glass button in the top-right corner.
+- **`/api/search` endpoint** — `GET /api/search?q=<query>&limit=<n>` returns a JSON array of `SearchResult` objects.
+- **Result highlighting** — navigating to a page via a search result appends `?q=<query>` to the URL. On load, matched terms are highlighted in the page body and the page scrolls to the first match. Highlights fade after 8 seconds.
+
+The search index is built server-side using TF-IDF with 3× boost for title, 2× for description and tags. See the [search guide](/docs/search) for details.
 
 > **Note:** `--no-client-js` disables everything. Individual `--no-*` flags disable specific features while leaving others enabled.
 
