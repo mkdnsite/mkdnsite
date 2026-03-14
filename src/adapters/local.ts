@@ -5,6 +5,7 @@ import type { MkdnSiteConfig } from '../config/schema.ts'
 import type { ContentSource } from '../content/types.ts'
 import type { MarkdownRenderer } from '../render/types.ts'
 import { FilesystemSource } from '../content/filesystem.ts'
+import { GitHubSource } from '../content/github.ts'
 import { createRenderer } from '../render/types.ts'
 
 export class LocalAdapter implements DeploymentAdapter {
@@ -16,6 +17,9 @@ export class LocalAdapter implements DeploymentAdapter {
   }
 
   createContentSource (config: MkdnSiteConfig): ContentSource {
+    if (config.github != null) {
+      return new GitHubSource(config.github)
+    }
     return new FilesystemSource(config.contentDir)
   }
 
@@ -137,7 +141,10 @@ export class LocalAdapter implements DeploymentAdapter {
     console.log(`  │   ${url.padEnd(42)} │`)
     console.log('  │                                              │')
     console.log(`  │   Runtime: ${this.name.padEnd(32)} │`)
-    console.log(`  │   Content: ${config.contentDir.padEnd(32)} │`)
+    const contentLabel = config.github != null
+      ? `github:${config.github.owner}/${config.github.repo}@${config.github.ref ?? 'main'}`
+      : config.contentDir
+    console.log(`  │   Content: ${contentLabel.padEnd(32)} │`)
     console.log(`  │   Renderer: ${this.rendererEngine.padEnd(30)} │`)
     console.log(`  │   Theme mode: ${config.theme.mode.padEnd(28)} │`)
     console.log(`  │   Client JS: ${(config.client.enabled ? 'on' : 'off').padEnd(29)} │`)

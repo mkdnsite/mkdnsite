@@ -96,6 +96,7 @@ export function resolveConfig (
       }
     },
     llmsTxt: { ...DEFAULT_CONFIG.llmsTxt, ...userConfig.llmsTxt },
-    client: { ...DEFAULT_CONFIG.client, ...userConfig.client }
+    client: { ...DEFAULT_CONFIG.client, ...userConfig.client },
+    github: userConfig.github
   }
 }
