@@ -1,7 +1,7 @@
 ---
 title: Element Examples
 description: A showcase of every supported Markdown element and block type.
-order: 2
+order: 8
 ---
 
 # Heading 1
