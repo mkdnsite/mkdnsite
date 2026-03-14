@@ -225,6 +225,10 @@ async function main (): Promise<void> {
     } catch { /* no config file */ }
 
     const merged: Partial<MkdnSiteConfig> = { ...fileConfig, ...cliConfig }
+    if (fileConfig.github != null || cliConfig.github != null) {
+      const gh = { ...fileConfig.github, ...cliConfig.github }
+      merged.github = gh as MkdnSiteConfig['github']
+    }
     if (merged.github != null && (merged.github.token == null || merged.github.token === '')) {
       const envToken = process.env.GITHUB_TOKEN ?? process.env.MKDNSITE_GITHUB_TOKEN ?? ''
       if (envToken !== '') merged.github = { ...merged.github, token: envToken }
@@ -275,6 +279,10 @@ async function main (): Promise<void> {
   if (fileConfig.client != null || cliConfig.client != null) {
     const client: Partial<MkdnSiteConfig['client']> = { ...fileConfig.client, ...cliConfig.client }
     merged.client = client as MkdnSiteConfig['client']
+  }
+  if (fileConfig.github != null || cliConfig.github != null) {
+    const gh = { ...fileConfig.github, ...cliConfig.github }
+    merged.github = gh as MkdnSiteConfig['github']
   }
   // Fall back to env var for GitHub token if not set via CLI or config file
   if (merged.github != null && (merged.github.token == null || merged.github.token === '')) {
