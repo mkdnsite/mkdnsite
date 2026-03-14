@@ -80,7 +80,7 @@ github: {
 | `repo` | `string` | — | Repository name |
 | `ref` | `string` | `'main'` | Branch, tag, or commit SHA to serve |
 | `path` | `string` | — | Subdirectory within the repo to treat as content root |
-| `token` | `string` | — | GitHub personal access token (increases API rate limit from 60 to 5,000 req/hr) |
+| `token` | `string` | — | GitHub personal access token (increases API rate limit from 60 to 5,000 req/hr). Also reads `GITHUB_TOKEN` or `MKDNSITE_GITHUB_TOKEN` env var when not set explicitly. |
 
 **Caching:** File contents and the repository tree are cached for 5 minutes. Call `source.refresh()` to invalidate (done automatically in watch mode). On first request, all `.md` files are fetched in parallel and cached together.
 

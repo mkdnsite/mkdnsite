@@ -170,6 +170,7 @@ function printHelp (): void {
     --github-ref <ref>    Branch or tag to serve (default: main)
     --github-path <path>  Subdirectory within the repo to use as content root
     --github-token <token> GitHub token for private repos or higher rate limits
+                          Also reads GITHUB_TOKEN or MKDNSITE_GITHUB_TOKEN env var
 
   Client-side features:
     --no-client-js        Disable client-side JavaScript (mermaid, copy, search, theme toggle)
@@ -229,6 +230,14 @@ async function main (): Promise<void> {
     const client: Partial<MkdnSiteConfig['client']> = { ...fileConfig.client, ...cliConfig.client }
     merged.client = client as MkdnSiteConfig['client']
   }
+  // Fall back to env var for GitHub token if not set via CLI or config file
+  if (merged.github != null && (merged.github.token == null || merged.github.token === '')) {
+    const envToken = process.env.GITHUB_TOKEN ?? process.env.MKDNSITE_GITHUB_TOKEN ?? ''
+    if (envToken !== '') {
+      merged.github = { ...merged.github, token: envToken }
+    }
+  }
+
   const config = resolveConfig(merged)
 
   const adapter = new LocalAdapter()

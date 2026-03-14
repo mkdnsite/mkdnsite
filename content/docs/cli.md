@@ -191,7 +191,7 @@ Serve content from a public GitHub repository instead of a local directory.
 | `--github <owner/repo>` | Serve a GitHub repo, e.g. `--github mkdnsite/mkdnsite` |
 | `--github-ref <ref>` | Branch, tag, or commit SHA (default: `main`) |
 | `--github-path <path>` | Subdirectory within the repo to use as content root |
-| `--github-token <token>` | GitHub token for private repos or higher rate limits |
+| `--github-token <token>` | GitHub token for private repos or higher rate limits. Also reads `GITHUB_TOKEN` or `MKDNSITE_GITHUB_TOKEN` env var. |
 
 ```bash
 # Serve a public repo from main branch
@@ -201,7 +201,10 @@ mkdnsite --github owner/repo
 mkdnsite --github owner/repo --github-ref develop --github-path docs
 
 # Use a token for private repos or to avoid rate limits
-mkdnsite --github myorg/private-docs --github-token "$GITHUB_TOKEN"
+mkdnsite --github myorg/private-docs --github-token ghp_xxx
+
+# Or set the env var (no need for --github-token)
+GITHUB_TOKEN=ghp_xxx mkdnsite --github myorg/private-docs
 ```
 
 Content is cached for 5 minutes. File listing uses the GitHub Git Trees API (one call per cache window); file contents come from `raw.githubusercontent.com`. Unauthenticated requests are limited to 60 API calls/hour; a token raises this to 5,000.
