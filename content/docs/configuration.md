@@ -40,6 +40,7 @@ When you run `mkdnsite`, it auto-detects `mkdnsite.config.ts` in the current wor
 |--------|------|---------|-------------|
 | `contentDir` | `string` | `'./content'` | Path to the directory containing `.md` files |
 | `staticDir` | `string` | — | Directory for static assets (images, CSS, etc.) served at `/` |
+| `github` | `GitHubSourceConfig` | — | Serve a GitHub repository instead of a local directory |
 | `preset` | `'docs' \| 'blog'` | — | Apply sensible defaults for a docs or blog use case |
 | `renderer` | `'portable' \| 'bun-native'` | `'portable'` | Markdown renderer engine |
 
@@ -58,6 +59,36 @@ staticDir: './static'  // serve ./static/logo.png at /logo.png
 ```
 
 Also settable with: `--static <dir>`
+
+### `github`
+
+Serve content from a public GitHub repository instead of a local directory. When set, `contentDir` is ignored.
+
+```typescript
+github: {
+  owner: 'mkdnsite',   // GitHub user or org
+  repo: 'mkdnsite',    // repository name
+  ref: 'main',         // branch, tag, or commit SHA (default: 'main')
+  path: 'content',     // subdirectory within the repo (optional)
+  token: process.env.GITHUB_TOKEN  // for private repos or higher rate limits
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `owner` | `string` | — | GitHub user or organization name |
+| `repo` | `string` | — | Repository name |
+| `ref` | `string` | `'main'` | Branch, tag, or commit SHA to serve |
+| `path` | `string` | — | Subdirectory within the repo to treat as content root |
+| `token` | `string` | — | GitHub personal access token (increases API rate limit from 60 to 5,000 req/hr) |
+
+**Caching:** File contents and the repository tree are cached for 5 minutes. Call `source.refresh()` to invalidate (done automatically in watch mode). On first request, all `.md` files are fetched in parallel and cached together.
+
+**Rate limits:** The GitHub Git Trees API (file listing) counts toward your rate limit — one call per 5-minute window. File content is fetched from `raw.githubusercontent.com` which has generous limits.
+
+CLI flags: `--github <owner/repo>`, `--github-ref`, `--github-path`, `--github-token`
+
+---
 
 ### `preset`
 

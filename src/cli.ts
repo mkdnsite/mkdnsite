@@ -11,7 +11,7 @@ interface ParsedArgs {
   configPath?: string
 }
 
-function parseArgs (args: string[]): ParsedArgs {
+export function parseArgs (args: string[]): ParsedArgs {
   const result: Record<string, unknown> = {}
   let configPath: string | undefined
 
@@ -88,6 +88,19 @@ function parseArgs (args: string[]): ParsedArgs {
       result.theme = { ...(result.theme as object ?? {}), fonts: { ...((result.theme as Record<string, unknown>)?.fonts as object ?? {}), mono: args[++i] } }
     } else if (arg === '--font-heading') {
       result.theme = { ...(result.theme as object ?? {}), fonts: { ...((result.theme as Record<string, unknown>)?.fonts as object ?? {}), heading: args[++i] } }
+    } else if (arg === '--github') {
+      const parts = args[++i].split('/')
+      if (parts.length !== 2 || parts[0] === '' || parts[1] === '') {
+        console.error('Error: --github requires owner/repo format (e.g. mkdnsite/mkdnsite)')
+        process.exit(1)
+      }
+      result.github = { ...(result.github ?? {}), owner: parts[0], repo: parts[1] }
+    } else if (arg === '--github-ref') {
+      result.github = { ...(result.github ?? {}), ref: args[++i] }
+    } else if (arg === '--github-path') {
+      result.github = { ...(result.github ?? {}), path: args[++i] }
+    } else if (arg === '--github-token') {
+      result.github = { ...(result.github ?? {}), token: args[++i] }
     } else if (arg === '--renderer') {
       result.renderer = args[++i]
     } else if (arg === '--static') {
@@ -151,6 +164,14 @@ function printHelp (): void {
     --no-llms-txt         Disable /llms.txt generation
     --no-negotiate        Disable content negotiation
     --renderer <engine>   Renderer: portable (default) or bun-native (Bun only)
+
+  GitHub source:
+    --github <owner/repo> Serve a public GitHub repo (e.g. --github owner/repo)
+    --github-ref <ref>    Branch or tag to serve (default: main)
+    --github-path <path>  Subdirectory within the repo to use as content root
+    --github-token <token> GitHub token for private repos or higher rate limits
+
+  Client-side features:
     --no-client-js        Disable client-side JavaScript (mermaid, copy, search, theme toggle)
     --no-theme-toggle     Disable light/dark theme toggle button
     --no-math             Disable KaTeX math rendering
@@ -218,7 +239,14 @@ async function main (): Promise<void> {
   await adapter.start(handler, config)
 }
 
-main().catch(err => {
-  console.error('Error starting mkdnsite:', err)
-  process.exit(1)
-})
+// Only run when executed directly (not when imported for parseArgs in tests)
+const isMainModule = typeof Bun !== 'undefined'
+  ? Bun.main === import.meta.path
+  : import.meta.url === `file://${process.argv[1]}`
+
+if (isMainModule) {
+  main().catch(err => {
+    console.error('Error starting mkdnsite:', err)
+    process.exit(1)
+  })
+}

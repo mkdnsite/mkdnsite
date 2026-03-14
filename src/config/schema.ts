@@ -41,6 +41,9 @@ export interface MkdnSiteConfig {
 
   /** Static files directory for images, videos, etc. */
   staticDir?: string
+
+  /** GitHub repository source (alternative to local contentDir) */
+  github?: import('../content/types.ts').GitHubSourceConfig
 }
 
 /** OpenGraph / social sharing meta tag configuration */
