@@ -2,6 +2,7 @@ import { describe, it, expect } from 'bun:test'
 import { renderPage } from '../src/render/page-shell.ts'
 import { resolveConfig } from '../src/config/defaults.ts'
 import { BASE_THEME_CSS } from '../src/theme/base-css.ts'
+import { parseFrontmatter } from '../src/content/frontmatter.ts'
 import type { NavNode } from '../src/content/types.ts'
 
 const rootNav: NavNode = {
@@ -91,6 +92,21 @@ describe('pageDate', () => {
     expect(html).not.toContain('class="mkdn-page-meta"')
     expect(html).not.toContain('datetime=')
   })
+
+  it('handles YAML-parsed Date objects (not just strings)', () => {
+    const { meta } = parseFrontmatter('---\ntitle: Test\ndate: 2024-03-15\nupdated: 2024-06-01\n---\nHello')
+    const themeOpts = { pageDate: true, readingTime: false }
+    const config = resolveConfig({ theme: themeOpts as never })
+    const html = renderPage({
+      renderedContent: '<p>Hello</p>',
+      meta: meta as never,
+      config,
+      currentSlug: '/test'
+    })
+    expect(html).toContain('datetime="2024-03-15"')
+    expect(html).toContain('datetime="2024-06-01"')
+    expect(html).toContain('class="mkdn-page-meta"')
+  })
 })
 
 // ---- Reading Time ----
@@ -106,7 +122,7 @@ describe('readingTime', () => {
     expect(html).toContain('1 min read')
   })
 
-  it('calculates 3 min for 476 words (ceil)', () => {
+  it('calculates 3 min for 477 words (ceil)', () => {
     const html = makePage({ theme: { readingTime: true }, body: 'word '.repeat(477) })
     expect(html).toContain('3 min read')
   })

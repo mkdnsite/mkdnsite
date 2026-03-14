@@ -165,11 +165,11 @@ function buildPageMetaHtml (meta: MarkdownMeta, config: MkdnSiteConfig, body?: s
       month: 'long',
       day: 'numeric'
     })
-    const dateVal = meta.date
+    const dateVal = coerceDateToString(meta.date)
     const dateStr = formatter.format(new Date(dateVal))
     let datePart = `<time datetime="${esc(dateVal)}">${esc(dateStr)}</time>`
     if (meta.updated != null) {
-      const updatedVal = meta.updated
+      const updatedVal = coerceDateToString(meta.updated)
       const updatedStr = formatter.format(new Date(updatedVal))
       datePart += ` · Updated <time datetime="${esc(updatedVal)}">${esc(updatedStr)}</time>`
     }
@@ -192,7 +192,7 @@ function buildReadingTimeHtml (body: string): string {
 }
 
 function buildTocHtml (renderedContent: string): string {
-  const headingRegex = /<h([2-4])\s+id="([^"]+)"[^>]*>([\s\S]+?)<\/h[2-4]>/g
+  const headingRegex = /<h([2-4])\s[^>]*?id="([^"]+)"[^>]*>([\s\S]+?)<\/h[2-4]>/g
   const headings: Array<{ level: number, id: string, text: string }> = []
 
   let match = headingRegex.exec(renderedContent)
@@ -283,6 +283,15 @@ function buildOgTags (props: PageShellProps): string {
   }
 
   return tags.join('\n  ')
+}
+
+/**
+ * Coerce a date value to an ISO date string.
+ * YAML parsers often produce Date objects instead of strings for bare dates.
+ */
+function coerceDateToString (val: unknown): string {
+  if (val instanceof Date) return val.toISOString().split('T')[0]
+  return String(val)
 }
 
 function esc (str: string): string {
