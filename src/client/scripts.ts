@@ -111,7 +111,8 @@ const SEARCH_SCRIPT = `
 
   function boldTerms(excerpt, terms) {
     var safe = escHtml(excerpt);
-    terms.forEach(function(t){
+    var sorted = terms.slice().sort(function(a,b){ return b.length - a.length; });
+    sorted.forEach(function(t){
       if (t.length < 2) return;
       var escaped = t.replace(new RegExp('[.*+?^' + '$' + '{}()|[\\]\\\\]','g'),'\\$&');
       var re = new RegExp('(' + escaped + ')', 'gi');
@@ -162,7 +163,7 @@ const SEARCH_SCRIPT = `
 
   function onInput() {
     clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(doSearch, 500);
+    debounceTimer = setTimeout(doSearch, 250);
   }
 
   function doSearch() {
@@ -250,6 +251,7 @@ const HIGHLIGHT_SCRIPT = `
   history.replaceState(null, '', newUrl);
 
   var terms = q.toLowerCase().split(/ +/).filter(function(t){ return t.length >= 2; });
+  terms.sort(function(a, b){ return b.length - a.length; });
   if (!terms.length) return;
 
   var prose = document.querySelector('.mkdn-prose');

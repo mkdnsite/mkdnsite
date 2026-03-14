@@ -100,7 +100,7 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
 
     // ---- Search API ----
     if (pathname === '/api/search' && config.client.search) {
-      const query = url.searchParams.get('q') ?? ''
+      const query = (url.searchParams.get('q') ?? '').slice(0, 200)
       const rawLimit = parseInt(url.searchParams.get('limit') ?? '10', 10)
       const limit = Math.min(isNaN(rawLimit) ? 10 : rawLimit, 50)
       const si = await ensureSearchIndex()
