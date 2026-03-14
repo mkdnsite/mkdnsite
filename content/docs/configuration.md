@@ -40,6 +40,7 @@ When you run `mkdnsite`, it auto-detects `mkdnsite.config.ts` in the current wor
 |--------|------|---------|-------------|
 | `contentDir` | `string` | `'./content'` | Path to the directory containing `.md` files |
 | `staticDir` | `string` | — | Directory for static assets (images, CSS, etc.) served at `/` |
+| `preset` | `'docs' \| 'blog'` | — | Apply sensible defaults for a docs or blog use case |
 | `renderer` | `'portable' \| 'bun-native'` | `'portable'` | Markdown renderer engine |
 
 ### `contentDir`
@@ -57,6 +58,25 @@ staticDir: './static'  // serve ./static/logo.png at /logo.png
 ```
 
 Also settable with: `--static <dir>`
+
+### `preset`
+
+Apply a preset to get sensible defaults for a common use case without per-field configuration. User values always win — the preset is applied first and any explicit setting overrides it.
+
+Merge order: `DEFAULT_CONFIG → preset → user config`
+
+| Preset | Effect |
+|--------|--------|
+| `'docs'` | Enables `showNav`, `showToc`, `prevNext`. Disables `pageTitle`, `pageDate`, `readingTime`. Best for documentation sites. |
+| `'blog'` | Enables `pageTitle`, `pageDate`, `readingTime`, `prevNext`. Disables `showNav`, `showToc`. Best for blog posts. |
+
+```typescript
+preset: 'blog'  // then override individual options as needed
+```
+
+CLI flag: `--preset <name>`
+
+---
 
 ### `renderer`
 
@@ -257,15 +277,17 @@ CLI flag: `--no-builtin-css`
 
 ### Other theme options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `showNav` | `boolean` | `true` | Show the navigation sidebar |
-| `showToc` | `boolean` | `true` | Show table of contents per page |
-| `editUrl` | `string` | — | Edit URL template, e.g. `https://github.com/org/repo/edit/main/{path}` |
-| `syntaxTheme` | `string` | `'github-light'` | Shiki light mode syntax theme |
-| `syntaxThemeDark` | `string` | `'github-dark'` | Shiki dark mode syntax theme |
-
-CLI flags: `--no-nav`
+| Option | Type | Default | CLI flag(s) | Description |
+|--------|------|---------|------------|-------------|
+| `showNav` | `boolean` | `true` | `--no-nav` | Show the navigation sidebar |
+| `showToc` | `boolean` | `true` | `--no-toc` | Show table of contents sidebar |
+| `pageTitle` | `boolean` | `false` | `--page-title` / `--no-page-title` | Render frontmatter `title` as `<h1>` above content |
+| `pageDate` | `boolean` | `false` | `--page-date` / `--no-page-date` | Render `date`/`updated` from frontmatter below page title |
+| `readingTime` | `boolean` | `false` | `--reading-time` / `--no-reading-time` | Show estimated reading time (238 wpm) |
+| `prevNext` | `boolean` | `false` | `--prev-next` / `--no-prev-next` | Show prev/next page navigation links at bottom |
+| `editUrl` | `string` | — | — | Edit URL template, e.g. `https://github.com/org/repo/edit/main/{path}` |
+| `syntaxTheme` | `string` | `'github-light'` | — | Shiki light mode syntax theme |
+| `syntaxThemeDark` | `string` | `'github-dark'` | — | Shiki dark mode syntax theme |
 
 ---
 
@@ -373,6 +395,8 @@ const config: Partial<MkdnSiteConfig> = {
     hostname: 'localhost'
   },
 
+  preset: 'docs',
+
   theme: {
     mode: 'prose',
     colorScheme: 'system',
@@ -395,6 +419,7 @@ const config: Partial<MkdnSiteConfig> = {
     syntaxThemeDark: 'github-dark',
     showNav: true,
     showToc: true,
+    prevNext: true,
     editUrl: 'https://github.com/myorg/myproject/edit/main/content/{path}'
   },
 

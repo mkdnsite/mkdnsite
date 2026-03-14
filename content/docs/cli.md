@@ -182,14 +182,58 @@ mkdnsite --static ./static --custom-css-url /my-theme.css
 mkdnsite --no-builtin-css --custom-css-url /my-complete-theme.css
 ```
 
+## Presets
+
+Apply a preset to configure sensible defaults for a common use case. User values always override the preset.
+
+| Flag | Description |
+|------|-------------|
+| `--preset <name>` | Apply preset: `docs` or `blog` |
+
+```bash
+mkdnsite --preset docs ./content   # nav + TOC + prev/next links
+mkdnsite --preset blog ./posts     # page title, date, reading time, prev/next
+```
+
+See [Configuration — preset](/docs/configuration#preset) for full details.
+
+## Page metadata
+
+Controls how frontmatter values are displayed in the rendered page.
+
+| Flag | Description |
+|------|-------------|
+| `--page-title` | Render frontmatter `title` as `<h1>` above article content |
+| `--no-page-title` | Disable page title rendering |
+| `--page-date` | Render `date`/`updated` from frontmatter below the page title |
+| `--no-page-date` | Disable page date rendering |
+| `--reading-time` | Show estimated reading time (calculated at 238 wpm) |
+| `--no-reading-time` | Disable reading time display |
+| `--prev-next` | Show prev/next page navigation links at the bottom of the article |
+| `--no-prev-next` | Disable prev/next navigation |
+| `--no-toc` | Disable the table of contents sidebar |
+
+```bash
+# Manual blog setup without a preset
+mkdnsite ./posts \
+  --page-title \
+  --page-date \
+  --reading-time \
+  --prev-next \
+  --no-nav \
+  --no-toc
+```
+
 ## Navigation
 
 | Flag | Description |
 |------|-------------|
 | `--no-nav` | Disable the navigation sidebar |
+| `--no-toc` | Disable the table of contents sidebar |
 
 ```bash
 mkdnsite --no-nav   # single-page or minimal sites
+mkdnsite --no-toc   # disable TOC without disabling nav
 ```
 
 ## Content negotiation
@@ -244,6 +288,12 @@ mkdnsite -v
 ```
 
 ## Common patterns
+
+### Blog with reading time and date
+
+```bash
+mkdnsite ./posts --preset blog --title "My Blog"
+```
 
 ### Local docs site with full branding
 
@@ -310,6 +360,16 @@ Every CLI flag maps to a field in `mkdnsite.config.ts`. CLI flags take precedenc
 | `--font-body` | `theme.fonts.body` |
 | `--font-mono` | `theme.fonts.mono` |
 | `--font-heading` | `theme.fonts.heading` |
+| `--preset` | `preset` |
+| `--page-title` | `theme.pageTitle: true` |
+| `--no-page-title` | `theme.pageTitle: false` |
+| `--page-date` | `theme.pageDate: true` |
+| `--no-page-date` | `theme.pageDate: false` |
+| `--prev-next` | `theme.prevNext: true` |
+| `--no-prev-next` | `theme.prevNext: false` |
+| `--reading-time` | `theme.readingTime: true` |
+| `--no-reading-time` | `theme.readingTime: false` |
+| `--no-toc` | `theme.showToc: false` |
 | `--no-nav` | `theme.showNav: false` |
 | `--no-negotiate` | `negotiation.enabled: false` |
 | `--no-llms-txt` | `llmsTxt.enabled: false` |
