@@ -583,21 +583,14 @@ body {
   z-index: 100;
   pointer-events: none;
   overflow: hidden;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  border: 1px solid var(--mkdn-border);
+  border-bottom: none;
 }
 .mkdn-thead-clone table {
   border-collapse: collapse;
-  table-layout: fixed;
 }
-.mkdn-thead-clone th {
-  background: var(--mkdn-bg-alt);
-  border-bottom: 2px solid var(--mkdn-border);
-  padding: 0.75rem 1rem;
-  font-weight: 600;
-  font-size: 0.875rem;
-  text-align: left;
-}
-.mkdn-thead-clone td[align="center"], .mkdn-thead-clone th[align="center"] { text-align: center; }
-.mkdn-thead-clone td[align="right"], .mkdn-thead-clone th[align="right"] { text-align: right; }
 
 /* ---- Chart rendering ---- */
 .mkdn-chart {

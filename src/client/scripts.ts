@@ -341,7 +341,7 @@ const STICKY_TABLE_SCRIPT = `
     if (!thead) return;
 
     var clone = document.createElement('div');
-    clone.className = 'mkdn-thead-clone';
+    clone.className = 'mkdn-thead-clone mkdn-prose';
     clone.style.display = 'none';
 
     var cloneTable = document.createElement('table');
@@ -355,10 +355,16 @@ const STICKY_TABLE_SCRIPT = `
   if (!clones.length) return;
 
   function syncWidths (entry) {
+    entry.cloneTable.style.width = entry.table.getBoundingClientRect().width + 'px';
     var ths = entry.thead.querySelectorAll('th');
     var cloneThs = entry.clone.querySelectorAll('th');
     ths.forEach(function(th, i){
-      if (cloneThs[i]) cloneThs[i].style.width = th.getBoundingClientRect().width + 'px';
+      if (cloneThs[i]) {
+        var w = th.getBoundingClientRect().width + 'px';
+        cloneThs[i].style.width = w;
+        cloneThs[i].style.minWidth = w;
+        cloneThs[i].style.maxWidth = w;
+      }
     });
     var wrapperRect = entry.wrapper.getBoundingClientRect();
     entry.clone.style.left = wrapperRect.left + 'px';
