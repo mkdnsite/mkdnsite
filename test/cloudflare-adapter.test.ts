@@ -152,11 +152,34 @@ describe('CloudflareAdapter — createTrafficAnalytics', () => {
       cacheHit: false
     })
     expect(calls).toHaveLength(1)
-    const dp = calls[0] as { blobs: string[], doubles: number[] }
+    const dp = calls[0] as { blobs: string[], doubles: number[], indexes: string[] }
     expect(dp.blobs).toContain('/docs')
     expect(dp.blobs).toContain('html')
     expect(dp.blobs).toContain('human')
     expect(dp.doubles).toContain(200)
     expect(dp.doubles).toContain(15)
+    expect(dp.indexes).toEqual([''])
+  })
+
+  it('WorkersAnalyticsEngineAnalytics writes siteId to indexes', async () => {
+    const { WorkersAnalyticsEngineAnalytics } = await import('../src/adapters/cloudflare.ts')
+    const calls: unknown[] = []
+    const mockDataset = { writeDataPoint: (data: unknown) => calls.push(data) }
+    const wae = new WorkersAnalyticsEngineAnalytics(mockDataset as never)
+    wae.logRequest({
+      timestamp: 1710000000000,
+      path: '/docs',
+      method: 'GET',
+      format: 'html',
+      trafficType: 'human',
+      statusCode: 200,
+      latencyMs: 15,
+      userAgent: 'TestAgent/1.0',
+      contentLength: 4321,
+      cacheHit: false,
+      siteId: 'site-abc123'
+    })
+    const dp = calls[0] as { indexes: string[] }
+    expect(dp.indexes).toEqual(['site-abc123'])
   })
 })

@@ -213,6 +213,22 @@ describe('ConsoleAnalytics', () => {
     expect(() => new ConsoleAnalytics()).not.toThrow()
   })
 
+  it('includes siteId when present', () => {
+    const lines: string[] = []
+    const ca = new ConsoleAnalytics(line => lines.push(line))
+    ca.logRequest(makeEvent({ siteId: 'site-abc123' }))
+    const obj = JSON.parse(lines[0])
+    expect(obj.site).toBe('site-abc123')
+  })
+
+  it('omits siteId when not present', () => {
+    const lines: string[] = []
+    const ca = new ConsoleAnalytics(line => lines.push(line))
+    ca.logRequest(makeEvent())
+    const obj = JSON.parse(lines[0])
+    expect(obj.site).toBeUndefined()
+  })
+
   it('logs cacheHit: true correctly', () => {
     const lines: string[] = []
     const ca = new ConsoleAnalytics(line => lines.push(line))
@@ -341,6 +357,37 @@ describe('Handler analytics integration', () => {
     })
     await handler(req)
     expect(events[0].contentLength).toBeGreaterThan(0)
+  })
+
+  it('passes siteId through to analytics events', async () => {
+    const events: TrafficEvent[] = []
+    const analytics: TrafficAnalytics = { logRequest: e => events.push(e) }
+    const config = resolveConfig({})
+    const handler = createHandler({
+      source: makeStubSource(),
+      renderer: makeStubRenderer(),
+      config,
+      analytics,
+      siteId: 'site-xyz789'
+    })
+    const req = new Request('http://localhost/test')
+    await handler(req)
+    expect(events[0].siteId).toBe('site-xyz789')
+  })
+
+  it('siteId is undefined when not configured', async () => {
+    const events: TrafficEvent[] = []
+    const analytics: TrafficAnalytics = { logRequest: e => events.push(e) }
+    const config = resolveConfig({})
+    const handler = createHandler({
+      source: makeStubSource(),
+      renderer: makeStubRenderer(),
+      config,
+      analytics
+    })
+    const req = new Request('http://localhost/test')
+    await handler(req)
+    expect(events[0].siteId).toBeUndefined()
   })
 
   it('records api format for /api/search endpoint', async () => {

@@ -34,6 +34,8 @@ export interface TrafficEvent {
   contentLength: number
   /** Whether the response was served from cache */
   cacheHit: boolean
+  /** Site identifier for multi-tenant deployments (e.g. mkdn.io). Undefined for single-site. */
+  siteId?: string
 }
 
 /**

@@ -21,7 +21,7 @@ export class ConsoleAnalytics implements TrafficAnalytics {
   }
 
   logRequest (event: TrafficEvent): void {
-    this.output(JSON.stringify({
+    const obj: Record<string, unknown> = {
       ts: event.timestamp,
       method: event.method,
       path: event.path,
@@ -32,6 +32,8 @@ export class ConsoleAnalytics implements TrafficAnalytics {
       bytes: event.contentLength,
       cache: event.cacheHit,
       ua: event.userAgent
-    }))
+    }
+    if (event.siteId != null) obj.site = event.siteId
+    this.output(JSON.stringify(obj))
   }
 }

@@ -21,6 +21,8 @@ export interface HandlerOptions {
   config: MkdnSiteConfig
   /** Optional traffic analytics backend. When provided, every request is logged. */
   analytics?: TrafficAnalytics
+  /** Site identifier for multi-tenant analytics isolation (e.g. mkdn.io). */
+  siteId?: string
 }
 
 /**
@@ -35,7 +37,7 @@ export interface HandlerOptions {
  * - Deno.serve()
  */
 export function createHandler (opts: HandlerOptions): (request: Request) => Promise<Response> {
-  const { source, renderer, config, analytics } = opts
+  const { source, renderer, config, analytics, siteId } = opts
 
   let llmsTxtCache: string | null = null
   let mcpHandlerFn: ((req: Request) => Promise<Response>) | null = null
@@ -89,7 +91,8 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
           latencyMs: Date.now() - start,
           userAgent: request.headers.get('User-Agent') ?? '',
           contentLength: readContentLength(response),
-          cacheHit: false // TODO: set from cache layer when response caching lands (#17)
+          cacheHit: false, // TODO: set from cache layer when response caching lands (#17)
+          siteId
         })
       } catch {
         // analytics must never break the response path

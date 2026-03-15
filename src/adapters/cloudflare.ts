@@ -151,6 +151,9 @@ export class WorkersAnalyticsEngineAnalytics implements TrafficAnalytics {
     // fields by index (blob1, blob2, ..., double1, double2, ...).
     // Do NOT reorder without updating all downstream queries.
     this.dataset.writeDataPoint({
+      indexes: [
+        event.siteId ?? '' // index1: site isolation key (empty for single-site)
+      ],
       blobs: [
         event.path, // blob1: URL pathname
         event.method, // blob2: HTTP method
