@@ -17,6 +17,11 @@ export interface ContentCache {
   getPageList: () => Promise<ContentPage[] | null>
   setPageList: (pages: ContentPage[]) => Promise<void>
 
+  /** Get serialized search index JSON (null if not cached) */
+  getSearchIndex: () => Promise<string | null>
+  /** Store serialized search index JSON */
+  setSearchIndex: (data: string) => Promise<void>
+
   clear: () => Promise<void>
 }
 
@@ -33,6 +38,7 @@ export class MemoryContentCache implements ContentCache {
   private readonly pages = new Map<string, CacheEntry<ContentPage>>()
   private nav: CacheEntry<NavNode> | null = null
   private pageList: CacheEntry<ContentPage[]> | null = null
+  private searchIndex: CacheEntry<string> | null = null
   private readonly ttlMs: number
 
   constructor (ttlMs?: number) {
@@ -67,10 +73,22 @@ export class MemoryContentCache implements ContentCache {
     this.pageList = { value: pages, expiresAt: Date.now() + this.ttlMs }
   }
 
+  async getSearchIndex (): Promise<string | null> {
+    if (this.searchIndex != null && Date.now() < this.searchIndex.expiresAt) {
+      return this.searchIndex.value
+    }
+    return null
+  }
+
+  async setSearchIndex (data: string): Promise<void> {
+    this.searchIndex = { value: data, expiresAt: Date.now() + this.ttlMs }
+  }
+
   async clear (): Promise<void> {
     this.pages.clear()
     this.nav = null
     this.pageList = null
+    this.searchIndex = null
   }
 }
 
@@ -176,6 +194,27 @@ export class KVContentCache implements ContentCache {
   async setPageList (pages: ContentPage[]): Promise<void> {
     await this.memory.setPageList(pages)
     await this.kv.put(this.prefix + 'pages', JSON.stringify(pages), {
+      expirationTtl: this.ttlSeconds
+    })
+  }
+
+  async getSearchIndex (): Promise<string | null> {
+    // L1: in-memory
+    const memResult = await this.memory.getSearchIndex()
+    if (memResult != null) return memResult
+
+    // L2: KV (search index stored as raw string, already JSON)
+    const raw = await this.kv.get(this.prefix + 'search-index')
+    if (raw != null) {
+      await this.memory.setSearchIndex(raw)
+      return raw
+    }
+    return null
+  }
+
+  async setSearchIndex (data: string): Promise<void> {
+    await this.memory.setSearchIndex(data)
+    await this.kv.put(this.prefix + 'search-index', data, {
       expirationTtl: this.ttlSeconds
     })
   }

@@ -80,7 +80,7 @@ export type { CloudflareEnv } from './adapters/cloudflare.ts'
 
 // Search
 export { createSearchIndex } from './search/index.ts'
-export type { SearchIndex, SearchResult } from './search/index.ts'
+export type { SearchIndex, SearchResult, SerializedSearchIndex } from './search/index.ts'
 
 // MCP
 export { createMcpServer } from './mcp/server.ts'

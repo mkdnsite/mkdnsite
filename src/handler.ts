@@ -9,6 +9,7 @@ import { renderPage, render404 } from './render/page-shell.ts'
 import { generateLlmsTxt } from './discovery/llmstxt.ts'
 import { createSearchIndex } from './search/index.ts'
 import type { SearchIndex } from './search/index.ts'
+import type { ContentCache } from './content/cache.ts'
 import { createMcpServer } from './mcp/server.ts'
 import { buildCsp } from './security/csp.ts'
 import { createMcpHandler } from './mcp/transport.ts'
@@ -23,6 +24,12 @@ export interface HandlerOptions {
   analytics?: TrafficAnalytics
   /** Site identifier for multi-tenant analytics isolation (e.g. mkdn.io). */
   siteId?: string
+  /**
+   * Optional content cache.
+   * When provided, the search index is loaded from / stored in the cache
+   * so cold-start rebuilds are avoided across isolates (e.g. Cloudflare Workers + KV).
+   */
+  contentCache?: ContentCache
 }
 
 /**
@@ -37,7 +44,7 @@ export interface HandlerOptions {
  * - Deno.serve()
  */
 export function createHandler (opts: HandlerOptions): (request: Request) => Promise<Response> {
-  const { source, renderer, config, analytics, siteId } = opts
+  const { source, renderer, config, analytics, siteId, contentCache } = opts
 
   let llmsTxtCache: string | null = null
   let mcpHandlerFn: ((req: Request) => Promise<Response>) | null = null
@@ -49,7 +56,27 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
     if (searchIndexPromise != null) return await searchIndexPromise
     searchIndexPromise = (async () => {
       const si = createSearchIndex()
+      // Try to restore from cache (avoids full rebuild on cold starts)
+      if (contentCache != null) {
+        const cached = await contentCache.getSearchIndex()
+        if (cached != null && cached !== '') {
+          try {
+            si.deserialize(cached)
+            return si
+          } catch {
+            // Corrupt / incompatible — fall through to rebuild
+          }
+        }
+      }
       await si.rebuild(source)
+      // Persist to cache for next cold start
+      if (contentCache != null) {
+        try {
+          await contentCache.setSearchIndex(si.serialize())
+        } catch {
+          // Non-fatal — cache write failure shouldn't break search
+        }
+      }
       return si
     })()
     return await searchIndexPromise
@@ -162,10 +189,18 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
     if (pathname === '/_refresh' && request.method === 'POST') {
       await source.refresh()
       llmsTxtCache = null
+      // Clear cached search index so next request triggers a full rebuild
+      if (contentCache != null) {
+        try {
+          await contentCache.setSearchIndex('')
+        } catch {
+          // Non-fatal
+        }
+      }
       // Reset and rebuild shared search index on refresh
       if (searchIndexPromise != null) {
-        const si = await searchIndexPromise
-        await si.rebuild(source)
+        searchIndexPromise = null
+        void ensureSearchIndex()
       }
       return new Response('cache cleared', { status: 200 })
     }
