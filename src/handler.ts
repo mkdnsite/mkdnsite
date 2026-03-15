@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { extname } from 'node:path'
+import { timingSafeEqual as cryptoTimingSafeEqual } from 'node:crypto'
 import type { MkdnSiteConfig } from './config/schema.ts'
 import type { ContentSource } from './content/types.ts'
 import type { MarkdownRenderer } from './render/types.ts'
@@ -468,23 +469,19 @@ function notModifiedHeaders (original: Record<string, string>): Record<string, s
 }
 
 /**
- * Constant-time string comparison to prevent timing side-channel attacks.
- * Always compares the full length of both strings regardless of where they differ.
+ * Constant-time string comparison using node:crypto timingSafeEqual.
+ * Converts both strings to UTF-8 Buffers of equal length before comparing
+ * to prevent side-channel timing attacks on the /_refresh auth token.
  */
 function timingSafeEqual (a: string, b: string): boolean {
-  if (a.length !== b.length) {
-    // Still do a full comparison against b to avoid leaking length info via timing
-    let mismatch = 1
-    for (let i = 0; i < b.length; i++) {
-      mismatch |= b.charCodeAt(i) ^ b.charCodeAt(i)
-    }
-    return mismatch === 0
-  }
-  let mismatch = 0
-  for (let i = 0; i < a.length; i++) {
-    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i)
-  }
-  return mismatch === 0
+  const aBuf = Buffer.from(a, 'utf8')
+  const bBuf = Buffer.from(b, 'utf8')
+  // Pad to same length so cryptoTimingSafeEqual doesn't throw
+  const len = Math.max(aBuf.length, bBuf.length)
+  const aPadded = Buffer.concat([aBuf, Buffer.alloc(len - aBuf.length)])
+  const bPadded = Buffer.concat([bBuf, Buffer.alloc(len - bBuf.length)])
+  // Length difference means mismatch; still do full comparison to avoid timing leaks
+  return aBuf.length === bBuf.length && cryptoTimingSafeEqual(aPadded, bPadded)
 }
 
 async function serveStatic (pathname: string, staticDir: string): Promise<Response> {
