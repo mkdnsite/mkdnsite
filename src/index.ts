@@ -16,6 +16,7 @@ export type {
   SiteConfig,
   OgConfig,
   AnalyticsConfig,
+  FaviconConfig,
   ThemeConfig,
   NegotiationConfig,
   ClientConfig,

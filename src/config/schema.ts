@@ -81,6 +81,12 @@ export interface OgConfig {
   twitterSite?: string
 }
 
+/** Favicon configuration */
+export interface FaviconConfig {
+  /** Path or URL to the favicon file (.ico, .png, .svg) */
+  src: string
+}
+
 export interface SiteConfig {
   title: string
   description?: string
@@ -88,6 +94,8 @@ export interface SiteConfig {
   lang?: string
   /** OpenGraph / social sharing meta tag configuration */
   og?: OgConfig
+  /** Favicon configuration */
+  favicon?: FaviconConfig
 }
 
 export interface ServerConfig {
