@@ -10,6 +10,7 @@ import { generateLlmsTxt } from './discovery/llmstxt.ts'
 import { createSearchIndex } from './search/index.ts'
 import type { SearchIndex } from './search/index.ts'
 import type { ContentCache } from './content/cache.ts'
+import type { ResponseCache } from './cache/response.ts'
 import { createMcpServer } from './mcp/server.ts'
 import { buildCsp } from './security/csp.ts'
 import { createMcpHandler } from './mcp/transport.ts'
@@ -30,6 +31,18 @@ export interface HandlerOptions {
    * so cold-start rebuilds are avoided across isolates (e.g. Cloudflare Workers + KV).
    */
   contentCache?: ContentCache
+  /**
+   * Optional response cache.
+   * When provided, rendered HTML and markdown responses are cached to skip SSR
+   * on repeat requests. Works with MemoryResponseCache (single-process) or
+   * KVResponseCache (Cloudflare Workers with KV — cross-isolate sharing).
+   */
+  responseCache?: ResponseCache
+  /**
+   * Optional secret token for authenticating POST /_refresh requests.
+   * When set, requests without `Authorization: Bearer <refreshToken>` are rejected with 401.
+   */
+  refreshToken?: string
 }
 
 /**
@@ -44,7 +57,7 @@ export interface HandlerOptions {
  * - Deno.serve()
  */
 export function createHandler (opts: HandlerOptions): (request: Request) => Promise<Response> {
-  const { source, renderer, config, analytics, siteId, contentCache } = opts
+  const { source, renderer, config, analytics, siteId, contentCache, responseCache, refreshToken } = opts
 
   let llmsTxtCache: string | null = null
   let mcpHandlerFn: ((req: Request) => Promise<Response>) | null = null
@@ -103,7 +116,7 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
     const url = new URL(request.url)
     const pathname = decodeURIComponent(url.pathname)
 
-    const response = await handleRequest(request, url, pathname)
+    const { response, cacheHit } = await handleRequest(request, url, pathname)
 
     if (analytics != null) {
       const format = resolveAnalyticsFormat(request, pathname, response)
@@ -118,7 +131,7 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
           latencyMs: Date.now() - start,
           userAgent: request.headers.get('User-Agent') ?? '',
           contentLength: readContentLength(response),
-          cacheHit: false, // TODO: set from cache layer when response caching lands (#17)
+          cacheHit,
           siteId
         })
       } catch {
@@ -166,43 +179,71 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
 
   // ---- Inner request handler (no analytics instrumentation) ----
 
-  async function handleRequest (request: Request, url: URL, pathname: string): Promise<Response> {
+  async function handleRequest (
+    request: Request,
+    url: URL,
+    pathname: string
+  ): Promise<{ response: Response, cacheHit: boolean }> {
+    function ok (response: Response): { response: Response, cacheHit: boolean } {
+      return { response, cacheHit: false }
+    }
+
     // ---- Special routes ----
 
     if (pathname === '/_health') {
-      return new Response('ok', { status: 200 })
+      return ok(new Response('ok', { status: 200 }))
     }
 
     if (pathname === '/llms.txt' && config.llmsTxt.enabled) {
       if (llmsTxtCache == null) {
         llmsTxtCache = await generateLlmsTxt(source, config)
       }
-      return textResponse(llmsTxtCache, {
+      return ok(textResponse(llmsTxtCache, {
         status: 200,
         headers: {
           'Content-Type': 'text/markdown; charset=utf-8',
           'Cache-Control': 'public, max-age=3600'
         }
-      })
+      }))
     }
 
     if (pathname === '/_refresh' && request.method === 'POST') {
-      await source.refresh()
-      llmsTxtCache = null
-      // Clear cached search index so next request triggers a full rebuild
-      if (contentCache != null) {
-        try {
-          await contentCache.setSearchIndex('')
-        } catch {
-          // Non-fatal
+      // Optional Bearer token auth
+      if (refreshToken != null && refreshToken !== '') {
+        const authHeader = request.headers.get('Authorization') ?? ''
+        const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
+        if (token !== refreshToken) {
+          return ok(new Response('Unauthorized', { status: 401 }))
         }
       }
-      // Reset and rebuild shared search index on refresh
+
+      await source.refresh()
+      llmsTxtCache = null
+
+      // Clear cached search index
+      if (contentCache != null) {
+        try { await contentCache.setSearchIndex('') } catch { /* non-fatal */ }
+      }
+
+      // Clear response cache (supports ?path= for single-entry invalidation)
+      if (responseCache != null) {
+        const pathParam = url.searchParams.get('path')
+        if (pathParam != null) {
+          // Invalidate both html and markdown variants
+          await responseCache.delete(pathParam + ':html')
+          await responseCache.delete(pathParam + ':markdown')
+        } else {
+          await responseCache.clear()
+        }
+      }
+
+      // Reset search index
       if (searchIndexPromise != null) {
         searchIndexPromise = null
         void ensureSearchIndex()
       }
-      return new Response('cache cleared', { status: 200 })
+
+      return ok(new Response('cache cleared', { status: 200 }))
     }
 
     // ---- Search API ----
@@ -212,10 +253,10 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
       const limit = Math.min(isNaN(rawLimit) ? 10 : rawLimit, 50)
       const si = await ensureSearchIndex()
       const results = si.search(query, limit)
-      return textResponse(JSON.stringify(results), {
+      return ok(textResponse(JSON.stringify(results), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
-      })
+      }))
     }
 
     // ---- MCP endpoint ----
@@ -225,12 +266,12 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
         pathname.startsWith((config.mcp.endpoint ?? '/mcp') + '/'))
     ) {
       const mcp = await ensureMcpHandler()
-      return await mcp(request)
+      return ok(await mcp(request))
     }
 
     // ---- Static files passthrough ----
     if (config.staticDir != null && hasStaticExtension(pathname)) {
-      return await serveStatic(pathname, config.staticDir)
+      return ok(await serveStatic(pathname, config.staticDir))
     }
 
     // ---- Content negotiation + page serving ----
@@ -252,33 +293,64 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
     if (page == null) {
       const format = negotiateFormat(request.headers.get('Accept'))
       if (format === 'markdown') {
-        return textResponse(
+        return ok(textResponse(
           '# 404 — Page Not Found\n\nThe requested page does not exist.\n',
           {
             status: 404,
             headers: { 'Content-Type': 'text/markdown; charset=utf-8' }
           }
-        )
+        ))
       }
-      return textResponse(render404(config), {
+      return ok(textResponse(render404(config), {
         status: 404,
         headers: htmlHeadersWithCsp(config)
-      })
+      }))
     }
 
     const format = forceMarkdown
       ? 'markdown'
       : negotiateFormat(request.headers.get('Accept'))
 
+    // ---- Response cache check (content pages only) ----
+    const cacheEnabled = config.cache?.enabled === true && responseCache != null
+    const cacheKey = slug + ':' + format
+
+    if (cacheEnabled && responseCache != null) {
+      const cached = await responseCache.get(cacheKey)
+      if (cached != null) {
+        // 304 Not Modified support
+        const ifNoneMatch = request.headers.get('If-None-Match')
+        const etag = cached.headers.ETag
+        if (ifNoneMatch != null && etag != null && ifNoneMatch === etag) {
+          return { response: new Response(null, { status: 304 }), cacheHit: true }
+        }
+        return { response: textResponse(cached.body, { status: cached.status, headers: cached.headers }), cacheHit: true }
+      }
+    }
+
     if (format === 'markdown') {
       const tokens = config.negotiation.includeTokenCount
         ? estimateTokens(page.body)
         : null
 
-      return textResponse(page.body, {
-        status: 200,
-        headers: markdownHeaders(tokens, config.negotiation.contentSignals)
-      })
+      const headers = markdownHeaders(tokens, config.negotiation.contentSignals, config.cache, slug)
+
+      // 304 Not Modified support for non-cached path
+      const ifNoneMatch = request.headers.get('If-None-Match')
+      if (ifNoneMatch != null && headers.ETag != null && ifNoneMatch === headers.ETag) {
+        return ok(new Response(null, { status: 304 }))
+      }
+
+      const response = textResponse(page.body, { status: 200, headers })
+      if (cacheEnabled && responseCache != null) {
+        await responseCache.set(cacheKey, {
+          body: page.body,
+          status: 200,
+          headers,
+          timestamp: Date.now()
+        }, config.cache?.maxAgeMarkdown)
+      }
+      return ok(response)
     }
 
     // ---- Render HTML via React SSR ----
@@ -296,10 +368,24 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
       body: page.body
     })
 
-    return textResponse(fullPage, {
-      status: 200,
-      headers: htmlHeadersWithCsp(config)
-    })
+    const htmlHdrs = htmlHeadersWithCsp(config, slug)
+
+    // 304 Not Modified support for non-cached path
+    const ifNoneMatch = request.headers.get('If-None-Match')
+    if (ifNoneMatch != null && htmlHdrs.ETag != null && ifNoneMatch === htmlHdrs.ETag) {
+      return ok(new Response(null, { status: 304 }))
+    }
+
+    const htmlResponse = textResponse(fullPage, { status: 200, headers: htmlHdrs })
+    if (cacheEnabled && responseCache != null) {
+      await responseCache.set(cacheKey, {
+        body: fullPage,
+        status: 200,
+        headers: htmlHdrs,
+        timestamp: Date.now()
+      }, config.cache?.maxAge)
+    }
+    return ok(htmlResponse)
   }
 }
 
@@ -322,8 +408,8 @@ function textResponse (body: string, init: ResponseInit): Response {
   return new Response(encoded, { ...init, headers })
 }
 
-function htmlHeadersWithCsp (config: MkdnSiteConfig): Record<string, string> {
-  const headers = htmlHeaders()
+function htmlHeadersWithCsp (config: MkdnSiteConfig, slug?: string): Record<string, string> {
+  const headers = htmlHeaders(config.cache, slug)
   if (config.csp?.enabled !== false) {
     headers['Content-Security-Policy'] = buildCsp(config)
   }

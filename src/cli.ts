@@ -5,6 +5,7 @@ import { resolveConfig } from './config/defaults.ts'
 import type { MkdnSiteConfig } from './config/schema.ts'
 import { LocalAdapter } from './adapters/local.ts'
 import { createHandler } from './handler.ts'
+import { MemoryResponseCache } from './cache/memory.ts'
 
 interface ParsedArgs {
   config: Partial<MkdnSiteConfig>
@@ -77,6 +78,20 @@ export function parseArgs (args: string[]): ParsedArgs {
       result.llmsTxt = { enabled: false }
     } else if (arg === '--no-csp') {
       result.csp = { enabled: false }
+    } else if (arg === '--cache') {
+      result.cache = { ...(result.cache ?? {}), enabled: true }
+    } else if (arg === '--no-cache') {
+      result.cache = { ...(result.cache ?? {}), enabled: false }
+    } else if (arg === '--cache-max-age') {
+      const val = parseInt(args[++i] ?? '', 10)
+      if (isNaN(val) || val < 0) { console.error('Error: --cache-max-age must be a non-negative integer'); process.exit(1) }
+      result.cache = { ...(result.cache ?? {}), maxAge: val }
+    } else if (arg === '--cache-swr') {
+      const val = parseInt(args[++i] ?? '', 10)
+      if (isNaN(val) || val < 0) { console.error('Error: --cache-swr must be a non-negative integer'); process.exit(1) }
+      result.cache = { ...(result.cache ?? {}), staleWhileRevalidate: val }
+    } else if (arg === '--cache-version') {
+      result.cache = { ...(result.cache ?? {}), versionTag: args[++i] }
     } else if (arg === '--no-negotiate') {
       result.negotiation = { enabled: false }
     } else if (arg === '--no-client-js') {
@@ -202,6 +217,13 @@ ${section('Analytics:')}
 ${flag('--ga-measurement-id <id>', 'Google Analytics 4 measurement ID (e.g. G-XXXXXXXXXX)')}
 ${flag('--traffic-analytics', 'Enable server-side traffic analytics')}
 ${flag('--traffic-console', 'Log traffic events as JSON lines to stdout')}
+${section('Caching:')}
+${flag('--cache', 'Enable in-memory response caching (default: off)')}
+${flag('--no-cache', 'Disable response caching')}
+${flag('--cache-max-age <seconds>', 'Cache-Control max-age for HTML (default: 300)')}
+${flag('--cache-swr <seconds>', 'stale-while-revalidate seconds (default: 0)')}
+${flag('--cache-version <tag>', 'Version tag for ETag header (e.g. v1.0.0 or git SHA)')}
+
 ${section('Security:')}
 ${flag('--no-csp', 'Disable Content-Security-Policy header')}
 ${section('GitHub Source:')}
@@ -332,7 +354,11 @@ async function main (): Promise<void> {
     }
   }
 
-  const handler = createHandler({ source, renderer, config, analytics: trafficAnalytics })
+  const responseCache = config.cache?.enabled === true
+    ? new MemoryResponseCache(config.cache?.maxAge)
+    : undefined
+
+  const handler = createHandler({ source, renderer, config, analytics: trafficAnalytics, responseCache })
 
   const stop = await adapter.start(handler, config)
 

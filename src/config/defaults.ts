@@ -117,6 +117,13 @@ export function resolveConfig (
       : userConfig.analytics,
     csp: userConfig.csp != null
       ? { ...DEFAULT_CONFIG.csp, ...userConfig.csp }
-      : DEFAULT_CONFIG.csp
+      : DEFAULT_CONFIG.csp,
+    cache: {
+      enabled: userConfig.cache?.enabled ?? false,
+      maxAge: userConfig.cache?.maxAge ?? 300,
+      maxAgeMarkdown: userConfig.cache?.maxAgeMarkdown ?? 300,
+      staleWhileRevalidate: userConfig.cache?.staleWhileRevalidate ?? 0,
+      versionTag: userConfig.cache?.versionTag
+    }
   }
 }
