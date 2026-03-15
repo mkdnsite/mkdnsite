@@ -17,6 +17,34 @@ export interface SearchIndex {
   search: (query: string, limit?: number) => SearchResult[]
   /** Rebuild the entire index from a content source */
   rebuild: (source: ContentSource) => Promise<void>
+  /** Serialize internal index state to a JSON string for storage */
+  serialize: () => string
+  /** Restore index state from a previously serialized JSON string */
+  deserialize: (data: string) => void
+}
+
+/** Serialized format stored in cache / on disk */
+export interface SerializedSearchIndex {
+  /** Version tag for forward-compat */
+  v: number
+  /** Documents: slug → serialized entry */
+  docs: Record<string, SerializedDocEntry>
+  /** Inverted index: token → list of slugs */
+  posting: Record<string, string[]>
+}
+
+interface SerializedDocEntry {
+  slug: string
+  title: string
+  description?: string
+  tags: string[]
+  titleTokens: string[]
+  descTokens: string[]
+  tagTokens: string[]
+  bodyTokens: string[]
+  body: string
+  termFreqs: Record<string, number>
+  totalTokens: number
 }
 
 interface DocEntry {
@@ -174,7 +202,75 @@ export function createSearchIndex (): SearchIndex {
     }
   }
 
-  return { index, remove, search, rebuild }
+  function serialize (): string {
+    const docsObj: Record<string, SerializedDocEntry> = {}
+    for (const [slug, entry] of docs) {
+      const termFreqsObj: Record<string, number> = {}
+      for (const [token, freq] of entry.termFreqs) {
+        termFreqsObj[token] = freq
+      }
+      docsObj[slug] = {
+        slug: entry.slug,
+        title: entry.title,
+        description: entry.description,
+        tags: entry.tags,
+        titleTokens: entry.titleTokens,
+        descTokens: entry.descTokens,
+        tagTokens: entry.tagTokens,
+        bodyTokens: entry.bodyTokens,
+        body: entry.body,
+        termFreqs: termFreqsObj,
+        totalTokens: entry.totalTokens
+      }
+    }
+
+    const postingObj: Record<string, string[]> = {}
+    for (const [token, set] of posting) {
+      postingObj[token] = Array.from(set)
+    }
+
+    const serialized: SerializedSearchIndex = { v: 1, docs: docsObj, posting: postingObj }
+    return JSON.stringify(serialized)
+  }
+
+  function deserialize (data: string): void {
+    const parsed = JSON.parse(data) as SerializedSearchIndex
+    if (parsed.v !== 1) {
+      throw new Error('SearchIndex: unsupported serialization version ' + String(parsed.v))
+    }
+
+    // Clear current state
+    docs.clear()
+    posting.clear()
+
+    // Restore docs
+    for (const [slug, entry] of Object.entries(parsed.docs)) {
+      const termFreqs = new Map<string, number>()
+      for (const [token, freq] of Object.entries(entry.termFreqs)) {
+        termFreqs.set(token, freq)
+      }
+      docs.set(slug, {
+        slug: entry.slug,
+        title: entry.title,
+        description: entry.description,
+        tags: entry.tags,
+        titleTokens: entry.titleTokens,
+        descTokens: entry.descTokens,
+        tagTokens: entry.tagTokens,
+        bodyTokens: entry.bodyTokens,
+        body: entry.body,
+        termFreqs,
+        totalTokens: entry.totalTokens
+      })
+    }
+
+    // Restore posting lists
+    for (const [token, slugs] of Object.entries(parsed.posting)) {
+      posting.set(token, new Set(slugs))
+    }
+  }
+
+  return { index, remove, search, rebuild, serialize, deserialize }
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
