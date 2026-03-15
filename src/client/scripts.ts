@@ -26,6 +26,10 @@ export function CLIENT_SCRIPTS (client: ClientConfig): string {
     scripts.push(HIGHLIGHT_SCRIPT)
   }
 
+  if (client.charts) {
+    scripts.push(CHART_SCRIPT)
+  }
+
   if (scripts.length === 0) return ''
 
   return `<script>${scripts.join('\n')}</script>`
@@ -318,5 +322,79 @@ const HIGHLIGHT_SCRIPT = `
 
   var fadeTimer = setTimeout(fadeHighlights, 8000);
   document.addEventListener('click', function(){ clearTimeout(fadeTimer); fadeHighlights(); }, { once: true });
+})();
+`.trim()
+
+const CHART_SCRIPT = `
+(function(){
+  var chartBlocks = document.querySelectorAll('code.language-chart');
+  if (chartBlocks.length === 0) return;
+
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js';
+  s.onload = function(){
+    var root = getComputedStyle(document.documentElement);
+    var textMuted = root.getPropertyValue('--mkdn-text-muted').trim() || '#6b7280';
+    var borderColor = root.getPropertyValue('--mkdn-border').trim() || '#e5e7eb';
+    var accent = root.getPropertyValue('--mkdn-accent').trim() || '#6366f1';
+    var fontBody = root.getPropertyValue('--mkdn-font-body').trim() || 'inherit';
+
+    var palette = [
+      accent,
+      '#06b6d4', '#f59e0b', '#10b981', '#ef4444',
+      '#8b5cf6', '#ec4899', '#14b8a6'
+    ];
+
+    Chart.defaults.color = textMuted;
+    Chart.defaults.borderColor = borderColor;
+    Chart.defaults.font.family = fontBody;
+
+    chartBlocks.forEach(function(block, idx){
+      var pre = block.parentElement;
+      var raw = block.textContent || '';
+      var config;
+      try {
+        config = JSON.parse(raw);
+      } catch(e) {
+        var errEl = document.createElement('div');
+        errEl.className = 'mkdn-chart-error';
+        errEl.textContent = 'Chart error: invalid JSON';
+        pre.parentElement.replaceChild(errEl, pre);
+        return;
+      }
+
+      if (config.data && config.data.datasets) {
+        config.data.datasets.forEach(function(ds, i){
+          var color = palette[i % palette.length];
+          if (!ds.backgroundColor) {
+            if (config.type === 'pie' || config.type === 'doughnut' || config.type === 'polarArea') {
+              ds.backgroundColor = palette.slice(0, (ds.data || []).length);
+            } else {
+              ds.backgroundColor = color + '33';
+            }
+          }
+          if (!ds.borderColor) ds.borderColor = color;
+          if (config.type === 'line' || config.type === 'radar') {
+            if (ds.tension === undefined) ds.tension = 0.3;
+            if (ds.fill === undefined) ds.fill = false;
+          }
+        });
+      }
+
+      if (!config.options) config.options = {};
+      config.options.responsive = true;
+      config.options.maintainAspectRatio = true;
+
+      var container = document.createElement('div');
+      container.className = 'mkdn-chart';
+      var canvas = document.createElement('canvas');
+      canvas.id = 'mkdn-chart-' + idx;
+      container.appendChild(canvas);
+      pre.parentElement.replaceChild(container, pre);
+
+      new Chart(canvas, config);
+    });
+  };
+  document.head.appendChild(s);
 })();
 `.trim()
