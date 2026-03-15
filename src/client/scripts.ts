@@ -392,7 +392,15 @@ const CHART_SCRIPT = `
       container.appendChild(canvas);
       pre.parentElement.replaceChild(container, pre);
 
-      new Chart(canvas, config);
+      try {
+        new Chart(canvas, config);
+      } catch(e) {
+        container.innerHTML = '';
+        var err = document.createElement('div');
+        err.className = 'mkdn-chart-error';
+        err.textContent = 'Chart error: ' + (e.message || 'unknown error');
+        container.appendChild(err);
+      }
     });
   };
   document.head.appendChild(s);
