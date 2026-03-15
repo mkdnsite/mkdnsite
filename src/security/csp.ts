@@ -1,14 +1,22 @@
-import type { MkdnSiteConfig } from '../config/schema.ts'
+import type { MkdnSiteConfig, CspConfig } from '../config/schema.ts'
+
+/**
+ * Sanitize a CSP source value to prevent directive injection.
+ * Strips semicolons which act as directive separators.
+ */
+function sanitizeCspValue (val: string): string {
+  return val.replace(/;/g, '').trim()
+}
 
 /**
  * Build a Content-Security-Policy header value string from the current config.
  * Only includes external sources for features that are actually enabled.
  */
 export function buildCsp (config: MkdnSiteConfig): string {
-  const { client, analytics, csp } = config
+  const { client, analytics, csp, theme } = config
   const gaEnabled = (analytics?.googleAnalytics?.measurementId ?? '') !== ''
   const useCdn = client.mermaid || client.charts
-  const extra: import('../config/schema.ts').CspConfig = csp ?? { enabled: true }
+  const extra: CspConfig = csp ?? { enabled: true }
 
   // script-src
   const scriptSrc = ["'self'", "'unsafe-inline'"]
@@ -17,22 +25,40 @@ export function buildCsp (config: MkdnSiteConfig): string {
     scriptSrc.push('https://www.googletagmanager.com')
     scriptSrc.push('https://www.google-analytics.com')
   }
-  if (extra.extraScriptSrc != null) scriptSrc.push(...extra.extraScriptSrc)
+  if (extra.extraScriptSrc != null) {
+    scriptSrc.push(...extra.extraScriptSrc.map(sanitizeCspValue))
+  }
 
   // style-src
   const styleSrc = ["'self'", "'unsafe-inline'"]
   if (client.math) styleSrc.push('https://cdn.jsdelivr.net')
-  if (extra.extraStyleSrc != null) styleSrc.push(...extra.extraStyleSrc)
+  if (theme.customCssUrl != null) {
+    try {
+      const u = new URL(theme.customCssUrl)
+      if (u.protocol === 'https:' || u.protocol === 'http:') {
+        styleSrc.push(u.origin)
+      }
+    } catch {
+      // relative URL — 'self' covers it
+    }
+  }
+  if (extra.extraStyleSrc != null) {
+    styleSrc.push(...extra.extraStyleSrc.map(sanitizeCspValue))
+  }
 
   // img-src
   const imgSrc = ["'self'", 'data:', 'https:']
   if (client.mermaid) imgSrc.push('blob:')
-  if (extra.extraImgSrc != null) imgSrc.push(...extra.extraImgSrc)
+  if (extra.extraImgSrc != null) {
+    imgSrc.push(...extra.extraImgSrc.map(sanitizeCspValue))
+  }
 
   // font-src
   const fontSrc = ["'self'", 'https://fonts.gstatic.com']
   if (client.math) fontSrc.push('https://cdn.jsdelivr.net')
-  if (extra.extraFontSrc != null) fontSrc.push(...extra.extraFontSrc)
+  if (extra.extraFontSrc != null) {
+    fontSrc.push(...extra.extraFontSrc.map(sanitizeCspValue))
+  }
 
   // connect-src
   const connectSrc = ["'self'"]
@@ -41,7 +67,9 @@ export function buildCsp (config: MkdnSiteConfig): string {
     connectSrc.push('https://analytics.google.com')
     connectSrc.push('https://region1.google-analytics.com')
   }
-  if (extra.extraConnectSrc != null) connectSrc.push(...extra.extraConnectSrc)
+  if (extra.extraConnectSrc != null) {
+    connectSrc.push(...extra.extraConnectSrc.map(sanitizeCspValue))
+  }
 
   const directives: string[] = [
     "default-src 'self'",
@@ -57,7 +85,7 @@ export function buildCsp (config: MkdnSiteConfig): string {
   ]
 
   if (extra.reportUri != null && extra.reportUri !== '') {
-    directives.push('report-uri ' + extra.reportUri)
+    directives.push('report-uri ' + sanitizeCspValue(extra.reportUri))
   }
 
   return directives.join('; ')

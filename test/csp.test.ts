@@ -185,4 +185,48 @@ describe('CSP — buildCsp() directives', () => {
   it('does NOT include report-uri when not configured', () => {
     expect(buildCsp(cfg())).not.toContain('report-uri')
   })
+
+  it('sanitizes semicolons from extraScriptSrc to prevent directive injection', () => {
+    const config = cfg({
+      csp: {
+        enabled: true,
+        extraScriptSrc: ["https://evil.com; script-src-elem 'unsafe-eval'"]
+      }
+    })
+    const csp = buildCsp(config)
+    // Semicolons stripped — the injected directive separator is neutralized
+    // The text remains as a harmless token within the existing directive
+    const directives = csp.split('; ')
+    // There should be no standalone "script-src-elem" directive
+    expect(directives.filter(d => d.startsWith('script-src-elem'))).toHaveLength(0)
+  })
+
+  it('sanitizes semicolons from reportUri', () => {
+    const config = cfg({
+      csp: {
+        enabled: true,
+        reportUri: 'https://report.example.com; script-src *'
+      }
+    })
+    const csp = buildCsp(config)
+    expect(csp).not.toContain('; script-src *')
+  })
+
+  it('auto-adds customCssUrl origin to style-src when external', () => {
+    const config = cfg({
+      theme: { customCssUrl: 'https://fonts.googleapis.com/css2?family=Inter' }
+    })
+    const csp = buildCsp(config)
+    const styleSrc = csp.split(';').find(d => d.trim().startsWith('style-src'))
+    expect(styleSrc).toContain('https://fonts.googleapis.com')
+  })
+
+  it('does not add customCssUrl origin for relative URLs', () => {
+    const config = cfg({
+      theme: { customCssUrl: '/styles/custom.css' }
+    })
+    const csp = buildCsp(config)
+    const styleSrc = csp.split(';').find(d => d.trim().startsWith('style-src'))
+    expect(styleSrc).not.toContain('/styles/custom.css')
+  })
 })
