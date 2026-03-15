@@ -40,6 +40,10 @@ export { BASE_THEME_CSS } from './theme/base-css.ts'
 // Content sources
 export { FilesystemSource } from './content/filesystem.ts'
 export { GitHubSource } from './content/github.ts'
+export { R2ContentSource } from './content/r2.ts'
+export type { R2ContentSourceConfig } from './content/r2.ts'
+export { buildNavTree } from './content/nav-builder.ts'
+export type { FileEntry } from './content/nav-builder.ts'
 export type {
   ContentSource,
   ContentPage,
@@ -67,6 +71,8 @@ export { generateLlmsTxt } from './discovery/llmstxt.ts'
 export type { DeploymentAdapter } from './adapters/types.ts'
 export { detectRuntime } from './adapters/types.ts'
 export { LocalAdapter } from './adapters/local.ts'
+export { CloudflareAdapter } from './adapters/cloudflare.ts'
+export type { CloudflareEnv } from './adapters/cloudflare.ts'
 
 // Search
 export { createSearchIndex } from './search/index.ts'

@@ -3,12 +3,16 @@ import type { MkdnSiteConfig } from '../config/schema.ts'
 import type { ContentSource } from '../content/types.ts'
 import type { MarkdownRenderer } from '../render/types.ts'
 import { createRenderer } from '../render/types.ts'
+import { GitHubSource } from '../content/github.ts'
+import { R2ContentSource } from '../content/r2.ts'
 
 /**
  * Cloudflare Workers deployment adapter.
  *
- * Uses R2 for content storage, KV for caching.
- * Wildcard DNS routes (*.mkdn.io) for hosted service.
+ * Auto-detects content source from env bindings:
+ * - CONTENT_SOURCE=r2 or CONTENT_BUCKET present → R2ContentSource
+ * - CONTENT_SOURCE=github or config.github set → GitHubSource
+ * - Explicit CONTENT_SOURCE env var overrides auto-detection
  *
  * Usage in a Worker:
  *
@@ -38,17 +42,36 @@ export class CloudflareAdapter implements DeploymentAdapter {
     this.env = env
   }
 
-  createContentSource (_config: MkdnSiteConfig): ContentSource {
-    // TODO: Implement R2ContentSource
-    // return new R2ContentSource(this.env.CONTENT_BUCKET)
+  createContentSource (config: MkdnSiteConfig): ContentSource {
+    const sourceType = this.env.CONTENT_SOURCE
+
+    // GitHub source: explicit CONTENT_SOURCE=github or config.github set
+    if (sourceType === 'github' || (sourceType == null && config.github != null)) {
+      const ghConfig = config.github ?? {
+        owner: this.env.GITHUB_OWNER ?? '',
+        repo: this.env.GITHUB_REPO ?? '',
+        ref: this.env.GITHUB_REF,
+        token: this.env.GITHUB_TOKEN
+      }
+      return new GitHubSource(ghConfig)
+    }
+
+    // R2 source: explicit CONTENT_SOURCE=r2 or CONTENT_BUCKET binding present
+    if (sourceType === 'r2' || (sourceType == null && this.env.CONTENT_BUCKET != null)) {
+      return new R2ContentSource({
+        bucket: this.env.CONTENT_BUCKET as R2Bucket,
+        basePath: this.env.CONTENT_BASE_PATH
+      })
+    }
+
     throw new Error(
-      'CloudflareAdapter.createContentSource() not yet implemented. ' +
-      'Provide an R2-backed ContentSource implementation.'
+      'CloudflareAdapter: No content source configured. ' +
+      'Set CONTENT_SOURCE=github|r2, provide CONTENT_BUCKET (R2), or set config.github.'
     )
   }
 
   async createRenderer (_config: MkdnSiteConfig): Promise<MarkdownRenderer> {
-    // CF Workers don't have Bun.markdown, always use portable
+    // CF Workers don't have Bun.markdown — always use portable renderer
     return await createRenderer('portable')
   }
 }
@@ -57,26 +80,58 @@ export class CloudflareAdapter implements DeploymentAdapter {
  * Expected Cloudflare Worker environment bindings.
  */
 export interface CloudflareEnv {
-  /** R2 bucket for markdown content */
+  /** Explicit content source selection: 'github' or 'r2' */
+  CONTENT_SOURCE?: 'github' | 'r2'
+
+  /** R2 bucket binding for markdown content */
   CONTENT_BUCKET?: R2Bucket
-  /** KV namespace for caching */
+  /** Key prefix within the R2 bucket (e.g. 'sites/abc123/') */
+  CONTENT_BASE_PATH?: string
+
+  /** KV namespace for caching (future use) */
   CACHE_KV?: KVNamespace
-  /** Site title from env var */
+
+  /** GitHub owner (used if config.github not set) */
+  GITHUB_OWNER?: string
+  /** GitHub repo (used if config.github not set) */
+  GITHUB_REPO?: string
+  /** GitHub branch/tag (default: main) */
+  GITHUB_REF?: string
+  /** GitHub token for private repos / higher rate limits */
+  GITHUB_TOKEN?: string
+
+  /** Site title (can override config.site.title) */
   SITE_TITLE?: string
-  /** Site URL from env var */
+  /** Site URL */
   SITE_URL?: string
 }
 
-// Type stubs for CF runtime types (not available in non-CF environments)
+// ─── Cloudflare R2 type stubs ─────────────────────────────────────────────────
+// These types are provided by the CF Workers runtime; stubs here for type-checking
+// in non-CF environments.
+
 interface R2Bucket {
   get: (key: string) => Promise<R2Object | null>
-  list: (options?: Record<string, unknown>) => Promise<{ objects: R2Object[] }>
+  list: (options?: R2ListOptions) => Promise<R2ObjectList>
 }
 
 interface R2Object {
   key: string
   uploaded: Date
+  size: number
   text: () => Promise<string>
+}
+
+interface R2ObjectList {
+  objects: R2Object[]
+  truncated: boolean
+  cursor?: string
+}
+
+interface R2ListOptions {
+  prefix?: string
+  cursor?: string
+  limit?: number
 }
 
 interface KVNamespace {
