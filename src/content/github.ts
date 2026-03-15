@@ -5,6 +5,7 @@ import type {
   NavNode,
   GitHubSourceConfig
 } from './types.ts'
+import { buildNavTree as sharedBuildNavTree } from './nav-builder.ts'
 
 const TTL_MS = 5 * 60 * 1000 // 5 minutes
 
@@ -148,7 +149,7 @@ export class GitHubSource implements ContentSource {
     }
 
     // Build nav tree
-    const nav = buildNavTree(parsed)
+    const nav = sharedBuildNavTree(parsed)
     this.navCache = { value: nav, expiresAt: Date.now() + TTL_MS }
   }
 
@@ -249,103 +250,6 @@ export class GitHubSource implements ContentSource {
   }
 }
 
-// ─── Nav tree builder ────────────────────────────────────────────────────────
-
-function buildNavTree (files: ParsedFile[]): NavNode {
-  const root: NavNode = { title: 'Root', slug: '/', order: 0, children: [], isSection: true }
-  const sections = new Map<string, NavNode>()
-  sections.set('', root)
-
-  const isIndex = (p: string): boolean =>
-    /(?:^|\/)(?:index|README|readme)\.md$/.test(p)
-
-  const indexFiles = files.filter(f => isIndex(f.path))
-  const leafFiles = files.filter(f => !isIndex(f.path))
-
-  // Apply index file metadata to section nodes
-  for (const file of indexFiles) {
-    const parts = file.path.split('/')
-    const dirParts = parts.slice(0, -1) // remove filename
-    if (dirParts.length === 0) continue // root index — not a section node
-
-    const dirPath = dirParts.join('/')
-    const section = getOrCreateSection(sections, dirPath, root)
-    if (file.meta.title != null) section.title = file.meta.title as string
-    if (file.meta.order != null) section.order = file.meta.order as number
-  }
-
-  // Add leaf nodes (non-index .md files)
-  for (const file of leafFiles) {
-    if (file.meta.draft === true) continue
-
-    const parts = file.path.split('/')
-    const fileName = parts[parts.length - 1]
-    const dirParts = parts.slice(0, -1)
-    const dirPath = dirParts.join('/')
-
-    const parent = getOrCreateSection(sections, dirPath, root)
-    const name = fileName.replace(/\.md$/, '')
-    const slugPath = file.path.replace(/\.md$/, '')
-    const node: NavNode = {
-      title: file.meta.title != null ? file.meta.title as string : titleCase(name),
-      slug: '/' + slugPath,
-      order: file.meta.order != null ? file.meta.order as number : 999,
-      children: [],
-      isSection: false
-    }
-    parent.children.push(node)
-  }
-
-  // Prune empty sections (sections with no navigable children)
-  pruneEmpty(root)
-
-  sortNode(root)
-  return root
-}
-
-function getOrCreateSection (
-  sections: Map<string, NavNode>,
-  path: string,
-  root: NavNode
-): NavNode {
-  if (sections.has(path)) return sections.get(path) as NavNode
-  if (path === '') return root
-
-  const parts = path.split('/')
-  const parentPath = parts.slice(0, -1).join('/')
-  const name = parts[parts.length - 1]
-  const parent = getOrCreateSection(sections, parentPath, root)
-
-  const section: NavNode = {
-    title: titleCase(name),
-    slug: '/' + path,
-    order: 999,
-    children: [],
-    isSection: true
-  }
-  sections.set(path, section)
-  parent.children.push(section)
-  return section
-}
-
-function pruneEmpty (node: NavNode): boolean {
-  node.children = node.children.filter(child => {
-    if (!child.isSection) return true
-    return pruneEmpty(child)
-  })
-  return node.children.length > 0
-}
-
-function sortNode (node: NavNode): void {
-  node.children.sort((a, b) => {
-    if (a.order !== b.order) return a.order - b.order
-    return a.title.localeCompare(b.title)
-  })
-  for (const child of node.children) {
-    if (child.isSection) sortNode(child)
-  }
-}
-
 // ─── Slug/key helpers ────────────────────────────────────────────────────────
 
 function slugToKey (slug: string): string {
@@ -362,10 +266,6 @@ function filePathToKey (filePath: string): string {
 
 function keyToSlug (key: string): string {
   return key === 'index' ? '/' : `/${key}`
-}
-
-function titleCase (str: string): string {
-  return str.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
 
 // ─── Types ───────────────────────────────────────────────────────────────────
