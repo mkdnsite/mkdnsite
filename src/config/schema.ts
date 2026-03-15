@@ -50,6 +50,9 @@ export interface MkdnSiteConfig {
 
   /** Analytics configuration (disabled by default) */
   analytics?: AnalyticsConfig
+
+  /** Content Security Policy configuration */
+  csp?: CspConfig
 }
 
 /** MCP (Model Context Protocol) server configuration */
@@ -58,6 +61,24 @@ export interface McpConfig {
   enabled: boolean
   /** MCP endpoint path (default: '/mcp') */
   endpoint?: string
+}
+
+/** Content Security Policy configuration */
+export interface CspConfig {
+  /** Enable the Content-Security-Policy header on HTML responses (default: true) */
+  enabled: boolean
+  /** Additional script-src sources */
+  extraScriptSrc?: string[]
+  /** Additional style-src sources */
+  extraStyleSrc?: string[]
+  /** Additional img-src sources */
+  extraImgSrc?: string[]
+  /** Additional connect-src sources */
+  extraConnectSrc?: string[]
+  /** Additional font-src sources */
+  extraFontSrc?: string[]
+  /** Report URI for CSP violation reports */
+  reportUri?: string
 }
 
 /** Analytics configuration */

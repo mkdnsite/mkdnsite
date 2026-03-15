@@ -10,6 +10,7 @@ import { generateLlmsTxt } from './discovery/llmstxt.ts'
 import { createSearchIndex } from './search/index.ts'
 import type { SearchIndex } from './search/index.ts'
 import { createMcpServer } from './mcp/server.ts'
+import { buildCsp } from './security/csp.ts'
 import { createMcpHandler } from './mcp/transport.ts'
 
 export interface HandlerOptions {
@@ -155,7 +156,7 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
       }
       return new Response(render404(config), {
         status: 404,
-        headers: htmlHeaders()
+        headers: htmlHeadersWithCsp(config)
       })
     }
 
@@ -191,9 +192,17 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
 
     return new Response(fullPage, {
       status: 200,
-      headers: htmlHeaders()
+      headers: htmlHeadersWithCsp(config)
     })
   }
+}
+
+function htmlHeadersWithCsp (config: MkdnSiteConfig): Record<string, string> {
+  const headers = htmlHeaders()
+  if (config.csp?.enabled !== false) {
+    headers['Content-Security-Policy'] = buildCsp(config)
+  }
+  return headers
 }
 
 const STATIC_EXTENSIONS = new Set([
