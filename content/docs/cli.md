@@ -352,6 +352,7 @@ mkdnsite --no-negotiate --no-llms-txt
 | `--no-theme-toggle` | Disable the light/dark toggle button |
 | `--no-math` | Disable KaTeX math rendering |
 | `--no-search` | Disable the ⌘K search modal and `/api/search` endpoint |
+| `--no-charts` | Disable Chart.js chart rendering |
 
 ```bash
 # Maximum performance / accessibility
@@ -484,3 +485,4 @@ Every CLI flag maps to a field in `mkdnsite.config.ts`. CLI flags take precedenc
 | `--no-theme-toggle` | `client.themeToggle: false` |
 | `--no-math` | `client.math: false` |
 | `--no-search` | `client.search: false` |
+| `--no-charts` | `client.charts: false` |

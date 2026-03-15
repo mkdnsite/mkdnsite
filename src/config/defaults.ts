@@ -41,7 +41,8 @@ export const DEFAULT_CONFIG: MkdnSiteConfig = {
     copyButton: true,
     themeToggle: true,
     math: true,
-    search: true
+    search: true,
+    charts: true
   },
   renderer: 'portable',
   mcp: {

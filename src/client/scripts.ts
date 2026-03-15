@@ -9,6 +9,8 @@ export function CLIENT_SCRIPTS (client: ClientConfig): string {
 
   const scripts: string[] = []
 
+  scripts.push(STICKY_TABLE_SCRIPT)
+
   if (client.themeToggle) {
     scripts.push(THEME_TOGGLE_SCRIPT)
   }
@@ -24,6 +26,10 @@ export function CLIENT_SCRIPTS (client: ClientConfig): string {
   if (client.search) {
     scripts.push(SEARCH_SCRIPT)
     scripts.push(HIGHLIGHT_SCRIPT)
+  }
+
+  if (client.charts) {
+    scripts.push(CHART_SCRIPT)
   }
 
   if (scripts.length === 0) return ''
@@ -318,5 +324,159 @@ const HIGHLIGHT_SCRIPT = `
 
   var fadeTimer = setTimeout(fadeHighlights, 8000);
   document.addEventListener('click', function(){ clearTimeout(fadeTimer); fadeHighlights(); }, { once: true });
+})();
+`.trim()
+
+const STICKY_TABLE_SCRIPT = `
+(function(){
+  var wrappers = document.querySelectorAll('.mkdn-table-wrapper');
+  if (!wrappers.length) return;
+
+  var clones = [];
+
+  wrappers.forEach(function(wrapper){
+    var table = wrapper.querySelector('table');
+    if (!table) return;
+    var thead = table.querySelector('thead');
+    if (!thead) return;
+
+    var clone = document.createElement('div');
+    clone.className = 'mkdn-thead-clone mkdn-prose';
+    clone.style.display = 'none';
+
+    var cloneTable = document.createElement('table');
+    cloneTable.appendChild(thead.cloneNode(true));
+    clone.appendChild(cloneTable);
+    document.body.appendChild(clone);
+
+    clones.push({ wrapper: wrapper, table: table, thead: thead, clone: clone, cloneTable: cloneTable });
+  });
+
+  if (!clones.length) return;
+
+  function syncWidths (entry) {
+    entry.cloneTable.style.width = entry.table.getBoundingClientRect().width + 'px';
+    var ths = entry.thead.querySelectorAll('th');
+    var cloneThs = entry.clone.querySelectorAll('th');
+    ths.forEach(function(th, i){
+      if (cloneThs[i]) {
+        var w = th.getBoundingClientRect().width + 'px';
+        cloneThs[i].style.width = w;
+        cloneThs[i].style.minWidth = w;
+        cloneThs[i].style.maxWidth = w;
+      }
+    });
+    var wrapperRect = entry.wrapper.getBoundingClientRect();
+    entry.clone.style.left = wrapperRect.left + 'px';
+    entry.clone.style.width = wrapperRect.width + 'px';
+    entry.cloneTable.style.marginLeft = (-entry.wrapper.scrollLeft) + 'px';
+  }
+
+  function onScroll () {
+    clones.forEach(function(entry){
+      var theadRect = entry.thead.getBoundingClientRect();
+      var tableBottom = entry.table.getBoundingClientRect().bottom;
+      var theadHeight = theadRect.height;
+      if (theadRect.top < 0 && tableBottom > theadHeight) {
+        entry.clone.style.display = 'block';
+        syncWidths(entry);
+      } else {
+        entry.clone.style.display = 'none';
+      }
+    });
+  }
+
+  clones.forEach(function(entry){
+    entry.wrapper.addEventListener('scroll', function(){
+      if (entry.clone.style.display !== 'none') {
+        entry.cloneTable.style.marginLeft = (-entry.wrapper.scrollLeft) + 'px';
+      }
+    });
+  });
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll, { passive: true });
+})();
+`.trim()
+
+const CHART_SCRIPT = `
+(function(){
+  var chartBlocks = document.querySelectorAll('code.language-chart');
+  if (chartBlocks.length === 0) return;
+
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js';
+  s.onload = function(){
+    var root = getComputedStyle(document.documentElement);
+    var textMuted = root.getPropertyValue('--mkdn-text-muted').trim() || '#6b7280';
+    var borderColor = root.getPropertyValue('--mkdn-border').trim() || '#e5e7eb';
+    var accent = root.getPropertyValue('--mkdn-accent').trim() || '#6366f1';
+    var fontBody = root.getPropertyValue('--mkdn-font-body').trim() || 'inherit';
+
+    var palette = [
+      accent,
+      '#06b6d4', '#f59e0b', '#10b981', '#ef4444',
+      '#8b5cf6', '#ec4899', '#14b8a6'
+    ];
+
+    Chart.defaults.color = textMuted;
+    Chart.defaults.borderColor = borderColor;
+    Chart.defaults.font.family = fontBody;
+
+    chartBlocks.forEach(function(block, idx){
+      var pre = block.parentElement;
+      var raw = block.textContent || '';
+      var config;
+      try {
+        config = JSON.parse(raw);
+      } catch(e) {
+        var errEl = document.createElement('div');
+        errEl.className = 'mkdn-chart-error';
+        errEl.textContent = 'Chart error: invalid JSON';
+        pre.parentElement.replaceChild(errEl, pre);
+        return;
+      }
+
+      if (config.data && config.data.datasets) {
+        config.data.datasets.forEach(function(ds, i){
+          var color = palette[i % palette.length];
+          if (!ds.backgroundColor) {
+            if (config.type === 'pie' || config.type === 'doughnut' || config.type === 'polarArea') {
+              ds.backgroundColor = palette.slice(0, (ds.data || []).length);
+            } else {
+              ds.backgroundColor = color + '33';
+            }
+          }
+          if (!ds.borderColor) ds.borderColor = color;
+          if (config.type === 'line' || config.type === 'radar') {
+            if (ds.tension === undefined) ds.tension = 0.3;
+            if (ds.fill === undefined) ds.fill = false;
+          }
+        });
+      }
+
+      if (!config.options) config.options = {};
+      config.options.responsive = true;
+      config.options.maintainAspectRatio = true;
+
+      var container = document.createElement('div');
+      container.className = 'mkdn-chart';
+      var canvas = document.createElement('canvas');
+      canvas.id = 'mkdn-chart-' + idx;
+      container.appendChild(canvas);
+      pre.parentElement.replaceChild(container, pre);
+
+      try {
+        new Chart(canvas, config);
+      } catch(e) {
+        container.innerHTML = '';
+        var err = document.createElement('div');
+        err.className = 'mkdn-chart-error';
+        err.textContent = 'Chart error: ' + (e.message || 'unknown error');
+        container.appendChild(err);
+      }
+    });
+  };
+  document.head.appendChild(s);
 })();
 `.trim()

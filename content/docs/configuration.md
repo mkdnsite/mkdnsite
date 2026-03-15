@@ -400,6 +400,7 @@ client: {
 | `mermaid` | `true` | — |
 | `copyButton` | `true` | — |
 | `search` | `true` | `--no-search` |
+| `charts` | `true` | `--no-charts` |
 
 ### `client.search`
 

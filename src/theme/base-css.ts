@@ -310,7 +310,6 @@ body {
 .mkdn-prose th { font-weight: 600; }
 .mkdn-prose tr:last-child td { border-bottom: none; }
 .mkdn-prose tbody tr:nth-child(even) { background: var(--mkdn-bg-alt); }
-.mkdn-prose thead { position: sticky; top: 0; z-index: 1; }
 .mkdn-prose thead th { background: var(--mkdn-bg-alt); }
 .mkdn-prose td[align="center"], .mkdn-prose th[align="center"] { text-align: center; }
 .mkdn-prose td[align="right"], .mkdn-prose th[align="right"] { text-align: right; }
@@ -576,4 +575,43 @@ body {
   transition: background 0.5s ease;
 }
 .mkdn-search-highlight--fading { background: transparent; }
+
+/* ---- Sticky table header (JS-cloned) ---- */
+.mkdn-thead-clone {
+  position: fixed;
+  top: 0;
+  z-index: 100;
+  pointer-events: none;
+  overflow: hidden;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  border: 1px solid var(--mkdn-border);
+  border-bottom: none;
+}
+.mkdn-thead-clone table {
+  border-collapse: collapse;
+}
+
+/* ---- Chart rendering ---- */
+.mkdn-chart {
+  max-width: 600px;
+  margin: 1.5rem auto;
+  padding: 1rem;
+  background: var(--mkdn-bg);
+  border: 1px solid var(--mkdn-border);
+  border-radius: 8px;
+}
+.mkdn-chart canvas {
+  width: 100% !important;
+  height: auto !important;
+}
+.mkdn-chart-error {
+  padding: 1rem;
+  margin: 1rem 0;
+  border: 1px solid #ef4444;
+  border-radius: 8px;
+  color: #ef4444;
+  font-size: 0.9rem;
+  text-align: center;
+}
 `.trim()

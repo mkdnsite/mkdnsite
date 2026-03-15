@@ -246,6 +246,9 @@ export interface ClientConfig {
 
   /** Enable client-side search (default: true when client enabled) */
   search: boolean
+
+  /** Enable Chart.js chart rendering (default: true when client enabled) */
+  charts: boolean
 }
 
 /**

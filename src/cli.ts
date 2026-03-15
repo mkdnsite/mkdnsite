@@ -70,13 +70,15 @@ export function parseArgs (args: string[]): ParsedArgs {
     } else if (arg === '--no-negotiate') {
       result.negotiation = { enabled: false }
     } else if (arg === '--no-client-js') {
-      result.client = { enabled: false, mermaid: false, copyButton: false, themeToggle: false, math: false, search: false }
+      result.client = { enabled: false, mermaid: false, copyButton: false, themeToggle: false, math: false, search: false, charts: false }
     } else if (arg === '--no-theme-toggle') {
       result.client = { ...(result.client as object ?? {}), themeToggle: false }
     } else if (arg === '--no-math') {
       result.client = { ...(result.client as object ?? {}), math: false }
     } else if (arg === '--no-search') {
       result.client = { ...(result.client as object ?? {}), search: false }
+    } else if (arg === '--no-charts') {
+      result.client = { ...(result.client as object ?? {}), charts: false }
     } else if (arg === '--color-scheme') {
       result.theme = { ...(result.theme as object ?? {}), colorScheme: args[++i] }
     } else if (arg === '--theme-mode') {
@@ -191,10 +193,11 @@ function printHelp (): void {
                           Also reads GITHUB_TOKEN or MKDNSITE_GITHUB_TOKEN env var
 
   Client-side features:
-    --no-client-js        Disable client-side JavaScript (mermaid, copy, search, theme toggle)
+    --no-client-js        Disable client-side JavaScript (mermaid, copy, search, charts, theme toggle)
     --no-theme-toggle     Disable light/dark theme toggle button
     --no-math             Disable KaTeX math rendering
     --no-search           Disable search functionality (UI and /api/search endpoint)
+    --no-charts           Disable Chart.js chart rendering
     -h, --help            Show this help
     -v, --version         Show version
 
