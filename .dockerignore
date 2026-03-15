@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.github
+*.md
+!content/**/*.md
+test
+coverage
+.release-please-manifest.json
+release-please-config.json
+themed.config.ts
+static

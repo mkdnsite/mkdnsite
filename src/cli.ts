@@ -299,7 +299,16 @@ async function main (): Promise<void> {
   const renderer = await adapter.createRenderer(config)
   const handler = createHandler({ source, renderer, config })
 
-  await adapter.start(handler, config)
+  const stop = await adapter.start(handler, config)
+
+  process.on('SIGINT', () => {
+    stop()
+    process.exit(0)
+  })
+  process.on('SIGTERM', () => {
+    stop()
+    process.exit(0)
+  })
 }
 
 // Only run when executed directly (not when imported for parseArgs in tests)
