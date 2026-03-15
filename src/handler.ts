@@ -59,7 +59,7 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
       // Try to restore from cache (avoids full rebuild on cold starts)
       if (contentCache != null) {
         const cached = await contentCache.getSearchIndex()
-        if (cached != null) {
+        if (cached != null && cached !== '') {
           try {
             si.deserialize(cached)
             return si
