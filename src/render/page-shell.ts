@@ -253,7 +253,10 @@ function buildPrevNextHtml (nav: NavNode, currentSlug: string): string {
 function buildAnalyticsTags (config: MkdnSiteConfig): string {
   const id = config.analytics?.googleAnalytics?.measurementId
   if (id == null || id === '') return ''
-  const safeId = esc(id)
+  // GA4 measurement IDs are always G- followed by alphanumerics
+  if (!/^G-[A-Z0-9]+$/i.test(id)) return ''
+  // Belt-and-suspenders: escape for both HTML and JS string context
+  const safeId = esc(id).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/<\//g, '<\\/')
   return `<script async src="https://www.googletagmanager.com/gtag/js?id=${safeId}"></script>
   <script>
     window.dataLayer = window.dataLayer || [];

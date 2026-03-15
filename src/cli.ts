@@ -156,7 +156,6 @@ ${section('Site:')}
 ${flag('--title <text>', 'Site title')}
 ${flag('--url <url>', 'Base URL for absolute links')}
 ${flag('--preset <name>', 'Apply preset: docs or blog')}
-${flag('--ga-measurement-id <id>', 'Google Analytics 4 measurement ID (e.g. G-XXXXXXXXXX)')}
 ${flag('--og-image <url>', 'Default OpenGraph image URL')}
 ${flag('--og-type <type>', 'website or article')}
 ${flag('--twitter-card <type>', 'summary or summary_large_image')}
@@ -190,6 +189,8 @@ ${flag('--no-mcp', 'Disable built-in MCP server')}
 ${flag('--mcp-endpoint <path>', 'Custom MCP endpoint path (default: /mcp)')}
 ${flag('--no-llms-txt', 'Disable /llms.txt generation')}
 ${flag('--no-negotiate', 'Disable content negotiation')}
+${section('Analytics:')}
+${flag('--ga-measurement-id <id>', 'Google Analytics 4 measurement ID (e.g. G-XXXXXXXXXX)')}
 ${section('GitHub Source:')}
 ${flag('--github <owner/repo>', 'Serve content from a GitHub repository')}
 ${flag('--github-ref <ref>', 'Branch or tag (default: main)')}

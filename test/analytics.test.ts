@@ -57,6 +57,26 @@ describe('google analytics — page shell', () => {
   })
 })
 
+describe('google analytics — XSS protection', () => {
+  it('rejects measurement ID with special characters', () => {
+    const html = render({ analytics: { googleAnalytics: { measurementId: "G-TEST'); alert('xss" } } })
+    expect(html).not.toContain('gtag')
+    expect(html).not.toContain('googletagmanager')
+    expect(html).not.toContain("G-TEST')")
+  })
+
+  it('rejects measurement ID without G- prefix', () => {
+    const html = render({ analytics: { googleAnalytics: { measurementId: 'INVALID123' } } })
+    expect(html).not.toContain('gtag')
+  })
+
+  it('accepts valid GA4 measurement ID format', () => {
+    const html = render({ analytics: { googleAnalytics: { measurementId: 'G-ABC123DEF' } } })
+    expect(html).toContain('G-ABC123DEF')
+    expect(html).toContain('gtag')
+  })
+})
+
 describe('google analytics — CLI flag', () => {
   it('--ga-measurement-id sets analytics.googleAnalytics.measurementId', () => {
     const { config } = parseArgs(['--ga-measurement-id', 'G-TESTID'])
