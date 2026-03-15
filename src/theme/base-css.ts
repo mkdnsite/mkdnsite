@@ -296,8 +296,12 @@ body {
 .mkdn-prose pre:hover .mkdn-copy-btn { opacity: 1; }
 
 .mkdn-table-wrapper {
-  overflow-x: auto; margin: 1.5rem 0;
-  border: 1px solid var(--mkdn-border); border-radius: 8px;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 70vh;
+  margin: 1.5rem 0;
+  border: 1px solid var(--mkdn-border);
+  border-radius: 8px;
 }
 .mkdn-prose table {
   border-collapse: collapse; width: 100%; font-size: 0.875rem;
