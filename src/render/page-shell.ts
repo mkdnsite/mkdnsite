@@ -85,6 +85,7 @@ export function renderPage (props: PageShellProps): string {
   ${description !== '' ? `<meta name="description" content="${esc(description)}">` : ''}
   ${buildOgTags(props)}
   <meta name="generator" content="mkdnsite">
+  ${buildAnalyticsTags(config)}
   ${config.client.math ? '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css" crossorigin="anonymous">' : ''}
   <style>${buildThemeCss(config)}</style>
   ${config.theme.customCssUrl != null ? `<link rel="stylesheet" href="${esc(config.theme.customCssUrl)}">` : ''}
@@ -247,6 +248,19 @@ function buildPrevNextHtml (nav: NavNode, currentSlug: string): string {
     : '<span></span>'
 
   return `<nav class="mkdn-prev-next" aria-label="Page navigation">${prevHtml}${nextHtml}</nav>`
+}
+
+function buildAnalyticsTags (config: MkdnSiteConfig): string {
+  const id = config.analytics?.googleAnalytics?.measurementId
+  if (id == null || id === '') return ''
+  const safeId = esc(id)
+  return `<script async src="https://www.googletagmanager.com/gtag/js?id=${safeId}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '${safeId}');
+  </script>`
 }
 
 function buildOgTags (props: PageShellProps): string {

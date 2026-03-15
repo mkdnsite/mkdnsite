@@ -34,6 +34,8 @@ export function parseArgs (args: string[]): ParsedArgs {
       result.site = { ...(result.site as object ?? {}), og: { ...((result.site as Record<string, unknown>)?.og as object ?? {}), twitterCard: args[++i] } }
     } else if (arg === '--twitter-site') {
       result.site = { ...(result.site as object ?? {}), og: { ...((result.site as Record<string, unknown>)?.og as object ?? {}), twitterSite: args[++i] } }
+    } else if (arg === '--ga-measurement-id') {
+      result.analytics = { googleAnalytics: { measurementId: args[++i] } }
     } else if (arg === '--preset') {
       result.preset = args[++i]
     } else if (arg === '--page-title') {
@@ -154,6 +156,7 @@ ${section('Site:')}
 ${flag('--title <text>', 'Site title')}
 ${flag('--url <url>', 'Base URL for absolute links')}
 ${flag('--preset <name>', 'Apply preset: docs or blog')}
+${flag('--ga-measurement-id <id>', 'Google Analytics 4 measurement ID (e.g. G-XXXXXXXXXX)')}
 ${flag('--og-image <url>', 'Default OpenGraph image URL')}
 ${flag('--og-type <type>', 'website or article')}
 ${flag('--twitter-card <type>', 'summary or summary_large_image')}
