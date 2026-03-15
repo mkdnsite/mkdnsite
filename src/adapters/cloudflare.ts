@@ -5,13 +5,15 @@ import type { MarkdownRenderer } from '../render/types.ts'
 import { createRenderer } from '../render/types.ts'
 import { GitHubSource } from '../content/github.ts'
 import { R2ContentSource } from '../content/r2.ts'
+import { AssetsSource } from '../content/assets.ts'
 
 /**
  * Cloudflare Workers deployment adapter.
  *
  * Auto-detects content source from env bindings:
- * - CONTENT_SOURCE=r2 or CONTENT_BUCKET present → R2ContentSource
  * - CONTENT_SOURCE=github or config.github set → GitHubSource
+ * - CONTENT_SOURCE=r2 or CONTENT_BUCKET present → R2ContentSource
+ * - CONTENT_SOURCE=assets or ASSETS binding present → AssetsSource
  * - Explicit CONTENT_SOURCE env var overrides auto-detection
  *
  * Usage in a Worker:
@@ -58,15 +60,36 @@ export class CloudflareAdapter implements DeploymentAdapter {
 
     // R2 source: explicit CONTENT_SOURCE=r2 or CONTENT_BUCKET binding present
     if (sourceType === 'r2' || (sourceType == null && this.env.CONTENT_BUCKET != null)) {
+      if (this.env.CONTENT_BUCKET == null) {
+        throw new Error(
+          'CloudflareAdapter: CONTENT_SOURCE=r2 requires a CONTENT_BUCKET binding in wrangler.toml.'
+        )
+      }
       return new R2ContentSource({
-        bucket: this.env.CONTENT_BUCKET as R2Bucket,
+        bucket: this.env.CONTENT_BUCKET,
         basePath: this.env.CONTENT_BASE_PATH
+      })
+    }
+
+    // Assets source: explicit CONTENT_SOURCE=assets or ASSETS binding present
+    if (sourceType === 'assets' || (sourceType == null && this.env.ASSETS != null)) {
+      if (this.env.ASSETS == null) {
+        throw new Error(
+          'CloudflareAdapter: CONTENT_SOURCE=assets requires an ASSETS binding in wrangler.toml.'
+        )
+      }
+      const manifest = this.env.CONTENT_MANIFEST != null
+        ? JSON.parse(this.env.CONTENT_MANIFEST) as string[]
+        : undefined
+      return new AssetsSource({
+        assets: this.env.ASSETS,
+        manifest
       })
     }
 
     throw new Error(
       'CloudflareAdapter: No content source configured. ' +
-      'Set CONTENT_SOURCE=github|r2, provide CONTENT_BUCKET (R2), or set config.github.'
+      'Set CONTENT_SOURCE=github|r2|assets, provide CONTENT_BUCKET (R2), ASSETS binding, or set config.github.'
     )
   }
 
@@ -80,13 +103,18 @@ export class CloudflareAdapter implements DeploymentAdapter {
  * Expected Cloudflare Worker environment bindings.
  */
 export interface CloudflareEnv {
-  /** Explicit content source selection: 'github' or 'r2' */
-  CONTENT_SOURCE?: 'github' | 'r2'
+  /** Explicit content source selection */
+  CONTENT_SOURCE?: 'github' | 'r2' | 'assets'
 
   /** R2 bucket binding for markdown content */
   CONTENT_BUCKET?: R2Bucket
   /** Key prefix within the R2 bucket (e.g. 'sites/abc123/') */
   CONTENT_BASE_PATH?: string
+
+  /** Workers Static Assets binding */
+  ASSETS?: AssetsFetcher
+  /** JSON array of .md file paths (alternative to _manifest.json in assets) */
+  CONTENT_MANIFEST?: string
 
   /** KV namespace for caching (future use) */
   CACHE_KV?: KVNamespace
@@ -132,6 +160,10 @@ interface R2ListOptions {
   prefix?: string
   cursor?: string
   limit?: number
+}
+
+interface AssetsFetcher {
+  fetch: (input: Request | string) => Promise<Response>
 }
 
 interface KVNamespace {

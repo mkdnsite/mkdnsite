@@ -9,94 +9,62 @@ interface CacheEntry<T> {
   expiresAt: number
 }
 
-/** Parsed R2 file ready for use */
 interface ParsedFile {
-  /** Relative path from content root, e.g. 'docs/getting-started.md' */
   path: string
   meta: Record<string, unknown>
   body: string
   raw: string
 }
 
-export interface R2ContentSourceConfig {
-  /** R2 bucket binding */
-  bucket: R2Bucket
-  /** Key prefix for content (e.g. 'sites/abc123/') */
-  basePath?: string
+export interface AssetsSourceConfig {
+  /** Workers Static Assets Fetcher binding */
+  assets: AssetsFetcher
+  /** Explicit list of .md file paths (if _manifest.json is not available) */
+  manifest?: string[]
 }
 
-// ─── R2 type stubs (not available outside Cloudflare Workers) ────────────────
+// ─── Workers Static Assets type stub ─────────────────────────────────────────
 
-interface R2Bucket {
-  get: (key: string) => Promise<R2Object | null>
-  list: (options?: R2ListOptions) => Promise<R2ObjectList>
-}
-
-interface R2Object {
-  key: string
-  uploaded: Date
-  size: number
-  text: () => Promise<string>
-}
-
-interface R2ObjectList {
-  objects: R2Object[]
-  truncated: boolean
-  cursor?: string
-}
-
-interface R2ListOptions {
-  prefix?: string
-  cursor?: string
-  limit?: number
+interface AssetsFetcher {
+  fetch: (input: Request | string) => Promise<Response>
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-async function listAllMdFiles (bucket: R2Bucket, prefix: string): Promise<R2Object[]> {
-  const objects: R2Object[] = []
-  let cursor: string | undefined
-  do {
-    const result = await bucket.list({ prefix, cursor })
-    objects.push(...result.objects.filter(o => o.key.endsWith('.md')))
-    cursor = result.truncated ? result.cursor : undefined
-  } while (cursor != null)
-  return objects
-}
-
-/** Convert a URL slug to a relative content key (no basePath prefix) */
 function slugToRelKey (slug: string): string {
   const stripped = slug.replace(/^\/+|\.md$/g, '').replace(/\/+$/, '')
   return stripped === '' ? 'index' : stripped
 }
 
-function keyToRelPath (key: string, basePath: string): string {
-  return basePath !== '' && key.startsWith(basePath)
-    ? key.slice(basePath.length)
-    : key
-}
-
-// ─── R2ContentSource ─────────────────────────────────────────────────────────
+// ─── AssetsSource ────────────────────────────────────────────────────────────
 
 /**
- * Content source that reads .md files from a Cloudflare R2 bucket.
+ * Content source that reads .md files from Cloudflare Workers Static Assets.
  *
- * Lazy prefetch: on first access, lists all .md keys, fetches them in parallel,
- * parses frontmatter, and caches for TTL_MS (5 minutes).
+ * Workers Static Assets are deployed alongside the Worker via wrangler deploy.
+ * Since the ASSETS binding doesn't support directory listing, a manifest of
+ * .md file paths is required. The manifest can be provided via:
+ *
+ * 1. A `_manifest.json` file in the assets directory (auto-discovered)
+ * 2. An explicit `manifest` array in the config
+ *
+ * Generate a manifest with:
+ *   find content -name '*.md' -printf '%P\n' | sort | jq -R -s 'split("\n") | map(select(. != ""))' > content/_manifest.json
+ *
+ * Or use the helper:
+ *   npx mkdnsite manifest --dir content > content/_manifest.json
  */
-export class R2ContentSource implements ContentSource {
-  private readonly bucket: R2Bucket
-  private readonly basePath: string
+export class AssetsSource implements ContentSource {
+  private readonly assets: AssetsFetcher
+  private readonly explicitManifest: string[] | null
 
   private pagesCache: CacheEntry<Map<string, ParsedFile>> | null = null
   private navCache: CacheEntry<NavNode> | null = null
   private initPromise: Promise<Map<string, ParsedFile>> | null = null
 
-  constructor (config: R2ContentSourceConfig) {
-    this.bucket = config.bucket
-    // Normalise basePath to end with '/' or be empty
-    const raw = config.basePath ?? ''
-    this.basePath = raw !== '' && !raw.endsWith('/') ? raw + '/' : raw
+  constructor (config: AssetsSourceConfig) {
+    this.assets = config.assets
+    this.explicitManifest = config.manifest ?? null
   }
 
   // ─── Public API ────────────────────────────────────────────────────────────
@@ -105,7 +73,6 @@ export class R2ContentSource implements ContentSource {
     const pages = await this.ensurePrefetched()
     const key = slugToRelKey(slug)
 
-    // Try exact key, then /index.md, /README.md, /readme.md (all relative keys, no basePath)
     for (const candidate of [key, key + '/index', key + '/README', key + '/readme']) {
       const file = pages.get(candidate)
       if (file != null && file.meta.draft !== true) {
@@ -152,18 +119,38 @@ export class R2ContentSource implements ContentSource {
     return result
   }
 
+  private async getManifest (): Promise<string[]> {
+    if (this.explicitManifest != null) return this.explicitManifest
+
+    // Try to fetch _manifest.json from static assets
+    try {
+      const response = await this.assets.fetch(new Request('http://assets/_manifest.json'))
+      if (response.ok) {
+        const manifest = await response.json() as string[]
+        if (Array.isArray(manifest)) return manifest
+      }
+    } catch {
+      // manifest not available
+    }
+
+    throw new Error(
+      'AssetsSource: No manifest found. Create a _manifest.json file listing your .md paths, ' +
+      'or pass a manifest array to AssetsSourceConfig.'
+    )
+  }
+
   private async prefetchAll (): Promise<Map<string, ParsedFile>> {
-    const objects = await listAllMdFiles(this.bucket, this.basePath)
+    const manifest = await this.getManifest()
+    const mdPaths = manifest.filter(p => p.endsWith('.md'))
 
     const fetched = await Promise.all(
-      objects.map(async (obj) => {
+      mdPaths.map(async (filePath) => {
         try {
-          const r2obj = await this.bucket.get(obj.key)
-          if (r2obj == null) return null
-          const raw = await r2obj.text()
+          const response = await this.assets.fetch(new Request(`http://assets/${filePath}`))
+          if (!response.ok) return null
+          const raw = await response.text()
           const { meta, body } = parseFrontmatter(raw)
-          const relPath = keyToRelPath(obj.key, this.basePath)
-          return { path: relPath, meta: meta as Record<string, unknown>, body, raw } satisfies ParsedFile
+          return { path: filePath, meta: meta as Record<string, unknown>, body, raw } satisfies ParsedFile
         } catch {
           return null
         }
@@ -178,7 +165,7 @@ export class R2ContentSource implements ContentSource {
     }
 
     this.pagesCache = { value: pages, expiresAt: Date.now() + TTL_MS }
-    this.navCache = null // invalidate nav on refresh
+    this.navCache = null
     return pages
   }
 

@@ -75,6 +75,35 @@ describe('CloudflareAdapter — createContentSource', () => {
     expect(source).toBeInstanceOf(GitHubSource)
   })
 
+  it('uses AssetsSource when ASSETS binding is provided', () => {
+    const mockAssets = { fetch: async () => new Response('') }
+    const env: CloudflareEnv = { ASSETS: mockAssets, CONTENT_MANIFEST: '["index.md"]' }
+    const adapter = makeAdapter(env)
+    const source = adapter.createContentSource(resolveConfig({}))
+    expect(source).toBeDefined()
+    expect(source.constructor.name).toBe('AssetsSource')
+  })
+
+  it('uses AssetsSource when CONTENT_SOURCE=assets', () => {
+    const mockAssets = { fetch: async () => new Response('') }
+    const env: CloudflareEnv = { CONTENT_SOURCE: 'assets', ASSETS: mockAssets }
+    const adapter = makeAdapter(env)
+    const source = adapter.createContentSource(resolveConfig({}))
+    expect(source.constructor.name).toBe('AssetsSource')
+  })
+
+  it('throws when CONTENT_SOURCE=assets but no ASSETS binding', () => {
+    const env: CloudflareEnv = { CONTENT_SOURCE: 'assets' }
+    const adapter = makeAdapter(env)
+    expect(() => adapter.createContentSource(resolveConfig({}))).toThrow('ASSETS')
+  })
+
+  it('throws when CONTENT_SOURCE=r2 but no CONTENT_BUCKET', () => {
+    const env: CloudflareEnv = { CONTENT_SOURCE: 'r2' }
+    const adapter = makeAdapter(env)
+    expect(() => adapter.createContentSource(resolveConfig({}))).toThrow('CONTENT_BUCKET')
+  })
+
   it('throws when no source is configured', () => {
     const adapter = makeAdapter({})
     const config = resolveConfig({})
