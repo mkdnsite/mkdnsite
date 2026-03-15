@@ -8,6 +8,7 @@ import { R2ContentSource } from '../content/r2.ts'
 import { AssetsSource } from '../content/assets.ts'
 import type { ContentCache } from '../content/cache.ts'
 import { KVContentCache } from '../content/cache.ts'
+import type { TrafficAnalytics, TrafficEvent } from '../analytics/types.ts'
 
 /**
  * Cloudflare Workers deployment adapter.
@@ -106,6 +107,69 @@ export class CloudflareAdapter implements DeploymentAdapter {
     // CF Workers don't have Bun.markdown — always use portable renderer
     return await createRenderer('portable')
   }
+
+  /**
+   * Create a TrafficAnalytics instance if the ANALYTICS binding is present.
+   *
+   * Returns `undefined` when the binding is absent so callers can skip
+   * passing analytics to createHandler without any change in behaviour.
+   *
+   * Usage:
+   * ```ts
+   * const handler = createHandler({
+   *   source: adapter.createContentSource(config),
+   *   renderer: await adapter.createRenderer(config),
+   *   config,
+   *   analytics: adapter.createTrafficAnalytics()
+   * })
+   * ```
+   */
+  createTrafficAnalytics (): TrafficAnalytics | undefined {
+    if (this.env.ANALYTICS == null) return undefined
+    return new WorkersAnalyticsEngineAnalytics(this.env.ANALYTICS)
+  }
+}
+
+/**
+ * Cloudflare Workers Analytics Engine implementation of TrafficAnalytics.
+ *
+ * Writes a data point to a CF Analytics Engine dataset binding (`ANALYTICS`).
+ * Each field maps to an index (string "blobs") or double (numeric values).
+ *
+ * Usage: automatically created by `CloudflareAdapter.createTrafficAnalytics()`
+ * when the `ANALYTICS` binding is present.
+ */
+export class WorkersAnalyticsEngineAnalytics implements TrafficAnalytics {
+  private readonly dataset: AnalyticsEngineDataset
+
+  constructor (dataset: AnalyticsEngineDataset) {
+    this.dataset = dataset
+  }
+
+  logRequest (event: TrafficEvent): void {
+    // Field ordering is significant — CF Analytics Engine queries reference
+    // fields by index (blob1, blob2, ..., double1, double2, ...).
+    // Do NOT reorder without updating all downstream queries.
+    this.dataset.writeDataPoint({
+      indexes: [
+        event.siteId ?? '' // index1: site isolation key (empty for single-site)
+      ],
+      blobs: [
+        event.path, // blob1: URL pathname
+        event.method, // blob2: HTTP method
+        event.format, // blob3: response format (html|markdown|mcp|api|other)
+        event.trafficType, // blob4: traffic classification (human|ai_agent|bot|mcp)
+        event.userAgent // blob5: raw User-Agent string
+      ],
+      doubles: [
+        event.statusCode, // double1: HTTP status code
+        event.latencyMs, // double2: handler latency in ms
+        event.contentLength, // double3: response body size in bytes
+        event.cacheHit ? 1 : 0, // double4: cache hit (1) or miss (0)
+        event.timestamp // double5: request timestamp (epoch ms)
+      ]
+    })
+  }
 }
 
 /**
@@ -141,6 +205,9 @@ export interface CloudflareEnv {
   SITE_TITLE?: string
   /** Site URL */
   SITE_URL?: string
+
+  /** Workers Analytics Engine dataset binding for traffic analytics */
+  ANALYTICS?: AnalyticsEngineDataset
 }
 
 // ─── Cloudflare R2 type stubs ─────────────────────────────────────────────────
@@ -180,4 +247,12 @@ interface KVNamespace {
   put: (key: string, value: string, options?: { expirationTtl?: number }) => Promise<void>
   delete: (key: string) => Promise<void>
   list: (options?: { prefix?: string }) => Promise<{ keys: Array<{ name: string }> }>
+}
+
+interface AnalyticsEngineDataset {
+  writeDataPoint: (data: {
+    blobs?: string[]
+    doubles?: number[]
+    indexes?: string[]
+  }) => void
 }

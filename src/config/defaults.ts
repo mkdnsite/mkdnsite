@@ -107,7 +107,14 @@ export function resolveConfig (
     client: { ...DEFAULT_CONFIG.client, ...userConfig.client },
     github: userConfig.github,
     mcp: { ...DEFAULT_CONFIG.mcp, ...userConfig.mcp },
-    analytics: userConfig.analytics,
+    analytics: userConfig.analytics != null
+      ? {
+          ...userConfig.analytics,
+          traffic: userConfig.analytics.traffic != null
+            ? { enabled: false, console: false, ...userConfig.analytics.traffic }
+            : userConfig.analytics.traffic
+        }
+      : userConfig.analytics,
     csp: userConfig.csp != null
       ? { ...DEFAULT_CONFIG.csp, ...userConfig.csp }
       : DEFAULT_CONFIG.csp
