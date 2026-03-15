@@ -45,6 +45,8 @@ export type { R2ContentSourceConfig } from './content/r2.ts'
 export { AssetsSource } from './content/assets.ts'
 export type { AssetsSourceConfig } from './content/assets.ts'
 export { buildNavTree } from './content/nav-builder.ts'
+export type { ContentCache } from './content/cache.ts'
+export { MemoryContentCache, KVContentCache } from './content/cache.ts'
 export type { FileEntry } from './content/nav-builder.ts'
 export type {
   ContentSource,

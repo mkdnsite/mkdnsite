@@ -6,6 +6,8 @@ import { createRenderer } from '../render/types.ts'
 import { GitHubSource } from '../content/github.ts'
 import { R2ContentSource } from '../content/r2.ts'
 import { AssetsSource } from '../content/assets.ts'
+import type { ContentCache } from '../content/cache.ts'
+import { KVContentCache } from '../content/cache.ts'
 
 /**
  * Cloudflare Workers deployment adapter.
@@ -44,6 +46,11 @@ export class CloudflareAdapter implements DeploymentAdapter {
     this.env = env
   }
 
+  private createCache (prefix?: string): ContentCache | undefined {
+    if (this.env.CACHE_KV == null) return undefined
+    return new KVContentCache(this.env.CACHE_KV, { prefix })
+  }
+
   createContentSource (config: MkdnSiteConfig): ContentSource {
     const sourceType = this.env.CONTENT_SOURCE
 
@@ -67,7 +74,8 @@ export class CloudflareAdapter implements DeploymentAdapter {
       }
       return new R2ContentSource({
         bucket: this.env.CONTENT_BUCKET,
-        basePath: this.env.CONTENT_BASE_PATH
+        basePath: this.env.CONTENT_BASE_PATH,
+        cache: this.createCache(this.env.CONTENT_BASE_PATH)
       })
     }
 
@@ -83,7 +91,8 @@ export class CloudflareAdapter implements DeploymentAdapter {
         : undefined
       return new AssetsSource({
         assets: this.env.ASSETS,
-        manifest
+        manifest,
+        cache: this.createCache('assets:')
       })
     }
 
@@ -168,5 +177,7 @@ interface AssetsFetcher {
 
 interface KVNamespace {
   get: (key: string) => Promise<string | null>
-  put: (key: string, value: string, options?: Record<string, unknown>) => Promise<void>
+  put: (key: string, value: string, options?: { expirationTtl?: number }) => Promise<void>
+  delete: (key: string) => Promise<void>
+  list: (options?: { prefix?: string }) => Promise<{ keys: Array<{ name: string }> }>
 }

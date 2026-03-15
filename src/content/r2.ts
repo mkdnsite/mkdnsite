@@ -1,13 +1,8 @@
 import { parseFrontmatter } from './frontmatter.ts'
 import type { ContentSource, ContentPage, NavNode } from './types.ts'
+import type { ContentCache } from './cache.ts'
+import { MemoryContentCache } from './cache.ts'
 import { buildNavTree } from './nav-builder.ts'
-
-const TTL_MS = 5 * 60 * 1000 // 5 minutes
-
-interface CacheEntry<T> {
-  value: T
-  expiresAt: number
-}
 
 /** Parsed R2 file ready for use */
 interface ParsedFile {
@@ -23,6 +18,8 @@ export interface R2ContentSourceConfig {
   bucket: R2Bucket
   /** Key prefix for content (e.g. 'sites/abc123/') */
   basePath?: string
+  /** Optional cache layer (defaults to in-memory). Pass KVContentCache for durable caching. */
+  cache?: ContentCache
 }
 
 // ─── R2 type stubs (not available outside Cloudflare Workers) ────────────────
@@ -87,13 +84,15 @@ function keyToRelPath (key: string, basePath: string): string {
 export class R2ContentSource implements ContentSource {
   private readonly bucket: R2Bucket
   private readonly basePath: string
+  private readonly cache: ContentCache
 
-  private pagesCache: CacheEntry<Map<string, ParsedFile>> | null = null
-  private navCache: CacheEntry<NavNode> | null = null
+  private rawCache: Map<string, ParsedFile> | null = null
+  private rawCacheExpiresAt: number = 0
   private initPromise: Promise<Map<string, ParsedFile>> | null = null
 
   constructor (config: R2ContentSourceConfig) {
     this.bucket = config.bucket
+    this.cache = config.cache ?? new MemoryContentCache()
     // Normalise basePath to end with '/' or be empty
     const raw = config.basePath ?? ''
     this.basePath = raw !== '' && !raw.endsWith('/') ? raw + '/' : raw
@@ -102,48 +101,63 @@ export class R2ContentSource implements ContentSource {
   // ─── Public API ────────────────────────────────────────────────────────────
 
   async getPage (slug: string): Promise<ContentPage | null> {
-    const pages = await this.ensurePrefetched()
     const key = slugToRelKey(slug)
 
-    // Try exact key, then /index.md, /README.md, /readme.md (all relative keys, no basePath)
+    // Try cache first for each candidate
+    for (const candidate of [key, key + '/index', key + '/README', key + '/readme']) {
+      const cached = await this.cache.getPage(candidate)
+      if (cached != null) return cached
+    }
+
+    // Fall through to prefetch
+    const pages = await this.ensurePrefetched()
+
     for (const candidate of [key, key + '/index', key + '/README', key + '/readme']) {
       const file = pages.get(candidate)
       if (file != null && file.meta.draft !== true) {
-        return this.toContentPage(file)
+        const page = this.toContentPage(file)
+        await this.cache.setPage(candidate, page)
+        return page
       }
     }
     return null
   }
 
   async getNavTree (): Promise<NavNode> {
-    if (this.navCache != null && Date.now() < this.navCache.expiresAt) {
-      return this.navCache.value
-    }
+    const cached = await this.cache.getNav()
+    if (cached != null) return cached
+
     const pages = await this.ensurePrefetched()
     const files = Array.from(pages.values())
     const nav = buildNavTree(files)
-    this.navCache = { value: nav, expiresAt: Date.now() + TTL_MS }
+    await this.cache.setNav(nav)
     return nav
   }
 
   async listPages (): Promise<ContentPage[]> {
+    const cached = await this.cache.getPageList()
+    if (cached != null) return cached
+
     const pages = await this.ensurePrefetched()
-    return Array.from(pages.values())
+    const result = Array.from(pages.values())
       .filter(f => f.meta.draft !== true)
       .map(f => this.toContentPage(f))
+    await this.cache.setPageList(result)
+    return result
   }
 
   async refresh (): Promise<void> {
-    this.pagesCache = null
-    this.navCache = null
+    this.rawCache = null
+    this.rawCacheExpiresAt = 0
     this.initPromise = null
+    await this.cache.clear()
   }
 
   // ─── Internal ──────────────────────────────────────────────────────────────
 
   private async ensurePrefetched (): Promise<Map<string, ParsedFile>> {
-    if (this.pagesCache != null && Date.now() < this.pagesCache.expiresAt) {
-      return this.pagesCache.value
+    if (this.rawCache != null && Date.now() < this.rawCacheExpiresAt) {
+      return this.rawCache
     }
     if (this.initPromise != null) return await this.initPromise
     this.initPromise = this.prefetchAll()
@@ -177,8 +191,8 @@ export class R2ContentSource implements ContentSource {
       pages.set(key, file)
     }
 
-    this.pagesCache = { value: pages, expiresAt: Date.now() + TTL_MS }
-    this.navCache = null // invalidate nav on refresh
+    this.rawCache = pages
+    this.rawCacheExpiresAt = Date.now() + 5 * 60 * 1000
     return pages
   }
 
