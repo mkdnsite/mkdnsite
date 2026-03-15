@@ -141,9 +141,9 @@ export class LocalAdapter implements DeploymentAdapter {
 
     // ASCII art header
     console.log('')
-    console.log(`${DIM_CYAN}   \u258c  \u258c    \u2598\u2597   `)
-    console.log('\u2598\u2598\u258c\u2599\u2598\u2598\u258c\u2598\u258c\u2598\u2598\u258c\u2587\u258c\u258c\u2598\u2608\u2598\u2587\u258c')
-    console.log(`\u258c\u258c\u258c\u2598\u2596\u2599\u258c\u258c\u258c\u2587\u258c\u258c\u2590\u2596\u2599\u258c${RESET}`)
+    console.log(`${DIM_CYAN}   ▌  ▌    ▘▗   `)
+    console.log('▛▛▌▙▘▛▌▛▌▛▘▌▜▘█▌')
+    console.log(`▌▌▌▛▖▙▌▌▌▄▌▌▐▖▙▖${RESET}`)
     console.log('')
     console.log(`  ${BOLD_GREEN}\u2192 ${url}${RESET}`)
     console.log('')
