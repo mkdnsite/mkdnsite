@@ -10,13 +10,28 @@ mkdnsite includes a built-in [Model Context Protocol (MCP)](https://modelcontext
 
 This is distinct from the `/llms.txt` endpoint (which is a static file for AI crawlers). MCP provides interactive, query-driven access.
 
+## Two transports
+
+mkdnsite supports MCP over two transports:
+
+| Transport | Command | Use case |
+|-----------|---------|----------|
+| **HTTP** | `mkdnsite ./content` | Web server with MCP at `/mcp` |
+| **stdio** | `mkdnsite mcp ./content` | Direct AI client integration (Claude Desktop, etc.) |
+
 ## Quick start
 
-The MCP server is enabled by default at `/mcp`. Start your docs server and connect your AI client:
+**HTTP transport** — MCP is enabled by default at `/mcp` when you run the web server:
 
 ```bash
 mkdnsite ./content
 # MCP endpoint: http://localhost:3000/mcp
+```
+
+**stdio transport** — run as a standalone MCP server with no web server:
+
+```bash
+mkdnsite mcp ./content
 ```
 
 ## Available tools
@@ -70,7 +85,20 @@ Get the full navigation tree structure.
 
 ### Claude Desktop
 
-Add to your `claude_desktop_config.json`:
+**stdio transport** (recommended for local use — no server required):
+
+```json
+{
+  "mcpServers": {
+    "my-docs": {
+      "command": "mkdnsite",
+      "args": ["mcp", "./path/to/content"]
+    }
+  }
+}
+```
+
+**HTTP transport** (when you already have the web server running):
 
 ```json
 {

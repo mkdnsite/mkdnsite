@@ -136,6 +136,11 @@ function printHelp (): void {
 
   Usage:
     mkdnsite [directory] [options]
+    mkdnsite mcp [directory] [options]
+
+  Subcommands:
+    mcp [directory] [options]  Run as MCP server over stdio (no web server)
+                               Supports the same content source options below
 
   Arguments:
     directory             Path to markdown content (default: ./content)
@@ -204,7 +209,38 @@ function printHelp (): void {
 }
 
 async function main (): Promise<void> {
-  const args = process.argv.slice(2)
+  const rawArgv = process.argv.slice(2)
+
+  // ── Subcommand: mkdnsite mcp [options] ──────────────────────────────────
+  if (rawArgv[0] === 'mcp') {
+    const mcpArgv = rawArgv.slice(1)
+    const { config: cliConfig, configPath: cliConfigPath } = parseArgs(mcpArgv)
+
+    let fileConfig: Partial<MkdnSiteConfig> = {}
+    try {
+      const cfgPath = cliConfigPath != null ? resolve(cliConfigPath) : resolve('mkdnsite.config.ts')
+      if (cliConfigPath == null) await access(cfgPath)
+      const mod = await import(cfgPath)
+      fileConfig = mod.default ?? mod
+    } catch { /* no config file */ }
+
+    const merged: Partial<MkdnSiteConfig> = { ...fileConfig, ...cliConfig }
+    if (fileConfig.github != null || cliConfig.github != null) {
+      const gh = { ...fileConfig.github, ...cliConfig.github }
+      merged.github = gh as MkdnSiteConfig['github']
+    }
+    if (merged.github != null && (merged.github.token == null || merged.github.token === '')) {
+      const envToken = process.env.GITHUB_TOKEN ?? process.env.MKDNSITE_GITHUB_TOKEN ?? ''
+      if (envToken !== '') merged.github = { ...merged.github, token: envToken }
+    }
+
+    const config = resolveConfig(merged)
+    const { runMcpStdio } = await import('./mcp/stdio.ts')
+    await runMcpStdio(config)
+    return
+  }
+
+  const args = rawArgv
   const { config: cliConfig, configPath: cliConfigPath } = parseArgs(args)
 
   // Try to load config file: use --config path if provided, else auto-detect mkdnsite.config.ts
@@ -243,6 +279,10 @@ async function main (): Promise<void> {
   if (fileConfig.client != null || cliConfig.client != null) {
     const client: Partial<MkdnSiteConfig['client']> = { ...fileConfig.client, ...cliConfig.client }
     merged.client = client as MkdnSiteConfig['client']
+  }
+  if (fileConfig.github != null || cliConfig.github != null) {
+    const gh = { ...fileConfig.github, ...cliConfig.github }
+    merged.github = gh as MkdnSiteConfig['github']
   }
   // Fall back to env var for GitHub token if not set via CLI or config file
   if (merged.github != null && (merged.github.token == null || merged.github.token === '')) {
