@@ -296,12 +296,8 @@ body {
 .mkdn-prose pre:hover .mkdn-copy-btn { opacity: 1; }
 
 .mkdn-table-wrapper {
-  overflow-x: auto;
-  overflow-y: auto;
-  max-height: 70vh;
-  margin: 1.5rem 0;
-  border: 1px solid var(--mkdn-border);
-  border-radius: 8px;
+  overflow-x: auto; margin: 1.5rem 0;
+  border: 1px solid var(--mkdn-border); border-radius: 8px;
 }
 .mkdn-prose table {
   border-collapse: collapse; width: 100%; font-size: 0.875rem;
@@ -314,7 +310,6 @@ body {
 .mkdn-prose th { font-weight: 600; }
 .mkdn-prose tr:last-child td { border-bottom: none; }
 .mkdn-prose tbody tr:nth-child(even) { background: var(--mkdn-bg-alt); }
-.mkdn-prose thead { position: sticky; top: 0; z-index: 1; }
 .mkdn-prose thead th { background: var(--mkdn-bg-alt); }
 .mkdn-prose td[align="center"], .mkdn-prose th[align="center"] { text-align: center; }
 .mkdn-prose td[align="right"], .mkdn-prose th[align="right"] { text-align: right; }
@@ -580,6 +575,29 @@ body {
   transition: background 0.5s ease;
 }
 .mkdn-search-highlight--fading { background: transparent; }
+
+/* ---- Sticky table header (JS-cloned) ---- */
+.mkdn-thead-clone {
+  position: fixed;
+  top: 0;
+  z-index: 100;
+  pointer-events: none;
+  overflow: hidden;
+}
+.mkdn-thead-clone table {
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.mkdn-thead-clone th {
+  background: var(--mkdn-bg-alt);
+  border-bottom: 2px solid var(--mkdn-border);
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-align: left;
+}
+.mkdn-thead-clone td[align="center"], .mkdn-thead-clone th[align="center"] { text-align: center; }
+.mkdn-thead-clone td[align="right"], .mkdn-thead-clone th[align="right"] { text-align: right; }
 
 /* ---- Chart rendering ---- */
 .mkdn-chart {

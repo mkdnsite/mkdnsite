@@ -9,6 +9,8 @@ export function CLIENT_SCRIPTS (client: ClientConfig): string {
 
   const scripts: string[] = []
 
+  scripts.push(STICKY_TABLE_SCRIPT)
+
   if (client.themeToggle) {
     scripts.push(THEME_TOGGLE_SCRIPT)
   }
@@ -322,6 +324,72 @@ const HIGHLIGHT_SCRIPT = `
 
   var fadeTimer = setTimeout(fadeHighlights, 8000);
   document.addEventListener('click', function(){ clearTimeout(fadeTimer); fadeHighlights(); }, { once: true });
+})();
+`.trim()
+
+const STICKY_TABLE_SCRIPT = `
+(function(){
+  var wrappers = document.querySelectorAll('.mkdn-table-wrapper');
+  if (!wrappers.length) return;
+
+  var clones = [];
+
+  wrappers.forEach(function(wrapper){
+    var table = wrapper.querySelector('table');
+    if (!table) return;
+    var thead = table.querySelector('thead');
+    if (!thead) return;
+
+    var clone = document.createElement('div');
+    clone.className = 'mkdn-thead-clone';
+    clone.style.display = 'none';
+
+    var cloneTable = document.createElement('table');
+    cloneTable.appendChild(thead.cloneNode(true));
+    clone.appendChild(cloneTable);
+    document.body.appendChild(clone);
+
+    clones.push({ wrapper: wrapper, table: table, thead: thead, clone: clone, cloneTable: cloneTable });
+  });
+
+  if (!clones.length) return;
+
+  function syncWidths (entry) {
+    var ths = entry.thead.querySelectorAll('th');
+    var cloneThs = entry.clone.querySelectorAll('th');
+    ths.forEach(function(th, i){
+      if (cloneThs[i]) cloneThs[i].style.width = th.getBoundingClientRect().width + 'px';
+    });
+    var wrapperRect = entry.wrapper.getBoundingClientRect();
+    entry.clone.style.left = wrapperRect.left + 'px';
+    entry.clone.style.width = wrapperRect.width + 'px';
+    entry.cloneTable.style.marginLeft = (-entry.wrapper.scrollLeft) + 'px';
+  }
+
+  function onScroll () {
+    clones.forEach(function(entry){
+      var theadRect = entry.thead.getBoundingClientRect();
+      var tableBottom = entry.table.getBoundingClientRect().bottom;
+      var theadHeight = theadRect.height;
+      if (theadRect.top < 0 && tableBottom > theadHeight) {
+        entry.clone.style.display = 'block';
+        syncWidths(entry);
+      } else {
+        entry.clone.style.display = 'none';
+      }
+    });
+  }
+
+  clones.forEach(function(entry){
+    entry.wrapper.addEventListener('scroll', function(){
+      if (entry.clone.style.display !== 'none') {
+        entry.cloneTable.style.marginLeft = (-entry.wrapper.scrollLeft) + 'px';
+      }
+    });
+  });
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll, { passive: true });
 })();
 `.trim()
 
