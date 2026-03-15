@@ -134,28 +134,41 @@ export class LocalAdapter implements DeploymentAdapter {
 
   private printStartup (config: MkdnSiteConfig, port: number): void {
     const url = `http://localhost:${String(port)}`
+    const DIM_CYAN = '\x1b[2;36m'
+    const BOLD_GREEN = '\x1b[1;32m'
+    const DIM = '\x1b[2m'
+    const RESET = '\x1b[0m'
+
+    // ASCII art header
     console.log('')
-    console.log('  ┌──────────────────────────────────────────────┐')
-    console.log('  │                                              │')
-    console.log('  │   mkdnsite is running                       │')
-    console.log(`  │   ${url.padEnd(42)} │`)
-    console.log('  │                                              │')
-    console.log(`  │   Runtime: ${this.name.padEnd(32)} │`)
-    const contentLabel = config.github != null
-      ? `github:${config.github.owner}/${config.github.repo}@${config.github.ref ?? 'main'}`
-      : config.contentDir
-    console.log(`  │   Content: ${contentLabel.padEnd(32)} │`)
-    console.log(`  │   Renderer: ${this.rendererEngine.padEnd(30)} │`)
-    console.log(`  │   Theme mode: ${config.theme.mode.padEnd(28)} │`)
-    console.log(`  │   Client JS: ${(config.client.enabled ? 'on' : 'off').padEnd(29)} │`)
-    console.log(`  │   Content negotiation: ${(config.negotiation.enabled ? 'on' : 'off').padEnd(19)} │`)
-    console.log('  │                                              │')
-    console.log('  └──────────────────────────────────────────────┘')
+    console.log(`${DIM_CYAN}   ▌  ▌    ▘▗   `)
+    console.log('▛▛▌▙▘▛▌▛▌▛▘▌▜▘█▌')
+    console.log(`▌▌▌▛▖▙▌▌▌▄▌▌▐▖▙▖${RESET}`)
     console.log('')
-    console.log('  Try:')
-    console.log(`    curl ${url}`)
-    console.log(`    curl -H "Accept: text/markdown" ${url}`)
-    console.log(`    curl ${url}/llms.txt`)
+    console.log(`  ${BOLD_GREEN}\u2192 ${url}${RESET}`)
+    console.log('')
+
+    const row = (label: string, value: string): void => {
+      console.log(`  ${DIM}${label.padEnd(12)}${RESET}${value}`)
+    }
+
+    row('Runtime', `local (${this.name})`)
+    if (config.github != null) {
+      const ref = config.github.ref ?? 'main'
+      row('GitHub', `${config.github.owner}/${config.github.repo}@${ref}`)
+    } else {
+      row('Content', config.contentDir)
+    }
+    row('Renderer', this.rendererEngine)
+    if (config.mcp.enabled) {
+      row('MCP', config.mcp.endpoint ?? '/mcp')
+    }
+    if (config.client.search) {
+      row('Search', '/api/search')
+    }
+
+    console.log('')
+    console.log(`  ${DIM}Ctrl+C to stop${RESET}`)
     console.log('')
   }
 }

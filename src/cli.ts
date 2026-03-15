@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { resolve } from 'node:path'
-import { access } from 'node:fs/promises'
+import { access, readFile } from 'node:fs/promises'
 import { resolveConfig } from './config/defaults.ts'
 import type { MkdnSiteConfig } from './config/schema.ts'
 import { LocalAdapter } from './adapters/local.ts'
@@ -121,9 +121,6 @@ export function parseArgs (args: string[]): ParsedArgs {
     } else if (arg === '--help' || arg === '-h') {
       printHelp()
       process.exit(0)
-    } else if (arg === '--version' || arg === '-v') {
-      console.log('mkdnsite 0.0.1')
-      process.exit(0)
     } else if (!arg.startsWith('-')) {
       result.contentDir = resolve(arg)
     }
@@ -133,86 +130,87 @@ export function parseArgs (args: string[]): ParsedArgs {
 }
 
 function printHelp (): void {
+  const B = '\x1b[1m'
+  const C = '\x1b[36m'
+  const DIM = '\x1b[2m'
+  const R = '\x1b[0m'
+  const flag = (f: string, desc: string): string => `  ${C}${f.padEnd(32)}${R}${desc}`
+  const section = (s: string): string => `\n${B}${s}${R}`
+
   console.log(`
-  mkdnsite — Markdown for the web
+${B}mkdnsite${R} — Markdown for the web. HTML for humans, Markdown for agents.
 
-  Usage:
-    mkdnsite [directory] [options]
-    mkdnsite mcp [directory] [options]
+${B}Usage:${R} mkdnsite [directory] [options]
+       mkdnsite mcp [directory] [options]
+${section('Arguments:')}
+  ${C}[directory]${R}                      Path to markdown content (default: ./content)
+${section('Subcommands:')}
+  ${C}mcp [directory] [options]${R}        Run as MCP server over stdio (no web server)
+${section('Server:')}
+${flag('-p, --port <n>', 'Port to listen on (default: 3000)')}
+${flag('--config <path>', 'Path to config file (default: mkdnsite.config.ts)')}
+${flag('--static <dir>', 'Directory for static assets')}
+${section('Site:')}
+${flag('--title <text>', 'Site title')}
+${flag('--url <url>', 'Base URL for absolute links')}
+${flag('--preset <name>', 'Apply preset: docs or blog')}
+${flag('--og-image <url>', 'Default OpenGraph image URL')}
+${flag('--og-type <type>', 'website or article')}
+${flag('--twitter-card <type>', 'summary or summary_large_image')}
+${flag('--twitter-site <handle>', 'Twitter @handle for the site')}
+${section('Theme:')}
+${flag('--color-scheme <val>', 'system (default), light, or dark')}
+${flag('--theme-mode <mode>', 'prose (default) or components')}
+${flag('--accent <color>', 'Accent color CSS value')}
+${flag('--logo <url-path>', 'Logo image URL path (e.g. /logo.svg)')}
+${flag('--logo-text <text>', 'Site name text in nav header')}
+${flag('--custom-css <css>', 'Inline CSS appended after built-in styles')}
+${flag('--custom-css-url <url>', 'External stylesheet URL')}
+${flag('--no-builtin-css', 'Strip built-in CSS (start from blank slate)')}
+${flag('--font-body <family>', 'Body font stack')}
+${flag('--font-mono <family>', 'Monospace font stack')}
+${flag('--font-heading <family>', 'Heading font stack')}
+${section('Page Features:')}
+${flag('--page-title / --no-page-title', 'Render frontmatter title as <h1>')}
+${flag('--page-date / --no-page-date', 'Render publish/update date')}
+${flag('--prev-next / --no-prev-next', 'Show prev/next navigation links')}
+${flag('--reading-time / --no-reading-time', 'Show estimated reading time')}
+${flag('--no-toc', 'Disable table of contents sidebar')}
+${flag('--no-nav', 'Disable navigation sidebar')}
+${section('Flags:')}
+${flag('--no-client-js', 'Disable all client-side JavaScript')}
+${flag('--no-theme-toggle', 'Disable light/dark theme toggle')}
+${flag('--no-math', 'Disable KaTeX math rendering')}
+${flag('--no-search', 'Disable search (UI + /api/search)')}
+${flag('--no-charts', 'Disable Chart.js chart rendering')}
+${flag('--no-mcp', 'Disable built-in MCP server')}
+${flag('--mcp-endpoint <path>', 'Custom MCP endpoint path (default: /mcp)')}
+${flag('--no-llms-txt', 'Disable /llms.txt generation')}
+${flag('--no-negotiate', 'Disable content negotiation')}
+${section('GitHub Source:')}
+${flag('--github <owner/repo>', 'Serve content from a GitHub repository')}
+${flag('--github-ref <ref>', 'Branch or tag (default: main)')}
+${flag('--github-path <path>', 'Subdirectory within the repo')}
+${flag('--github-token <token>', 'GitHub token (also reads GITHUB_TOKEN env var)')}
+${section('General:')}
+${flag('--renderer <engine>', 'portable (default) or bun-native')}
+${flag('-h, --help', 'Show this help')}
+${flag('-v, --version', 'Show version')}
 
-  Subcommands:
-    mcp [directory] [options]  Run as MCP server over stdio (no web server)
-                               Supports the same content source options below
-
-  Arguments:
-    directory             Path to markdown content (default: ./content)
-
-  Options:
-    --config <path>       Path to config file (default: mkdnsite.config.ts)
-    -p, --port <n>        Port to listen on (default: 3000)
-    --title <text>        Site title
-    --url <url>           Base URL for absolute links
-    --og-image <url>      Default OpenGraph image URL
-    --og-type <type>      Default OpenGraph type (website or article)
-    --twitter-card <type> Twitter card type: summary or summary_large_image
-    --twitter-site <handle> Twitter @handle for the site
-    --static <dir>        Directory for static assets
-    --color-scheme <val>  Color scheme: system (default), light, or dark
-    --theme-mode <mode>   Theme mode: prose (default) or components
-    --accent <color>      Accent color CSS value (sets theme.colors.accent)
-    --logo <url-path>     Logo image URL path, e.g. /logo.svg (sets theme.logo.src)
-    --logo-text <text>    Site name / text logo in nav header
-    --custom-css <css>    Inline CSS appended after built-in styles
-    --custom-css-url <url> External stylesheet URL loaded via <link>
-    --no-builtin-css      Strip built-in CSS (start from blank slate)
-    --font-body <family>  Body/prose font stack (sets theme.fonts.body)
-    --font-mono <family>  Monospace font stack (sets theme.fonts.mono)
-    --font-heading <family> Heading font stack (sets theme.fonts.heading)
-    --preset <name>       Apply preset: docs or blog
-    --page-title          Render frontmatter title as <h1> above content
-    --no-page-title       Disable page title rendering
-    --page-date           Render publish/update date from frontmatter
-    --no-page-date        Disable page date rendering
-    --prev-next           Show prev/next page navigation links
-    --no-prev-next        Disable prev/next links
-    --reading-time        Show estimated reading time
-    --no-reading-time     Disable reading time display
-    --no-toc              Disable table of contents sidebar
-    --no-nav              Disable navigation sidebar
-    --no-mcp              Disable the built-in MCP server
-    --mcp-endpoint <path> Custom MCP endpoint path (default: /mcp)
-    --no-llms-txt         Disable /llms.txt generation
-    --no-negotiate        Disable content negotiation
-    --renderer <engine>   Renderer: portable (default) or bun-native (Bun only)
-
-  GitHub source:
-    --github <owner/repo> Serve a public GitHub repo (e.g. --github owner/repo)
-    --github-ref <ref>    Branch or tag to serve (default: main)
-    --github-path <path>  Subdirectory within the repo to use as content root
-    --github-token <token> GitHub token for private repos or higher rate limits
-                          Also reads GITHUB_TOKEN or MKDNSITE_GITHUB_TOKEN env var
-
-  Client-side features:
-    --no-client-js        Disable client-side JavaScript (mermaid, copy, search, charts, theme toggle)
-    --no-theme-toggle     Disable light/dark theme toggle button
-    --no-math             Disable KaTeX math rendering
-    --no-search           Disable search functionality (UI and /api/search endpoint)
-    --no-charts           Disable Chart.js chart rendering
-    -h, --help            Show this help
-    -v, --version         Show version
-
-  Content Negotiation:
-    Browsers get HTML:    curl http://localhost:3000
-    AI agents get MD:     curl -H "Accept: text/markdown" http://localhost:3000
-    Append .md to URL:    curl http://localhost:3000/page.md
-    AI content index:     curl http://localhost:3000/llms.txt
-
-  https://mkdn.site
+  ${DIM}https://mkdn.site${R}
   `)
 }
 
 async function main (): Promise<void> {
   const rawArgv = process.argv.slice(2)
+
+  // ── --version ────────────────────────────────────────────────────────────
+  if (rawArgv.includes('--version') || rawArgv.includes('-v')) {
+    const pkgUrl = new URL('../package.json', import.meta.url)
+    const pkgJson = JSON.parse(await readFile(pkgUrl, 'utf-8')) as { version: string }
+    console.log(pkgJson.version)
+    process.exit(0)
+  }
 
   // ── Subcommand: mkdnsite mcp [options] ──────────────────────────────────
   if (rawArgv[0] === 'mcp') {
