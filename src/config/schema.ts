@@ -88,6 +88,22 @@ export interface AnalyticsConfig {
     /** GA4 measurement ID, e.g. 'G-XXXXXXXXXX' */
     measurementId: string
   }
+  /** Server-side traffic analytics (default: disabled) */
+  traffic?: TrafficAnalyticsConfig
+}
+
+/** Server-side traffic analytics configuration */
+export interface TrafficAnalyticsConfig {
+  /**
+   * Enable server-side traffic analytics.
+   * When false (default) the analytics hook is skipped entirely.
+   */
+  enabled?: boolean
+  /**
+   * Log each request as a JSON line to stdout.
+   * Useful for development / debugging. Requires enabled: true.
+   */
+  console?: boolean
 }
 
 /** OpenGraph / social sharing meta tag configuration */

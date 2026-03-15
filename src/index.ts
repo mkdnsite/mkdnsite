@@ -86,3 +86,16 @@ export type { SearchIndex, SearchResult } from './search/index.ts'
 export { createMcpServer } from './mcp/server.ts'
 export { createMcpHandler } from './mcp/transport.ts'
 export type { McpConfig } from './config/schema.ts'
+
+// Traffic analytics
+export type {
+  TrafficAnalytics,
+  TrafficEvent,
+  TrafficType,
+  AnalyticsResponseFormat
+} from './analytics/types.ts'
+export { classifyTraffic, BOT_PATTERNS } from './analytics/classify.ts'
+export { NoopAnalytics } from './analytics/noop.ts'
+export { ConsoleAnalytics } from './analytics/console.ts'
+export { WorkersAnalyticsEngineAnalytics } from './adapters/cloudflare.ts'
+export type { TrafficAnalyticsConfig } from './config/schema.ts'

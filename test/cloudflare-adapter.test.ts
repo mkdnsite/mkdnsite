@@ -119,3 +119,44 @@ describe('CloudflareAdapter — createRenderer', () => {
     expect(renderer.engine).toBe('portable')
   })
 })
+
+describe('CloudflareAdapter — createTrafficAnalytics', () => {
+  it('returns undefined when ANALYTICS binding is absent', () => {
+    const adapter = makeAdapter({})
+    expect(adapter.createTrafficAnalytics()).toBeUndefined()
+  })
+
+  it('returns WorkersAnalyticsEngineAnalytics when ANALYTICS binding is present', async () => {
+    const { WorkersAnalyticsEngineAnalytics } = await import('../src/adapters/cloudflare.ts')
+    const mockDataset = { writeDataPoint: () => {} }
+    const adapter = makeAdapter({ ANALYTICS: mockDataset as never })
+    const analytics = adapter.createTrafficAnalytics()
+    expect(analytics).toBeInstanceOf(WorkersAnalyticsEngineAnalytics)
+  })
+
+  it('WorkersAnalyticsEngineAnalytics.logRequest calls writeDataPoint', async () => {
+    const { WorkersAnalyticsEngineAnalytics } = await import('../src/adapters/cloudflare.ts')
+    const calls: unknown[] = []
+    const mockDataset = { writeDataPoint: (data: unknown) => calls.push(data) }
+    const wae = new WorkersAnalyticsEngineAnalytics(mockDataset as never)
+    wae.logRequest({
+      timestamp: 1710000000000,
+      path: '/docs',
+      method: 'GET',
+      format: 'html',
+      trafficType: 'human',
+      statusCode: 200,
+      latencyMs: 15,
+      userAgent: 'TestAgent/1.0',
+      contentLength: 4321,
+      cacheHit: false
+    })
+    expect(calls).toHaveLength(1)
+    const dp = calls[0] as { blobs: string[], doubles: number[] }
+    expect(dp.blobs).toContain('/docs')
+    expect(dp.blobs).toContain('html')
+    expect(dp.blobs).toContain('human')
+    expect(dp.doubles).toContain(200)
+    expect(dp.doubles).toContain(15)
+  })
+})

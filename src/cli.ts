@@ -37,7 +37,11 @@ export function parseArgs (args: string[]): ParsedArgs {
     } else if (arg === '--twitter-site') {
       result.site = { ...(result.site as object ?? {}), og: { ...((result.site as Record<string, unknown>)?.og as object ?? {}), twitterSite: args[++i] } }
     } else if (arg === '--ga-measurement-id') {
-      result.analytics = { googleAnalytics: { measurementId: args[++i] } }
+      result.analytics = { ...(result.analytics as object ?? {}), googleAnalytics: { measurementId: args[++i] } }
+    } else if (arg === '--traffic-analytics') {
+      result.analytics = { ...(result.analytics as object ?? {}), traffic: { ...((result.analytics as Record<string, unknown>)?.traffic as object ?? {}), enabled: true } }
+    } else if (arg === '--traffic-console') {
+      result.analytics = { ...(result.analytics as object ?? {}), traffic: { ...((result.analytics as Record<string, unknown>)?.traffic as object ?? {}), console: true } }
     } else if (arg === '--preset') {
       result.preset = args[++i]
     } else if (arg === '--page-title') {
@@ -196,6 +200,8 @@ ${flag('--no-llms-txt', 'Disable /llms.txt generation')}
 ${flag('--no-negotiate', 'Disable content negotiation')}
 ${section('Analytics:')}
 ${flag('--ga-measurement-id <id>', 'Google Analytics 4 measurement ID (e.g. G-XXXXXXXXXX)')}
+${flag('--traffic-analytics', 'Enable server-side traffic analytics')}
+${flag('--traffic-console', 'Log traffic events as JSON lines to stdout')}
 ${section('Security:')}
 ${flag('--no-csp', 'Disable Content-Security-Policy header')}
 ${section('GitHub Source:')}
@@ -309,7 +315,20 @@ async function main (): Promise<void> {
   const adapter = new LocalAdapter()
   const source = adapter.createContentSource(config)
   const renderer = await adapter.createRenderer(config)
-  const handler = createHandler({ source, renderer, config })
+
+  // Wire up server-side traffic analytics if enabled
+  let trafficAnalytics
+  if (config.analytics?.traffic?.enabled === true) {
+    if (config.analytics.traffic.console === true) {
+      const { ConsoleAnalytics } = await import('./analytics/console.ts')
+      trafficAnalytics = new ConsoleAnalytics()
+    } else {
+      const { NoopAnalytics } = await import('./analytics/noop.ts')
+      trafficAnalytics = new NoopAnalytics()
+    }
+  }
+
+  const handler = createHandler({ source, renderer, config, analytics: trafficAnalytics })
 
   const stop = await adapter.start(handler, config)
 

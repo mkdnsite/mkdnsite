@@ -12,11 +12,15 @@ import type { SearchIndex } from './search/index.ts'
 import { createMcpServer } from './mcp/server.ts'
 import { buildCsp } from './security/csp.ts'
 import { createMcpHandler } from './mcp/transport.ts'
+import type { TrafficAnalytics, AnalyticsResponseFormat } from './analytics/types.ts'
+import { classifyTraffic } from './analytics/classify.ts'
 
 export interface HandlerOptions {
   source: ContentSource
   renderer: MarkdownRenderer
   config: MkdnSiteConfig
+  /** Optional traffic analytics backend. When provided, every request is logged. */
+  analytics?: TrafficAnalytics
 }
 
 /**
@@ -31,7 +35,7 @@ export interface HandlerOptions {
  * - Deno.serve()
  */
 export function createHandler (opts: HandlerOptions): (request: Request) => Promise<Response> {
-  const { source, renderer, config } = opts
+  const { source, renderer, config, analytics } = opts
 
   let llmsTxtCache: string | null = null
   let mcpHandlerFn: ((req: Request) => Promise<Response>) | null = null
@@ -66,9 +70,69 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
   }
 
   return async function handler (request: Request): Promise<Response> {
+    const start = Date.now()
     const url = new URL(request.url)
     const pathname = decodeURIComponent(url.pathname)
 
+    const response = await handleRequest(request, url, pathname)
+
+    if (analytics != null) {
+      const format = resolveAnalyticsFormat(request, pathname, response)
+      try {
+        analytics.logRequest({
+          timestamp: start,
+          path: pathname,
+          method: request.method,
+          format,
+          trafficType: classifyTraffic(request, format),
+          statusCode: response.status,
+          latencyMs: Date.now() - start,
+          userAgent: request.headers.get('User-Agent') ?? '',
+          contentLength: parseInt(response.headers.get('Content-Length') ?? '0', 10),
+          cacheHit: false
+        })
+      } catch {
+        // analytics must never break the response path
+      }
+    }
+
+    return response
+  }
+
+  // ---- Analytics format resolution ----
+
+  function resolveAnalyticsFormat (
+    request: Request,
+    pathname: string,
+    response: Response
+  ): AnalyticsResponseFormat {
+    const contentType = response.headers.get('Content-Type') ?? ''
+    if (contentType.includes('text/markdown')) return 'markdown'
+    if (contentType.includes('text/html')) return 'html'
+    if (contentType.includes('application/json')) return 'api'
+    // MCP: check endpoint
+    const mcpEndpoint = config.mcp.endpoint ?? '/mcp'
+    if (
+      config.mcp.enabled &&
+      (pathname === mcpEndpoint || pathname.startsWith(mcpEndpoint + '/'))
+    ) {
+      return 'mcp'
+    }
+    const accept = request.headers.get('Accept') ?? ''
+    if (
+      accept.includes('text/markdown') ||
+      accept.includes('text/x-markdown') ||
+      accept.includes('application/markdown') ||
+      pathname.endsWith('.md')
+    ) {
+      return 'markdown'
+    }
+    return 'other'
+  }
+
+  // ---- Inner request handler (no analytics instrumentation) ----
+
+  async function handleRequest (request: Request, url: URL, pathname: string): Promise<Response> {
     // ---- Special routes ----
 
     if (pathname === '/_health') {
