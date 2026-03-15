@@ -93,3 +93,28 @@ jobs:
             dist/mkdnsite-linux-x64
             dist/mkdnsite-darwin-arm64
             dist/mkdnsite-windows-x64.exe
+
+  docker:
+    name: Build and Push Docker Image
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            mkdnsite/mkdnsite:latest
+            mkdnsite/mkdnsite:${{ needs.release-please.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
