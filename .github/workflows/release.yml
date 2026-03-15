@@ -117,7 +117,7 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            mkdnsite/mkdnsite:latest
-            mkdnsite/mkdnsite:${{ needs.release-please.outputs.version }}
+            nexdrew/mkdnsite:latest
+            nexdrew/mkdnsite:${{ needs.release-please.outputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

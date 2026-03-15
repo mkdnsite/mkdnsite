@@ -11,7 +11,7 @@ Run mkdnsite in a container without installing any runtime.
 ## Quick start
 
 ```bash
-docker run -p 3000:3000 -v ./content:/site mkdnsite/mkdnsite
+docker run -p 3000:3000 -v ./content:/site nexdrew/mkdnsite
 ```
 
 ## Build locally
@@ -24,7 +24,7 @@ docker run -p 3000:3000 -v ./my-docs:/site mkdnsite
 ## With a GitHub source
 
 ```bash
-docker run -p 3000:3000 mkdnsite/mkdnsite --github owner/repo
+docker run -p 3000:3000 nexdrew/mkdnsite --github owner/repo
 ```
 
 ## Docker Compose
@@ -32,7 +32,7 @@ docker run -p 3000:3000 mkdnsite/mkdnsite --github owner/repo
 ```yaml
 services:
   docs:
-    image: mkdnsite/mkdnsite
+    image: nexdrew/mkdnsite
     ports:
       - "3000:3000"
     volumes:
