@@ -47,6 +47,9 @@ export interface MkdnSiteConfig {
 
   /** MCP (Model Context Protocol) server configuration */
   mcp: McpConfig
+
+  /** Analytics configuration (disabled by default) */
+  analytics?: AnalyticsConfig
 }
 
 /** MCP (Model Context Protocol) server configuration */
@@ -55,6 +58,15 @@ export interface McpConfig {
   enabled: boolean
   /** MCP endpoint path (default: '/mcp') */
   endpoint?: string
+}
+
+/** Analytics configuration */
+export interface AnalyticsConfig {
+  /** Google Analytics 4 (GA4) configuration */
+  googleAnalytics?: {
+    /** GA4 measurement ID, e.g. 'G-XXXXXXXXXX' */
+    measurementId: string
+  }
 }
 
 /** OpenGraph / social sharing meta tag configuration */

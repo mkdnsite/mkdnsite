@@ -86,6 +86,7 @@ export function renderPage (props: PageShellProps): string {
   ${buildOgTags(props)}
   <meta name="generator" content="mkdnsite">
   ${buildFaviconTags(config)}
+  ${buildAnalyticsTags(config)}
   ${config.client.math ? '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css" crossorigin="anonymous">' : ''}
   <style>${buildThemeCss(config)}</style>
   ${config.theme.customCssUrl != null ? `<link rel="stylesheet" href="${esc(config.theme.customCssUrl)}">` : ''}
@@ -282,6 +283,22 @@ function buildFaviconTags (config: MkdnSiteConfig): string {
     lines.push(`<link rel="apple-touch-icon" href="${safeSrc}">`)
   }
   return lines.join('\n  ')
+}
+
+function buildAnalyticsTags (config: MkdnSiteConfig): string {
+  const id = config.analytics?.googleAnalytics?.measurementId
+  if (id == null || id === '') return ''
+  // GA4 measurement IDs are always G- followed by alphanumerics
+  if (!/^G-[A-Z0-9]+$/i.test(id)) return ''
+  // Belt-and-suspenders: escape for both HTML and JS string context
+  const safeId = esc(id).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/<\//g, '<\\/')
+  return `<script async src="https://www.googletagmanager.com/gtag/js?id=${safeId}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '${safeId}');
+  </script>`
 }
 
 function buildOgTags (props: PageShellProps): string {

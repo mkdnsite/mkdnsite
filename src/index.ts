@@ -15,6 +15,7 @@ export type {
   MkdnSiteConfig,
   SiteConfig,
   OgConfig,
+  AnalyticsConfig,
   FaviconConfig,
   ThemeConfig,
   NegotiationConfig,

@@ -36,6 +36,8 @@ export function parseArgs (args: string[]): ParsedArgs {
       result.site = { ...(result.site as object ?? {}), og: { ...((result.site as Record<string, unknown>)?.og as object ?? {}), twitterCard: args[++i] } }
     } else if (arg === '--twitter-site') {
       result.site = { ...(result.site as object ?? {}), og: { ...((result.site as Record<string, unknown>)?.og as object ?? {}), twitterSite: args[++i] } }
+    } else if (arg === '--ga-measurement-id') {
+      result.analytics = { googleAnalytics: { measurementId: args[++i] } }
     } else if (arg === '--preset') {
       result.preset = args[++i]
     } else if (arg === '--page-title') {
@@ -190,6 +192,8 @@ ${flag('--no-mcp', 'Disable built-in MCP server')}
 ${flag('--mcp-endpoint <path>', 'Custom MCP endpoint path (default: /mcp)')}
 ${flag('--no-llms-txt', 'Disable /llms.txt generation')}
 ${flag('--no-negotiate', 'Disable content negotiation')}
+${section('Analytics:')}
+${flag('--ga-measurement-id <id>', 'Google Analytics 4 measurement ID (e.g. G-XXXXXXXXXX)')}
 ${section('GitHub Source:')}
 ${flag('--github <owner/repo>', 'Serve content from a GitHub repository')}
 ${flag('--github-ref <ref>', 'Branch or tag (default: main)')}
