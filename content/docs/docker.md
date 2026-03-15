@@ -41,4 +41,4 @@ services:
 
 ## Image details
 
-The image uses a compiled binary (via `bun build --compile`) on Debian slim. No Bun, Node, or Deno runtime is included — just the self-contained `mkdnsite` executable. Image size is typically under 100MB.
+The image uses Google's distroless base (`gcr.io/distroless/cc-debian12`) with a compiled binary (via `bun build --compile`). No Bun, Node, or Deno runtime is included — just the self-contained `mkdnsite` executable. Multi-platform: `linux/amd64` and `linux/arm64`.

@@ -7,15 +7,13 @@ WORKDIR /app
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
 
-# Copy source and compile
+# Copy source and compile (auto-detects target platform)
 COPY src/ src/
 COPY tsconfig.json ./
-RUN bun build --compile --target=bun-linux-x64 src/cli.ts --outfile /app/mkdnsite
+RUN bun build --compile src/cli.ts --outfile /app/mkdnsite
 
 # ── Runtime stage ────────────────────────────────────────────────────────────
-FROM debian:bookworm-slim
-
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
+FROM gcr.io/distroless/cc-debian12
 
 COPY --from=build /app/mkdnsite /usr/local/bin/mkdnsite
 
