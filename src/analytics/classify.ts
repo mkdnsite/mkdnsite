@@ -40,26 +40,20 @@ export const BOT_PATTERNS: RegExp[] = [
  *
  * Rules (evaluated in order):
  * 1. MCP format → 'mcp'
- * 2. markdown Accept or .md URL → 'ai_agent'
+ * 2. markdown format (already resolved by the handler from Accept header / .md URL) → 'ai_agent'
  * 3. User-Agent matches a known bot pattern → 'bot'
  * 4. Otherwise → 'human'
+ *
+ * The `format` parameter is pre-resolved by the handler's `resolveAnalyticsFormat()`,
+ * which already checks Content-Type, Accept headers, and .md URL suffix — so we
+ * avoid duplicating that logic here.
  */
 export function classifyTraffic (request: Request, format: AnalyticsResponseFormat): TrafficType {
   // MCP traffic
   if (format === 'mcp') return 'mcp'
 
-  // AI agent: requested raw markdown
-  const accept = request.headers.get('Accept') ?? ''
-  const url = new URL(request.url)
-  if (
-    format === 'markdown' ||
-    accept.includes('text/markdown') ||
-    accept.includes('text/x-markdown') ||
-    accept.includes('application/markdown') ||
-    url.pathname.endsWith('.md')
-  ) {
-    return 'ai_agent'
-  }
+  // AI agent: served raw markdown (format resolved from Accept header / .md URL / Content-Type)
+  if (format === 'markdown') return 'ai_agent'
 
   // Known bot by User-Agent
   const ua = request.headers.get('User-Agent') ?? ''

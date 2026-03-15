@@ -147,20 +147,23 @@ export class WorkersAnalyticsEngineAnalytics implements TrafficAnalytics {
   }
 
   logRequest (event: TrafficEvent): void {
+    // Field ordering is significant — CF Analytics Engine queries reference
+    // fields by index (blob1, blob2, ..., double1, double2, ...).
+    // Do NOT reorder without updating all downstream queries.
     this.dataset.writeDataPoint({
       blobs: [
-        event.path,
-        event.method,
-        event.format,
-        event.trafficType,
-        event.userAgent
+        event.path, // blob1: URL pathname
+        event.method, // blob2: HTTP method
+        event.format, // blob3: response format (html|markdown|mcp|api|other)
+        event.trafficType, // blob4: traffic classification (human|ai_agent|bot|mcp)
+        event.userAgent // blob5: raw User-Agent string
       ],
       doubles: [
-        event.statusCode,
-        event.latencyMs,
-        event.contentLength,
-        event.cacheHit ? 1 : 0,
-        event.timestamp
+        event.statusCode, // double1: HTTP status code
+        event.latencyMs, // double2: handler latency in ms
+        event.contentLength, // double3: response body size in bytes
+        event.cacheHit ? 1 : 0, // double4: cache hit (1) or miss (0)
+        event.timestamp // double5: request timestamp (epoch ms)
       ]
     })
   }

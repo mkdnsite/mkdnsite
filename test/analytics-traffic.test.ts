@@ -85,24 +85,17 @@ describe('classifyTraffic', () => {
     expect(classifyTraffic(req, 'markdown')).toBe('ai_agent')
   })
 
-  it('returns ai_agent when Accept header contains text/markdown', () => {
+  it('returns human when format is html even with markdown-like Accept', () => {
+    // classifyTraffic relies on pre-resolved format, not raw Accept headers.
+    // Accept header classification happens in resolveAnalyticsFormat().
     const req = makeRequest({ accept: 'text/markdown' })
-    expect(classifyTraffic(req, 'html')).toBe('ai_agent')
+    expect(classifyTraffic(req, 'html')).toBe('human')
   })
 
-  it('returns ai_agent when Accept header contains text/x-markdown', () => {
-    const req = makeRequest({ accept: 'text/x-markdown' })
-    expect(classifyTraffic(req, 'html')).toBe('ai_agent')
-  })
-
-  it('returns ai_agent when Accept header contains application/markdown', () => {
-    const req = makeRequest({ accept: 'application/markdown' })
-    expect(classifyTraffic(req, 'html')).toBe('ai_agent')
-  })
-
-  it('returns ai_agent when URL ends in .md', () => {
+  it('returns human when format is html even for .md URL', () => {
+    // URL-based classification happens in resolveAnalyticsFormat(), not here.
     const req = makeRequest({ url: 'http://localhost/page.md' })
-    expect(classifyTraffic(req, 'html')).toBe('ai_agent')
+    expect(classifyTraffic(req, 'html')).toBe('human')
   })
 
   it('returns bot for Googlebot', () => {
@@ -316,6 +309,38 @@ describe('Handler analytics integration', () => {
     // Should not propagate the analytics error
     const res = await handler(req)
     expect(res.status).toBe(200)
+  })
+
+  it('records non-zero contentLength for HTML responses', async () => {
+    const events: TrafficEvent[] = []
+    const analytics: TrafficAnalytics = { logRequest: e => events.push(e) }
+    const config = resolveConfig({})
+    const handler = createHandler({
+      source: makeStubSource(),
+      renderer: makeStubRenderer(),
+      config,
+      analytics
+    })
+    const req = new Request('http://localhost/test')
+    await handler(req)
+    expect(events[0].contentLength).toBeGreaterThan(0)
+  })
+
+  it('records non-zero contentLength for markdown responses', async () => {
+    const events: TrafficEvent[] = []
+    const analytics: TrafficAnalytics = { logRequest: e => events.push(e) }
+    const config = resolveConfig({})
+    const handler = createHandler({
+      source: makeStubSource(),
+      renderer: makeStubRenderer(),
+      config,
+      analytics
+    })
+    const req = new Request('http://localhost/test', {
+      headers: { Accept: 'text/markdown' }
+    })
+    await handler(req)
+    expect(events[0].contentLength).toBeGreaterThan(0)
   })
 
   it('records api format for /api/search endpoint', async () => {

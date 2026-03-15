@@ -88,8 +88,8 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
           statusCode: response.status,
           latencyMs: Date.now() - start,
           userAgent: request.headers.get('User-Agent') ?? '',
-          contentLength: parseInt(response.headers.get('Content-Length') ?? '0', 10),
-          cacheHit: false
+          contentLength: readContentLength(response),
+          cacheHit: false // TODO: set from cache layer when response caching lands (#17)
         })
       } catch {
         // analytics must never break the response path
@@ -106,11 +106,7 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
     pathname: string,
     response: Response
   ): AnalyticsResponseFormat {
-    const contentType = response.headers.get('Content-Type') ?? ''
-    if (contentType.includes('text/markdown')) return 'markdown'
-    if (contentType.includes('text/html')) return 'html'
-    if (contentType.includes('application/json')) return 'api'
-    // MCP: check endpoint
+    // MCP: check endpoint first (MCP responses may have various Content-Types)
     const mcpEndpoint = config.mcp.endpoint ?? '/mcp'
     if (
       config.mcp.enabled &&
@@ -118,6 +114,14 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
     ) {
       return 'mcp'
     }
+
+    // Prefer response Content-Type when available
+    const contentType = response.headers.get('Content-Type') ?? ''
+    if (contentType.includes('text/markdown')) return 'markdown'
+    if (contentType.includes('text/html')) return 'html'
+    if (contentType.includes('application/json')) return 'api'
+
+    // Fallback: infer from request when Content-Type is missing (e.g. static files)
     const accept = request.headers.get('Accept') ?? ''
     if (
       accept.includes('text/markdown') ||
@@ -143,7 +147,7 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
       if (llmsTxtCache == null) {
         llmsTxtCache = await generateLlmsTxt(source, config)
       }
-      return new Response(llmsTxtCache, {
+      return textResponse(llmsTxtCache, {
         status: 200,
         headers: {
           'Content-Type': 'text/markdown; charset=utf-8',
@@ -170,7 +174,7 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
       const limit = Math.min(isNaN(rawLimit) ? 10 : rawLimit, 50)
       const si = await ensureSearchIndex()
       const results = si.search(query, limit)
-      return new Response(JSON.stringify(results), {
+      return textResponse(JSON.stringify(results), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
       })
@@ -210,7 +214,7 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
     if (page == null) {
       const format = negotiateFormat(request.headers.get('Accept'))
       if (format === 'markdown') {
-        return new Response(
+        return textResponse(
           '# 404 — Page Not Found\n\nThe requested page does not exist.\n',
           {
             status: 404,
@@ -218,7 +222,7 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
           }
         )
       }
-      return new Response(render404(config), {
+      return textResponse(render404(config), {
         status: 404,
         headers: htmlHeadersWithCsp(config)
       })
@@ -233,7 +237,7 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
         ? estimateTokens(page.body)
         : null
 
-      return new Response(page.body, {
+      return textResponse(page.body, {
         status: 200,
         headers: markdownHeaders(tokens, config.negotiation.contentSignals)
       })
@@ -254,11 +258,30 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
       body: page.body
     })
 
-    return new Response(fullPage, {
+    return textResponse(fullPage, {
       status: 200,
       headers: htmlHeadersWithCsp(config)
     })
   }
+}
+
+/**
+ * Read content length from the response Content-Length header.
+ * Returns 0 when the header is absent or unparseable.
+ */
+function readContentLength (response: Response): number {
+  const header = response.headers.get('Content-Length')
+  if (header == null) return 0
+  const parsed = parseInt(header, 10)
+  return isNaN(parsed) ? 0 : parsed
+}
+
+/** Create a Response with Content-Length set from the body string. */
+function textResponse (body: string, init: ResponseInit): Response {
+  const encoded = new TextEncoder().encode(body)
+  const headers = new Headers(init.headers)
+  headers.set('Content-Length', String(encoded.byteLength))
+  return new Response(encoded, { ...init, headers })
 }
 
 function htmlHeadersWithCsp (config: MkdnSiteConfig): Record<string, string> {

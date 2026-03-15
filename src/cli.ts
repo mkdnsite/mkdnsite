@@ -323,6 +323,10 @@ async function main (): Promise<void> {
       const { ConsoleAnalytics } = await import('./analytics/console.ts')
       trafficAnalytics = new ConsoleAnalytics()
     } else {
+      console.warn(
+        'Warning: --traffic-analytics is enabled but no backend is configured. ' +
+        'Add --traffic-console for stdout logging. Analytics will be a no-op.'
+      )
       const { NoopAnalytics } = await import('./analytics/noop.ts')
       trafficAnalytics = new NoopAnalytics()
     }
