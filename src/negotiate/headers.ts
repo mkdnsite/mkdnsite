@@ -7,7 +7,10 @@ function buildCacheControl (maxAge: number, swr: number): string {
 }
 
 function buildEtag (versionTag: string, slug?: string): string {
-  const tag = slug != null ? versionTag + '-' + slug.replace(/[^a-zA-Z0-9-]/g, '_') : versionTag
+  // Sanitize versionTag: strip quotes and non-printable chars to prevent malformed ETag headers
+  // eslint-disable-next-line no-control-regex
+  const safeVersion = versionTag.replace(/["\\\x00-\x1f]/g, '')
+  const tag = slug != null ? safeVersion + '-' + slug.replace(/[^a-zA-Z0-9-]/g, '_') : safeVersion
   return 'W/"' + tag + '"'
 }
 

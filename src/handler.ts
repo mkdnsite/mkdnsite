@@ -212,7 +212,7 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
       if (refreshToken != null && refreshToken !== '') {
         const authHeader = request.headers.get('Authorization') ?? ''
         const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
-        if (token !== refreshToken) {
+        if (!timingSafeEqual(token, refreshToken)) {
           return ok(new Response('Unauthorized', { status: 401 }))
         }
       }
@@ -322,7 +322,7 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
         const ifNoneMatch = request.headers.get('If-None-Match')
         const etag = cached.headers.ETag
         if (ifNoneMatch != null && etag != null && ifNoneMatch === etag) {
-          return { response: new Response(null, { status: 304 }), cacheHit: true }
+          return { response: new Response(null, { status: 304, headers: notModifiedHeaders(cached.headers) }), cacheHit: true }
         }
         return { response: textResponse(cached.body, { status: cached.status, headers: cached.headers }), cacheHit: true }
       }
@@ -338,7 +338,7 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
       // 304 Not Modified support for non-cached path
       const ifNoneMatch = request.headers.get('If-None-Match')
       if (ifNoneMatch != null && headers.ETag != null && ifNoneMatch === headers.ETag) {
-        return ok(new Response(null, { status: 304 }))
+        return ok(new Response(null, { status: 304, headers: notModifiedHeaders(headers) }))
       }
 
       const response = textResponse(page.body, { status: 200, headers })
@@ -373,7 +373,7 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
     // 304 Not Modified support for non-cached path
     const ifNoneMatch = request.headers.get('If-None-Match')
     if (ifNoneMatch != null && htmlHdrs.ETag != null && ifNoneMatch === htmlHdrs.ETag) {
-      return ok(new Response(null, { status: 304 }))
+      return ok(new Response(null, { status: 304, headers: notModifiedHeaders(htmlHdrs) }))
     }
 
     const htmlResponse = textResponse(fullPage, { status: 200, headers: htmlHdrs })
@@ -453,6 +453,38 @@ const MIME_TYPES: Record<string, string> = {
   '.woff2': 'font/woff2',
   '.ttf': 'font/ttf',
   '.eot': 'application/vnd.ms-fontobject'
+}
+
+/**
+ * Extract headers required by RFC 7232 for 304 Not Modified responses.
+ * Must include ETag, Cache-Control, Vary (and Content-Type if set).
+ */
+function notModifiedHeaders (original: Record<string, string>): Record<string, string> {
+  const headers: Record<string, string> = {}
+  if (original.ETag != null) headers.ETag = original.ETag
+  if (original['Cache-Control'] != null) headers['Cache-Control'] = original['Cache-Control']
+  if (original.Vary != null) headers.Vary = original.Vary
+  return headers
+}
+
+/**
+ * Constant-time string comparison to prevent timing side-channel attacks.
+ * Always compares the full length of both strings regardless of where they differ.
+ */
+function timingSafeEqual (a: string, b: string): boolean {
+  if (a.length !== b.length) {
+    // Still do a full comparison against b to avoid leaking length info via timing
+    let mismatch = 1
+    for (let i = 0; i < b.length; i++) {
+      mismatch |= b.charCodeAt(i) ^ b.charCodeAt(i)
+    }
+    return mismatch === 0
+  }
+  let mismatch = 0
+  for (let i = 0; i < a.length; i++) {
+    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  }
+  return mismatch === 0
 }
 
 async function serveStatic (pathname: string, staticDir: string): Promise<Response> {

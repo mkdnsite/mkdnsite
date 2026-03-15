@@ -364,6 +364,33 @@ describe('Cache-Control and ETag headers', () => {
     }))
     expect(second.status).toBe(304)
   })
+
+  it('304 response includes ETag, Cache-Control, and Vary headers', async () => {
+    const config = resolveConfig({ cache: { versionTag: 'v2.0.0', maxAge: 600 } } as unknown as Parameters<typeof resolveConfig>[0])
+    const handler = createHandler({ source: mockSource, renderer: stubRenderer, config })
+
+    const first = await handler(new Request('http://localhost/'))
+    const etag = first.headers.get('ETag')
+    expect(etag).not.toBeNull()
+
+    const second = await handler(new Request('http://localhost/', {
+      headers: { 'If-None-Match': etag ?? '' }
+    }))
+    expect(second.status).toBe(304)
+    expect(second.headers.get('ETag')).toBe(etag)
+    expect(second.headers.get('Cache-Control')).not.toBeNull()
+    expect(second.headers.get('Vary')).toBe('Accept')
+  })
+
+  it('ETag sanitizes special characters in versionTag', async () => {
+    const config = resolveConfig({ cache: { versionTag: 'v1"inject\\bad' } } as unknown as Parameters<typeof resolveConfig>[0])
+    const handler = createHandler({ source: mockSource, renderer: stubRenderer, config })
+    const res = await handler(new Request('http://localhost/'))
+    const etag = res.headers.get('ETag')
+    expect(etag).not.toBeNull()
+    expect(etag).not.toContain('"inject')
+    expect(etag).toMatch(/^W\/"v1injectbad/)
+  })
 })
 
 // ─── CLI flag parsing ─────────────────────────────────────────────────────────
@@ -397,5 +424,10 @@ describe('CLI — cache flag parsing', () => {
   it('--cache-version sets versionTag', async () => {
     const config = await parseArgs(['--cache-version', 'v2.0.0'])
     expect((config.cache as Record<string, unknown>)?.versionTag).toBe('v2.0.0')
+  })
+
+  it('--cache-max-age-markdown sets maxAgeMarkdown', async () => {
+    const config = await parseArgs(['--cache-max-age-markdown', '120'])
+    expect((config.cache as Record<string, unknown>)?.maxAgeMarkdown).toBe(120)
   })
 })

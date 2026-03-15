@@ -86,6 +86,10 @@ export function parseArgs (args: string[]): ParsedArgs {
       const val = parseInt(args[++i] ?? '', 10)
       if (isNaN(val) || val < 0) { console.error('Error: --cache-max-age must be a non-negative integer'); process.exit(1) }
       result.cache = { ...(result.cache ?? {}), maxAge: val }
+    } else if (arg === '--cache-max-age-markdown') {
+      const val = parseInt(args[++i], 10)
+      if (isNaN(val) || val < 0) { console.error('Error: --cache-max-age-markdown must be a non-negative integer'); process.exit(1) }
+      result.cache = { ...(result.cache as object ?? {}), maxAgeMarkdown: val }
     } else if (arg === '--cache-swr') {
       const val = parseInt(args[++i] ?? '', 10)
       if (isNaN(val) || val < 0) { console.error('Error: --cache-swr must be a non-negative integer'); process.exit(1) }
@@ -221,6 +225,7 @@ ${section('Caching:')}
 ${flag('--cache', 'Enable in-memory response caching (default: off)')}
 ${flag('--no-cache', 'Disable response caching')}
 ${flag('--cache-max-age <seconds>', 'Cache-Control max-age for HTML (default: 300)')}
+${flag('--cache-max-age-markdown <s>', 'Cache-Control max-age for markdown (default: 300)')}
 ${flag('--cache-swr <seconds>', 'stale-while-revalidate seconds (default: 0)')}
 ${flag('--cache-version <tag>', 'Version tag for ETag header (e.g. v1.0.0 or git SHA)')}
 
