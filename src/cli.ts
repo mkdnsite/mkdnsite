@@ -71,6 +71,8 @@ export function parseArgs (args: string[]): ParsedArgs {
       result.mcp = { ...(result.mcp ?? {}), endpoint: ep }
     } else if (arg === '--no-llms-txt') {
       result.llmsTxt = { enabled: false }
+    } else if (arg === '--no-csp') {
+      result.csp = { enabled: false }
     } else if (arg === '--no-negotiate') {
       result.negotiation = { enabled: false }
     } else if (arg === '--no-client-js') {
@@ -194,6 +196,8 @@ ${flag('--no-llms-txt', 'Disable /llms.txt generation')}
 ${flag('--no-negotiate', 'Disable content negotiation')}
 ${section('Analytics:')}
 ${flag('--ga-measurement-id <id>', 'Google Analytics 4 measurement ID (e.g. G-XXXXXXXXXX)')}
+${section('Security:')}
+${flag('--no-csp', 'Disable Content-Security-Policy header')}
 ${section('GitHub Source:')}
 ${flag('--github <owner/repo>', 'Serve content from a GitHub repository')}
 ${flag('--github-ref <ref>', 'Branch or tag (default: main)')}

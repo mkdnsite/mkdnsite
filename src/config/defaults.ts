@@ -48,6 +48,9 @@ export const DEFAULT_CONFIG: MkdnSiteConfig = {
   mcp: {
     enabled: true,
     endpoint: '/mcp'
+  },
+  csp: {
+    enabled: true
   }
 }
 
@@ -103,6 +106,10 @@ export function resolveConfig (
     llmsTxt: { ...DEFAULT_CONFIG.llmsTxt, ...userConfig.llmsTxt },
     client: { ...DEFAULT_CONFIG.client, ...userConfig.client },
     github: userConfig.github,
-    mcp: { ...DEFAULT_CONFIG.mcp, ...userConfig.mcp }
+    mcp: { ...DEFAULT_CONFIG.mcp, ...userConfig.mcp },
+    analytics: userConfig.analytics,
+    csp: userConfig.csp != null
+      ? { ...DEFAULT_CONFIG.csp, ...userConfig.csp }
+      : DEFAULT_CONFIG.csp
   }
 }
