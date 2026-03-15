@@ -26,6 +26,8 @@ export function parseArgs (args: string[]): ParsedArgs {
       result.site = { ...(result.site as object ?? {}), title: args[++i] }
     } else if (arg === '--url') {
       result.site = { ...(result.site as object ?? {}), url: args[++i] }
+    } else if (arg === '--favicon') {
+      result.site = { ...(result.site as object ?? {}), favicon: { src: args[++i] } }
     } else if (arg === '--og-image') {
       result.site = { ...(result.site as object ?? {}), og: { ...((result.site as Record<string, unknown>)?.og as object ?? {}), image: args[++i] } }
     } else if (arg === '--og-type') {
@@ -154,6 +156,7 @@ ${section('Site:')}
 ${flag('--title <text>', 'Site title')}
 ${flag('--url <url>', 'Base URL for absolute links')}
 ${flag('--preset <name>', 'Apply preset: docs or blog')}
+${flag('--favicon <path>', 'Favicon path or URL (.ico, .png, .svg)')}
 ${flag('--og-image <url>', 'Default OpenGraph image URL')}
 ${flag('--og-type <type>', 'website or article')}
 ${flag('--twitter-card <type>', 'summary or summary_large_image')}

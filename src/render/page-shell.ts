@@ -85,6 +85,7 @@ export function renderPage (props: PageShellProps): string {
   ${description !== '' ? `<meta name="description" content="${esc(description)}">` : ''}
   ${buildOgTags(props)}
   <meta name="generator" content="mkdnsite">
+  ${buildFaviconTags(config)}
   ${config.client.math ? '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css" crossorigin="anonymous">' : ''}
   <style>${buildThemeCss(config)}</style>
   ${config.theme.customCssUrl != null ? `<link rel="stylesheet" href="${esc(config.theme.customCssUrl)}">` : ''}
@@ -247,6 +248,40 @@ function buildPrevNextHtml (nav: NavNode, currentSlug: string): string {
     : '<span></span>'
 
   return `<nav class="mkdn-prev-next" aria-label="Page navigation">${prevHtml}${nextHtml}</nav>`
+}
+
+function faviconMimeType (src: string): string {
+  const lower = src.toLowerCase().split('?')[0]
+  if (lower.endsWith('.svg')) return 'image/svg+xml'
+  if (lower.endsWith('.png')) return 'image/png'
+  if (lower.endsWith('.ico')) return 'image/x-icon'
+  // Default fallback
+  return 'image/x-icon'
+}
+
+function buildFaviconTags (config: MkdnSiteConfig): string {
+  // Resolve favicon src: explicit favicon config wins, then logo fallback (PNG/SVG only)
+  let src: string | undefined
+  if (config.site.favicon?.src != null) {
+    src = config.site.favicon.src
+  } else if (config.theme.logo?.src != null) {
+    const lower = config.theme.logo.src.toLowerCase().split('?')[0]
+    if (lower.endsWith('.svg') || lower.endsWith('.png')) {
+      src = config.theme.logo.src
+    }
+  }
+  if (src == null) return ''
+
+  const safeSrc = esc(src)
+  const type = faviconMimeType(src)
+  const lines: string[] = []
+
+  lines.push(`<link rel="icon" href="${safeSrc}" type="${type}">`)
+  // apple-touch-icon for PNG (requires raster image)
+  if (type === 'image/png') {
+    lines.push(`<link rel="apple-touch-icon" href="${safeSrc}">`)
+  }
+  return lines.join('\n  ')
 }
 
 function buildOgTags (props: PageShellProps): string {
