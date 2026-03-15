@@ -42,3 +42,5 @@ services:
 ## Image details
 
 The image uses Google's distroless base (`gcr.io/distroless/cc-debian12`) with a compiled binary (via `bun build --compile`). No Bun, Node, or Deno runtime is included — just the self-contained `mkdnsite` executable. Multi-platform: `linux/amd64` and `linux/arm64`.
+
+The container responds to Ctrl+C and `docker stop` — SIGINT and SIGTERM are handled for graceful shutdown.
