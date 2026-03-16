@@ -1,6 +1,6 @@
 {
   "name": "mkdnsite",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Markdown for the web. HTML for humans, Markdown for agents.",
   "type": "module",
   "main": "src/index.ts",
