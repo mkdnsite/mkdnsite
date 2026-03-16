@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/mkdnsite/mkdnsite/compare/v1.0.0...v1.0.1) (2026-03-16)
+
+
+### Bug Fixes
+
+* Must use npm 11+ for trusted publishing ([#46](https://github.com/mkdnsite/mkdnsite/issues/46)) ([f482a7c](https://github.com/mkdnsite/mkdnsite/commit/f482a7cd9ee3080a76b26a10858e838371064681))
+
 ## 1.0.0 (2026-03-16)
 
 
