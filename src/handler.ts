@@ -1,6 +1,5 @@
 import { readFile } from 'node:fs/promises'
 import { extname } from 'node:path'
-import { timingSafeEqual as cryptoTimingSafeEqual } from 'node:crypto'
 import type { MkdnSiteConfig } from './config/schema.ts'
 import type { ContentSource } from './content/types.ts'
 import type { MarkdownRenderer } from './render/types.ts'
@@ -469,19 +468,28 @@ function notModifiedHeaders (original: Record<string, string>): Record<string, s
 }
 
 /**
- * Constant-time string comparison using node:crypto timingSafeEqual.
- * Converts both strings to UTF-8 Buffers of equal length before comparing
- * to prevent side-channel timing attacks on the /_refresh auth token.
+ * Constant-time string comparison to prevent timing side-channel attacks.
+ * Uses TextEncoder (Web API, available on all runtimes) instead of Buffer
+ * for Deno compatibility. Always compares full length regardless of mismatch.
  */
 function timingSafeEqual (a: string, b: string): boolean {
-  const aBuf = Buffer.from(a, 'utf8')
-  const bBuf = Buffer.from(b, 'utf8')
-  // Pad to same length so cryptoTimingSafeEqual doesn't throw
-  const len = Math.max(aBuf.length, bBuf.length)
-  const aPadded = Buffer.concat([aBuf, Buffer.alloc(len - aBuf.length)])
-  const bPadded = Buffer.concat([bBuf, Buffer.alloc(len - bBuf.length)])
-  // Length difference means mismatch; still do full comparison to avoid timing leaks
-  return aBuf.length === bBuf.length && cryptoTimingSafeEqual(aPadded, bPadded)
+  const encoder = new TextEncoder()
+  const aBuf = encoder.encode(a)
+  const bBuf = encoder.encode(b)
+  if (aBuf.length !== bBuf.length) {
+    // Still do a full comparison to avoid leaking length info via timing
+    let mismatch = 1
+    for (let i = 0; i < bBuf.length; i++) {
+      mismatch |= bBuf[i] ^ bBuf[i]
+    }
+    void mismatch
+    return false
+  }
+  let mismatch = 0
+  for (let i = 0; i < aBuf.length; i++) {
+    mismatch |= aBuf[i] ^ bBuf[i]
+  }
+  return mismatch === 0
 }
 
 async function serveStatic (pathname: string, staticDir: string): Promise<Response> {
