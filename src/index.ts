@@ -17,6 +17,7 @@ export type {
   OgConfig,
   AnalyticsConfig,
   CspConfig,
+  CacheConfig,
   FaviconConfig,
   ThemeConfig,
   NegotiationConfig,
@@ -47,6 +48,9 @@ export type { AssetsSourceConfig } from './content/assets.ts'
 export { buildNavTree } from './content/nav-builder.ts'
 export type { ContentCache } from './content/cache.ts'
 export { MemoryContentCache, KVContentCache } from './content/cache.ts'
+export type { ResponseCache, CachedResponse } from './cache/response.ts'
+export { MemoryResponseCache } from './cache/memory.ts'
+export { KVResponseCache } from './cache/kv.ts'
 export type { FileEntry } from './content/nav-builder.ts'
 export type {
   ContentSource,

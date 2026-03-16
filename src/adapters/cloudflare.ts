@@ -8,6 +8,8 @@ import { R2ContentSource } from '../content/r2.ts'
 import { AssetsSource } from '../content/assets.ts'
 import type { ContentCache } from '../content/cache.ts'
 import { KVContentCache } from '../content/cache.ts'
+import type { ResponseCache } from '../cache/response.ts'
+import { KVResponseCache } from '../cache/kv.ts'
 import type { TrafficAnalytics, TrafficEvent } from '../analytics/types.ts'
 
 /**
@@ -124,6 +126,15 @@ export class CloudflareAdapter implements DeploymentAdapter {
    * })
    * ```
    */
+  /**
+   * Create a ResponseCache backed by CACHE_KV when available.
+   * Returns undefined when no KV binding is present.
+   */
+  createResponseCache (): ResponseCache | undefined {
+    if (this.env.CACHE_KV == null) return undefined
+    return new KVResponseCache(this.env.CACHE_KV, { prefix: 'resp:' })
+  }
+
   createTrafficAnalytics (): TrafficAnalytics | undefined {
     if (this.env.ANALYTICS == null) return undefined
     return new WorkersAnalyticsEngineAnalytics(this.env.ANALYTICS)
@@ -205,6 +216,9 @@ export interface CloudflareEnv {
   SITE_TITLE?: string
   /** Site URL */
   SITE_URL?: string
+
+  /** Secret token for authenticating POST /_refresh requests */
+  REFRESH_TOKEN?: string
 
   /** Workers Analytics Engine dataset binding for traffic analytics */
   ANALYTICS?: AnalyticsEngineDataset

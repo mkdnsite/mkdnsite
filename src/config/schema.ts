@@ -53,6 +53,9 @@ export interface MkdnSiteConfig {
 
   /** Content Security Policy configuration */
   csp?: CspConfig
+
+  /** Response caching and CDN header configuration */
+  cache?: CacheConfig
 }
 
 /** MCP (Model Context Protocol) server configuration */
@@ -79,6 +82,20 @@ export interface CspConfig {
   extraFontSrc?: string[]
   /** Report URI for CSP violation reports */
   reportUri?: string
+}
+
+/** Response caching and CDN header configuration */
+export interface CacheConfig {
+  /** Enable response caching (default: false — opt-in) */
+  enabled?: boolean
+  /** Cache-Control max-age in seconds for HTML responses (default: 300) */
+  maxAge?: number
+  /** Cache-Control max-age in seconds for markdown responses (default: 300) */
+  maxAgeMarkdown?: number
+  /** stale-while-revalidate in seconds (default: 0, meaning omitted) */
+  staleWhileRevalidate?: number
+  /** Version tag for ETag and CDN cache busting (e.g. 'v1.2.3' or git SHA) */
+  versionTag?: string
 }
 
 /** Analytics configuration */
