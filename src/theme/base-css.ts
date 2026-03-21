@@ -531,15 +531,20 @@ body {
 
   /* Tables scroll horizontally rather than compressing */
   .mkdn-table-wrapper {
-    overflow-x: auto;
+    display: block;
+    overflow-x: scroll;
     -webkit-overflow-scrolling: touch;
     max-width: calc(100vw - 2rem);
   }
   .mkdn-prose table {
-    width: max-content;
-    min-width: 100%;
+    width: auto;
+    min-width: 0;
+    table-layout: auto;
   }
-  .mkdn-prose th, .mkdn-prose td { white-space: nowrap; }
+  .mkdn-prose th, .mkdn-prose td {
+    white-space: nowrap;
+    padding: 0.5rem 0.75rem;
+  }
 
   /* Top padding so first article content isn't hidden behind fixed hamburger */
   .mkdn-article { padding-top: 0.5rem; }
