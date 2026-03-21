@@ -95,6 +95,7 @@ export function renderPage (props: PageShellProps): string {
 <body>
   ${searchTriggerHtml}
   ${themeToggleHtml}
+  ${navHtml !== '' ? '<button class=\'mkdn-nav-toggle\' type=\'button\' aria-label=\'Toggle navigation\' aria-expanded=\'false\'><svg xmlns=\'http://www.w3.org/2000/svg\' width=\'18\' height=\'18\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M4 12h16\'/><path d=\'M4 6h16\'/><path d=\'M4 18h16\'/></svg></button><div class=\'mkdn-nav-backdrop\'></div>' : ''}
   <div class="mkdn-layout">
     ${navHtml !== '' ? `<nav class="mkdn-nav" aria-label="Site navigation">${navHtml}</nav>` : ''}
     <main class="mkdn-main">
