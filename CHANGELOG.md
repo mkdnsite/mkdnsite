@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.3](https://github.com/mkdnsite/mkdnsite/compare/v1.1.2...v1.1.3) (2026-03-21)
+
+
+### Bug Fixes
+
+* Add required User-Agent header to GitHub API requests ([#61](https://github.com/mkdnsite/mkdnsite/issues/61)) ([a6f940c](https://github.com/mkdnsite/mkdnsite/commit/a6f940c60e45dfa6ee46f50dbc3fe2854f8f07d8))
+* Ensure version.ts is generated in all release and CI pipelines ([#63](https://github.com/mkdnsite/mkdnsite/issues/63)) ([cbfa7a2](https://github.com/mkdnsite/mkdnsite/commit/cbfa7a2c1f7fe833bbc63f1461d8bbe7f312b3f1))
+
 ## [1.1.2](https://github.com/mkdnsite/mkdnsite/compare/v1.1.1...v1.1.2) (2026-03-21)
 
 
