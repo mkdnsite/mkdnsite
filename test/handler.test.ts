@@ -167,3 +167,76 @@ describe('handler integration', () => {
     expect(await res.text()).toBe('ok')
   })
 })
+
+describe('staticHandler option', () => {
+  const config = resolveConfig({
+    contentDir: resolve(import.meta.dir, '../content'),
+    site: { title: 'Test Site' }
+  })
+  const source = new FilesystemSource(config.contentDir)
+  const renderer = new PortableRenderer()
+
+  it('calls staticHandler for static extension requests', async () => {
+    let called = false
+    let calledWith = ''
+    const handler = createHandler({
+      source,
+      renderer,
+      config,
+      staticHandler: async (pathname) => {
+        called = true
+        calledWith = pathname
+        return new Response('img-data', { status: 200, headers: { 'Content-Type': 'image/png' } })
+      }
+    })
+    const req = new Request('http://localhost:3000/logo.png')
+    const res = await handler(req)
+    expect(called).toBe(true)
+    expect(calledWith).toBe('/logo.png')
+    expect(res.status).toBe(200)
+    expect(res.headers.get('Content-Type')).toBe('image/png')
+    expect(await res.text()).toBe('img-data')
+  })
+
+  it('falls through to built-in serveStatic when staticHandler returns null', async () => {
+    const handler = createHandler({
+      source,
+      renderer,
+      config: resolveConfig({
+        contentDir: resolve(import.meta.dir, '../content'),
+        staticDir: resolve(import.meta.dir, '../content'),
+        site: { title: 'Test Site' }
+      }),
+      staticHandler: async (_pathname) => null
+    })
+    // /nonexistent.png will trigger built-in serveStatic which returns 404
+    const req = new Request('http://localhost:3000/nonexistent.png')
+    const res = await handler(req)
+    // built-in serveStatic returns 404 for missing files
+    expect(res.status).toBe(404)
+  })
+
+  it('does not call staticHandler for non-static extension requests', async () => {
+    let called = false
+    const handler = createHandler({
+      source,
+      renderer,
+      config,
+      staticHandler: async (_pathname) => {
+        called = true
+        return new Response('should-not-reach', { status: 200 })
+      }
+    })
+    const req = new Request('http://localhost:3000/')
+    await handler(req)
+    expect(called).toBe(false)
+  })
+
+  it('falls through to content routing when no staticHandler and no staticDir', async () => {
+    const handler = createHandler({ source, renderer, config })
+    const req = new Request('http://localhost:3000/logo.png')
+    const res = await handler(req)
+    // No static handler, no staticDir — falls through to content routing → 404
+    expect(res.status).toBe(404)
+  })
+})
