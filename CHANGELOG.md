@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/mkdnsite/mkdnsite/compare/v1.1.1...v1.1.2) (2026-03-21)
+
+
+### Bug Fixes
+
+* Add error logging and retry to GitHubSource tree fetch ([#59](https://github.com/mkdnsite/mkdnsite/issues/59)) ([cd418a0](https://github.com/mkdnsite/mkdnsite/commit/cd418a03ba2fd55024dea4b021eb593b562871fa))
+
 ## [1.1.1](https://github.com/mkdnsite/mkdnsite/compare/v1.1.0...v1.1.1) (2026-03-21)
 
 
