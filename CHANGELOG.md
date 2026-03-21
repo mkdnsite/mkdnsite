@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/mkdnsite/mkdnsite/compare/v1.1.0...v1.1.1) (2026-03-21)
+
+
+### Bug Fixes
+
+* Move @types/picomatch to dependencies for downstream tsc ([#57](https://github.com/mkdnsite/mkdnsite/issues/57)) ([ab8a04c](https://github.com/mkdnsite/mkdnsite/commit/ab8a04cae6239e59e875533846f559b97af5ac95))
+
 ## [1.1.0](https://github.com/mkdnsite/mkdnsite/compare/v1.0.1...v1.1.0) (2026-03-21)
 
 
