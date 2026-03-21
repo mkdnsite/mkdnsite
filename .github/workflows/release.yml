@@ -47,6 +47,9 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Generate version
+        run: bun run version:generate
+
       - name: Lint
         run: bun run lint
 
@@ -75,6 +78,9 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
+
+      - name: Generate version
+        run: bun run version:generate
 
       - name: Build Linux x64
         run: bun build --compile --target=bun-linux-x64 src/cli.ts --outfile dist/mkdnsite-linux-x64
