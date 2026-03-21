@@ -493,7 +493,31 @@ body {
   .mkdn-theme-toggle { top: 0.75rem; right: 0.75rem; }
   .mkdn-search-trigger { right: 3rem; }
   .mkdn-prev-next { flex-direction: column; }
-  .mkdn-prev-next a { max-width: 100%; }
+  .mkdn-prev-next a { max-width: 100%; font-size: 0.8rem; }
+
+  /* Scale down base font — everything using rem shrinks proportionally */
+  html { font-size: 14px; }
+
+  /* Tighter prose headings on mobile */
+  .mkdn-prose h1 { font-size: 1.75rem; }
+  .mkdn-prose h2 { font-size: 1.5rem; margin-top: 1.75rem; }
+  .mkdn-prose h3 { font-size: 1.25rem; margin-top: 1.5rem; }
+  .mkdn-prose h4 { font-size: 1.1rem; }
+
+  /* Constrain wide elements to viewport width */
+  .mkdn-prose pre,
+  .mkdn-code-block,
+  .mkdn-table-wrapper,
+  .mkdn-chart { max-width: calc(100vw - 2rem); }
+
+  /* Tighter code block padding on mobile */
+  .mkdn-prose pre { padding: 0.75rem; font-size: 0.8rem; }
+
+  /* Ensure images don't overflow */
+  .mkdn-prose img { max-width: 100%; height: auto; }
+
+  /* Smaller page title on mobile */
+  .mkdn-page-title { font-size: 1.75rem; }
 }
 
 /* ---- Search trigger button ---- */
