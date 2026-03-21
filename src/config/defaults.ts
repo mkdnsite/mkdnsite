@@ -106,6 +106,8 @@ export function resolveConfig (
     llmsTxt: { ...DEFAULT_CONFIG.llmsTxt, ...userConfig.llmsTxt },
     client: { ...DEFAULT_CONFIG.client, ...userConfig.client },
     github: userConfig.github,
+    include: userConfig.include,
+    exclude: userConfig.exclude,
     mcp: { ...DEFAULT_CONFIG.mcp, ...userConfig.mcp },
     analytics: userConfig.analytics != null
       ? {

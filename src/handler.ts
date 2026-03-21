@@ -150,7 +150,7 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
     response: Response
   ): AnalyticsResponseFormat {
     // MCP: check endpoint first (MCP responses may have various Content-Types)
-    const mcpEndpoint = config.mcp.endpoint ?? '/mcp'
+    const mcpEndpoint: string = config.mcp.endpoint ?? '/mcp'
     if (
       config.mcp.enabled &&
       (pathname === mcpEndpoint || pathname.startsWith(mcpEndpoint + '/'))
@@ -260,10 +260,10 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
     }
 
     // ---- MCP endpoint ----
+    const mcpPath: string = config.mcp.endpoint ?? '/mcp'
     if (
       config.mcp.enabled &&
-      (pathname === (config.mcp.endpoint ?? '/mcp') ||
-        pathname.startsWith((config.mcp.endpoint ?? '/mcp') + '/'))
+      (pathname === mcpPath || pathname.startsWith(mcpPath + '/'))
     ) {
       const mcp = await ensureMcpHandler()
       return ok(await mcp(request))

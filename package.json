@@ -51,6 +51,7 @@
     "gray-matter": "^4.0.3",
     "katex": "^0.16.38",
     "lucide-react": "^0.577.0",
+    "picomatch": "^4.0.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^9.0.0",
@@ -69,6 +70,7 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/picomatch": "^4.0.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "ts-standard": "^12.0.2",

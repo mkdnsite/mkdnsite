@@ -147,6 +147,14 @@ export function parseArgs (args: string[]): ParsedArgs {
       result.renderer = args[++i]
     } else if (arg === '--static') {
       result.staticDir = resolve(args[++i])
+    } else if (arg === '--include') {
+      const patterns = (result.include as string[] | undefined) ?? []
+      patterns.push(args[++i])
+      result.include = patterns
+    } else if (arg === '--exclude') {
+      const patterns = (result.exclude as string[] | undefined) ?? []
+      patterns.push(args[++i])
+      result.exclude = patterns
     } else if (arg === '--help' || arg === '-h') {
       printHelp()
       process.exit(0)
@@ -179,6 +187,8 @@ ${section('Server:')}
 ${flag('-p, --port <n>', 'Port to listen on (default: 3000)')}
 ${flag('--config <path>', 'Path to config file (default: mkdnsite.config.ts)')}
 ${flag('--static <dir>', 'Directory for static assets')}
+${flag('--include <pattern>', 'Glob pattern to include (repeatable, e.g. docs/**)')}
+${flag('--exclude <pattern>', 'Glob pattern to exclude (repeatable, e.g. **/*.draft.md)')}
 ${section('Site:')}
 ${flag('--title <text>', 'Site title')}
 ${flag('--url <url>', 'Base URL for absolute links')}
