@@ -83,4 +83,14 @@ export interface GitHubSourceConfig {
   path?: string
   /** GitHub personal access token (for private repos or higher rate limits) */
   token?: string
+  /**
+   * Glob patterns to include. Only matching files will be served.
+   * Mutually exclusive with `exclude`.
+   */
+  include?: string[]
+  /**
+   * Glob patterns to exclude. Matching files will not be served.
+   * Mutually exclusive with `include`.
+   */
+  exclude?: string[]
 }

@@ -18,7 +18,11 @@ export class LocalAdapter implements DeploymentAdapter {
 
   createContentSource (config: MkdnSiteConfig): ContentSource {
     if (config.github != null) {
-      return new GitHubSource(config.github)
+      return new GitHubSource({
+        ...config.github,
+        include: config.include,
+        exclude: config.exclude
+      })
     }
     return new FilesystemSource(config.contentDir, {
       include: config.include,

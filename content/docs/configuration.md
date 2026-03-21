@@ -60,6 +60,40 @@ staticDir: './static'  // serve ./static/logo.png at /logo.png
 
 Also settable with: `--static <dir>`
 
+### `include`
+
+Glob patterns that limit which `.md` files are served. Only files whose path (relative to `contentDir`) matches at least one pattern will be served. Mutually exclusive with `exclude`.
+
+```typescript
+// Only serve files under docs/ and guides/
+include: ['docs/**', 'guides/**']
+```
+
+Also settable with: `--include <pattern>` (repeatable)
+
+```bash
+mkdnsite --include 'docs/**' --include 'guides/**'
+```
+
+### `exclude`
+
+Glob patterns for files to omit. Matching files are not served. Mutually exclusive with `include`.
+
+```typescript
+// Hide draft files and the private/ directory
+exclude: ['**/*.draft.md', 'private/**']
+```
+
+Also settable with: `--exclude <pattern>` (repeatable)
+
+```bash
+mkdnsite --exclude '**/*.draft.md' --exclude 'private/**'
+```
+
+> **Note:** `include` and `exclude` are mutually exclusive — define one or the other, not both. Patterns use [picomatch](https://github.com/micromatch/picomatch) glob syntax.
+
+Both options work with `FilesystemSource` (local dev) and `GitHubSource` (hosted). Patterns are matched against the path relative to `contentDir` or `github.path`.
+
 ### `github`
 
 Serve content from a public GitHub repository instead of a local directory. When set, `contentDir` is ignored.
