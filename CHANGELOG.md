@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.0](https://github.com/mkdnsite/mkdnsite/compare/v1.0.1...v1.1.0) (2026-03-21)
+
+
+### Features
+
+* Make serveStatic pluggable for non-filesystem deployments ([#53](https://github.com/mkdnsite/mkdnsite/issues/53)) ([7277223](https://github.com/mkdnsite/mkdnsite/commit/72772232c4022186bc6366780ee31044c41f61a4))
+* Support include/exclude glob patterns for content filtering ([#54](https://github.com/mkdnsite/mkdnsite/issues/54)) ([f9e9dbf](https://github.com/mkdnsite/mkdnsite/commit/f9e9dbf12d64e8ba88389c4b4ed4f28189b0e37d))
+
+
+### Bug Fixes
+
+* Improve responsive layout for mobile nav and content ([#52](https://github.com/mkdnsite/mkdnsite/issues/52)) ([af3febe](https://github.com/mkdnsite/mkdnsite/commit/af3febe1c3435c88dbb807819854a897cd8c0966))
+
 ## [1.0.1](https://github.com/mkdnsite/mkdnsite/compare/v1.0.0...v1.0.1) (2026-03-16)
 
 
