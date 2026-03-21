@@ -507,7 +507,6 @@ body {
   /* Constrain wide elements to viewport width */
   .mkdn-prose pre,
   .mkdn-code-block,
-  .mkdn-table-wrapper,
   .mkdn-chart { max-width: calc(100vw - 2rem); }
 
   /* Tighter code block padding on mobile */
@@ -527,23 +526,6 @@ body {
     padding-left: 0.3em;
     padding-right: 0;
     opacity: 0.5;
-  }
-
-  /* Tables scroll horizontally rather than compressing */
-  .mkdn-table-wrapper {
-    display: block;
-    overflow-x: scroll;
-    -webkit-overflow-scrolling: touch;
-    max-width: calc(100vw - 2rem);
-  }
-  .mkdn-prose table {
-    width: auto;
-    min-width: 0;
-    table-layout: auto;
-  }
-  .mkdn-prose th, .mkdn-prose td {
-    white-space: nowrap;
-    padding: 0.5rem 0.75rem;
   }
 
   /* Top padding so first article content isn't hidden behind fixed hamburger */
