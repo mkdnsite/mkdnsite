@@ -1,4 +1,5 @@
 import picomatch from 'picomatch'
+import { VERSION } from '../version.ts'
 import { parseFrontmatter } from './frontmatter.ts'
 import type {
   ContentSource,
@@ -12,7 +13,7 @@ const TTL_MS = 5 * 60 * 1000 // 5 minutes
 
 const GITHUB_HEADERS: Record<string, string> = {
   Accept: 'application/vnd.github.v3+json',
-  'User-Agent': 'mkdnsite',
+  'User-Agent': `mkdnsite/${VERSION}`,
   'X-GitHub-Api-Version': '2026-03-10'
 }
 
@@ -220,7 +221,7 @@ export class GitHubSource implements ContentSource {
     const fullPath = basePath !== '' ? `${basePath}/${filePath}` : filePath
     const url = `https://raw.githubusercontent.com/${owner}/${repo}/${ref}/${fullPath}`
 
-    const headers: Record<string, string> = { 'User-Agent': 'mkdnsite' }
+    const headers: Record<string, string> = { 'User-Agent': `mkdnsite/${VERSION}` }
     if (this.config.token !== '') {
       headers.Authorization = `token ${this.config.token}`
     }
