@@ -518,6 +518,32 @@ body {
 
   /* Smaller page title on mobile */
   .mkdn-page-title { font-size: 1.75rem; }
+
+  /* Move heading anchors to the right on mobile — avoids left-side overflow */
+  .mkdn-prose a.mkdn-heading-anchor {
+    margin-left: 0;
+    margin-right: 0;
+    float: right;
+    padding-left: 0.3em;
+    padding-right: 0;
+    opacity: 0.5;
+  }
+
+  /* Tables scroll horizontally rather than compressing */
+  .mkdn-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mkdn-prose table { min-width: 500px; }
+
+  /* Top padding so first article content isn't hidden behind fixed hamburger */
+  .mkdn-article { padding-top: 0.5rem; }
+
+  /* Heading anchor scroll offset accounts for fixed hamburger button height */
+  .mkdn-prose h1, .mkdn-prose h2, .mkdn-prose h3,
+  .mkdn-prose h4, .mkdn-prose h5, .mkdn-prose h6 {
+    scroll-margin-top: 3.5rem;
+  }
 }
 
 /* ---- Search trigger button ---- */
@@ -610,10 +636,11 @@ body {
 }
 
 @media (max-width: 640px) {
-  .mkdn-search-overlay { padding-top: 0; align-items: flex-end; }
+  .mkdn-search-overlay { padding-top: 4vh; align-items: flex-start; }
   .mkdn-search-modal {
-    max-width: 100%; border-radius: 12px 12px 0 0;
-    max-height: 70vh;
+    max-width: 100%; border-radius: 12px;
+    max-height: 80vh;
+    margin: 0 0.5rem;
   }
   .mkdn-search-trigger { right: 3rem; }
 }
