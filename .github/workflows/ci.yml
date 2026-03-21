@@ -21,6 +21,9 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Generate version
+        run: bun run version:generate
+
       - name: Lint
         run: bun run lint
 
@@ -48,6 +51,9 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Generate version
+        run: bun run version:generate
+
       - name: Verify CLI loads on Node
         # --experimental-strip-types lets Node run .ts files directly.
         # --help exits 0 after printing usage, confirming the module graph
@@ -71,6 +77,9 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
+
+      - name: Generate version
+        run: bun run version:generate
 
       - name: Verify types on Deno
         # --unstable-sloppy-imports allows Deno to resolve bare npm specifiers

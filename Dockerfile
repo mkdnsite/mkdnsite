@@ -4,12 +4,17 @@ FROM oven/bun:latest AS build
 WORKDIR /app
 
 # Install dependencies first (cache layer)
+# Use --ignore-scripts to skip prepare (scripts/ not copied yet)
 COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --ignore-scripts
 
-# Copy source and compile (auto-detects target platform)
+# Copy source, scripts, and config
 COPY src/ src/
+COPY scripts/ scripts/
 COPY tsconfig.json ./
+
+# Generate version.ts from package.json, then compile
+RUN bun run version:generate
 RUN bun build --compile src/cli.ts --outfile /app/mkdnsite
 
 # ── Runtime stage ────────────────────────────────────────────────────────────
