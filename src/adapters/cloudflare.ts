@@ -139,6 +139,54 @@ export class CloudflareAdapter implements DeploymentAdapter {
     if (this.env.ANALYTICS == null) return undefined
     return new WorkersAnalyticsEngineAnalytics(this.env.ANALYTICS)
   }
+
+  /**
+   * Create a static file handler backed by an R2 bucket.
+   *
+   * When a `STATIC_BUCKET` binding is present in the Worker environment, this
+   * method returns a `staticHandler` function that reads static assets (images,
+   * fonts, CSS, etc.) from R2. Pass the result to `createHandler` via the
+   * `staticHandler` option:
+   *
+   * ```ts
+   * const handler = createHandler({
+   *   source: adapter.createContentSource(config),
+   *   renderer: await adapter.createRenderer(config),
+   *   config,
+   *   staticHandler: adapter.createStaticHandler()
+   * })
+   * ```
+   *
+   * Returns `undefined` when no `STATIC_BUCKET` binding is configured, so
+   * callers can pass the result unconditionally — `createHandler` ignores
+   * `undefined` staticHandler values.
+   *
+   * The handler strips the leading `/` from the pathname before fetching from
+   * R2 (e.g. `/logo.png` → key `logo.png`). Returns `null` for missing objects
+   * so the request falls through to the built-in `serveStatic` or a 404.
+   */
+  createStaticHandler (): ((pathname: string) => Promise<Response | null>) | undefined {
+    const bucket = this.env.STATIC_BUCKET
+    if (bucket == null) return undefined
+
+    return async (pathname: string): Promise<Response | null> => {
+      const key = pathname.replace(/^\//, '')
+      const obj = await bucket.get(key)
+      if (obj == null) return null
+
+      const ext = key.split('.').pop() ?? ''
+      const contentType = MIME_TYPES[ext] ?? 'application/octet-stream'
+      const body = await obj.text()
+
+      return new Response(body, {
+        status: 200,
+        headers: {
+          'Content-Type': contentType,
+          'Cache-Control': 'public, max-age=31536000, immutable'
+        }
+      })
+    }
+  }
 }
 
 /**
@@ -203,6 +251,9 @@ export interface CloudflareEnv {
   /** KV namespace for caching (future use) */
   CACHE_KV?: KVNamespace
 
+  /** R2 bucket for serving static assets (images, fonts, CSS, etc.) */
+  STATIC_BUCKET?: R2Bucket
+
   /** GitHub owner (used if config.github not set) */
   GITHUB_OWNER?: string
   /** GitHub repo (used if config.github not set) */
@@ -222,6 +273,25 @@ export interface CloudflareEnv {
 
   /** Workers Analytics Engine dataset binding for traffic analytics */
   ANALYTICS?: AnalyticsEngineDataset
+}
+
+// ─── Static asset MIME type map ──────────────────────────────────────────────
+const MIME_TYPES: Record<string, string> = {
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  svg: 'image/svg+xml',
+  ico: 'image/x-icon',
+  css: 'text/css; charset=utf-8',
+  js: 'text/javascript; charset=utf-8',
+  woff: 'font/woff',
+  woff2: 'font/woff2',
+  ttf: 'font/ttf',
+  otf: 'font/otf',
+  pdf: 'application/pdf',
+  json: 'application/json'
 }
 
 // ─── Cloudflare R2 type stubs ─────────────────────────────────────────────────
