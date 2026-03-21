@@ -9,6 +9,7 @@ export function CLIENT_SCRIPTS (client: ClientConfig): string {
 
   const scripts: string[] = []
 
+  scripts.push(NAV_TOGGLE_SCRIPT)
   scripts.push(STICKY_TABLE_SCRIPT)
 
   if (client.themeToggle) {
@@ -36,6 +37,31 @@ export function CLIENT_SCRIPTS (client: ClientConfig): string {
 
   return `<script>${scripts.join('\n')}</script>`
 }
+
+const NAV_TOGGLE_SCRIPT = `
+(function(){
+  var toggle = document.querySelector('.mkdn-nav-toggle');
+  var nav = document.querySelector('.mkdn-nav');
+  var backdrop = document.querySelector('.mkdn-nav-backdrop');
+  if (!toggle || !nav) return;
+  function open() {
+    nav.classList.add('mkdn-nav--open');
+    if (backdrop) backdrop.classList.add('mkdn-nav-backdrop--visible');
+    toggle.setAttribute('aria-expanded', 'true');
+  }
+  function close() {
+    nav.classList.remove('mkdn-nav--open');
+    if (backdrop) backdrop.classList.remove('mkdn-nav-backdrop--visible');
+    toggle.setAttribute('aria-expanded', 'false');
+  }
+  toggle.addEventListener('click', function() {
+    nav.classList.contains('mkdn-nav--open') ? close() : open();
+  });
+  if (backdrop) backdrop.addEventListener('click', close);
+  nav.addEventListener('click', function(e) {
+    if (e.target && e.target.closest && e.target.closest('a')) close();
+  });
+})();`
 
 const THEME_TOGGLE_SCRIPT = `
 (function(){
