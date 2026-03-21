@@ -154,6 +154,9 @@ export class GitHubSource implements ContentSource {
     )
 
     const parsed = fetched.filter((f): f is ParsedFile => f != null)
+    if (parsed.length < mdFiles.length) {
+      console.warn(`GitHubSource: fetched ${parsed.length}/${mdFiles.length} files (${mdFiles.length - parsed.length} failed)`)
+    }
 
     // Populate page cache
     for (const file of parsed) {
@@ -230,6 +233,26 @@ export class GitHubSource implements ContentSource {
       return this.treeCache.value
     }
 
+    const entries = await this.fetchTreeOnce()
+    if (entries.length === 0) {
+      // Retry once after 1 second — transient failures (rate limit, network
+      // blip) often resolve quickly and an empty tree causes silent empty nav.
+      console.warn('GitHubSource: tree fetch returned empty, retrying in 1s...')
+      await new Promise<void>(resolve => setTimeout(resolve, 1000))
+      const retried = await this.fetchTreeOnce()
+      if (retried.length > 0) {
+        this.treeCache = { value: retried, expiresAt: Date.now() + TTL_MS }
+        return retried
+      }
+      // Both attempts failed — leave treeCache empty so next request retries
+      return entries
+    }
+
+    this.treeCache = { value: entries, expiresAt: Date.now() + TTL_MS }
+    return entries
+  }
+
+  private async fetchTreeOnce (): Promise<GitHubTreeEntry[]> {
     const { owner, repo, ref, path: basePath } = this.config
     const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${ref}?recursive=1`
 
@@ -242,10 +265,14 @@ export class GitHubSource implements ContentSource {
 
     try {
       const response = await fetch(url, { headers })
-      if (!response.ok) return []
+      if (!response.ok) {
+        const body = await response.text().catch(() => '')
+        console.error('GitHubSource: tree API returned', response.status, body)
+        return []
+      }
 
       const data = await response.json() as { tree: GitHubTreeEntry[] }
-      const entries = data.tree
+      return data.tree
         .filter(entry =>
           entry.type === 'blob' &&
           entry.path.endsWith('.md') &&
@@ -255,10 +282,8 @@ export class GitHubSource implements ContentSource {
           ...entry,
           path: basePath !== '' ? entry.path.slice(basePath.length + 1) : entry.path
         }))
-
-      this.treeCache = { value: entries, expiresAt: Date.now() + TTL_MS }
-      return entries
-    } catch {
+    } catch (err) {
+      console.error('GitHubSource: failed to fetch repo tree:', err instanceof Error ? err.message : err)
       return []
     }
   }
