@@ -60,6 +60,44 @@ staticDir: './static'  // serve ./static/logo.png at /logo.png
 
 Also settable with: `--static <dir>`
 
+### `staticHandler` (programmatic API only)
+
+A callback for serving static assets in non-filesystem deployments (Cloudflare Workers + R2, Vercel Edge, Deno Deploy). When set, it is called instead of the built-in filesystem `serveStatic` for requests with static file extensions.
+
+```typescript
+import { createHandler, resolveConfig } from 'mkdnsite'
+
+const handler = createHandler({
+  source,
+  renderer,
+  config,
+  // Read static files from Cloudflare R2
+  staticHandler: async (pathname) => {
+    const key = pathname.replace(/^\//, '')
+    const obj = await env.STATIC_BUCKET.get(key)
+    if (obj == null) return null  // fall through to built-in serveStatic or 404
+    return new Response(await obj.text(), {
+      headers: { 'Content-Type': 'image/png' }
+    })
+  }
+})
+```
+
+**Behaviour**: return a `Response` to serve it directly, or `null` to fall through to the built-in `serveStatic` (if `staticDir` is set) or ultimately a 404.
+
+This option is **programmatic-only** — it accepts a function and cannot be set from a config file or CLI flag. Use `staticDir` for local/filesystem deployments.
+
+If you are using the `CloudflareAdapter`, call `adapter.createStaticHandler()` to get a pre-built R2-backed handler:
+
+```typescript
+const handler = createHandler({
+  source: adapter.createContentSource(config),
+  renderer: await adapter.createRenderer(config),
+  config,
+  staticHandler: adapter.createStaticHandler()  // reads from STATIC_BUCKET R2 binding
+})
+```
+
 ### `include`
 
 Glob patterns that limit which `.md` files are served. Only files whose path (relative to `contentDir`) matches at least one pattern will be served. Mutually exclusive with `exclude`.

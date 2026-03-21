@@ -43,6 +43,15 @@ export interface HandlerOptions {
    * When set, requests without `Authorization: Bearer <refreshToken>` are rejected with 401.
    */
   refreshToken?: string
+  /**
+   * Optional custom static file handler.
+   * When provided, this function is called instead of the built-in filesystem-based
+   * serveStatic for requests matching static file extensions.
+   * Return a Response to serve it, or null to fall through to the built-in serveStatic
+   * (if config.staticDir is set) or ultimately a 404.
+   * Use this for non-filesystem deployments (R2, S3, KV, GitHub API, etc.).
+   */
+  staticHandler?: (pathname: string) => Promise<Response | null>
 }
 
 /**
@@ -57,7 +66,7 @@ export interface HandlerOptions {
  * - Deno.serve()
  */
 export function createHandler (opts: HandlerOptions): (request: Request) => Promise<Response> {
-  const { source, renderer, config, analytics, siteId, contentCache, responseCache, refreshToken } = opts
+  const { source, renderer, config, analytics, siteId, contentCache, responseCache, refreshToken, staticHandler } = opts
 
   let llmsTxtCache: string | null = null
   let mcpHandlerFn: ((req: Request) => Promise<Response>) | null = null
@@ -270,8 +279,14 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
     }
 
     // ---- Static files passthrough ----
-    if (config.staticDir != null && hasStaticExtension(pathname)) {
-      return ok(await serveStatic(pathname, config.staticDir))
+    if (hasStaticExtension(pathname)) {
+      if (staticHandler != null) {
+        const staticResponse = await staticHandler(pathname)
+        if (staticResponse != null) return ok(staticResponse)
+      }
+      if (config.staticDir != null) {
+        return ok(await serveStatic(pathname, config.staticDir))
+      }
     }
 
     // ---- Content negotiation + page serving ----
