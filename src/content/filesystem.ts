@@ -1,16 +1,41 @@
 import { readdir, readFile, stat } from 'node:fs/promises'
 import { join, relative, extname, basename, dirname } from 'node:path'
+import picomatch from 'picomatch'
 import { parseFrontmatter } from './frontmatter.ts'
 import type { ContentSource, ContentPage, NavNode } from './types.ts'
+
+export interface FilesystemSourceOptions {
+  /** Glob patterns to include. Only matching files will be served. Mutually exclusive with exclude. */
+  include?: string[]
+  /** Glob patterns to exclude. Matching files will not be served. Mutually exclusive with include. */
+  exclude?: string[]
+}
 
 export class FilesystemSource implements ContentSource {
   private readonly rootDir: string
   private readonly cache = new Map<string, ContentPage>()
   private navCache: NavNode | null = null
   private allPagesCache: ContentPage[] | null = null
+  private readonly includeMatcher: picomatch.Matcher | null
+  private readonly excludeMatcher: picomatch.Matcher | null
 
-  constructor (rootDir: string) {
+  constructor (rootDir: string, opts: FilesystemSourceOptions = {}) {
     this.rootDir = rootDir
+    this.includeMatcher = opts.include != null && opts.include.length > 0
+      ? picomatch(opts.include)
+      : null
+    this.excludeMatcher = opts.exclude != null && opts.exclude.length > 0
+      ? picomatch(opts.exclude)
+      : null
+  }
+
+  /** Returns true if a relative path should be served, based on include/exclude patterns. */
+  private shouldInclude (relPath: string): boolean {
+    // Normalise to forward slashes for consistent glob matching
+    const p = relPath.replace(/\\/g, '/')
+    if (this.includeMatcher != null) return this.includeMatcher(p)
+    if (this.excludeMatcher != null) return !this.excludeMatcher(p)
+    return true
   }
 
   async getPage (slug: string): Promise<ContentPage | null> {
@@ -41,6 +66,10 @@ export class FilesystemSource implements ContentSource {
         const raw = await readFile(filePath, 'utf-8')
         const parsed = parseFrontmatter(raw)
         const fileStat = await stat(filePath)
+
+        // Check include/exclude patterns against relative path
+        const relPath = relative(this.rootDir, filePath)
+        if (!this.shouldInclude(relPath)) return null
 
         const page: ContentPage = {
           slug: `/${normalized === 'index' ? '' : normalized}`,
@@ -101,6 +130,9 @@ export class FilesystemSource implements ContentSource {
         await this.walkDir(fullPath, pages)
       } else if (entry.isFile() && extname(entry.name) === '.md') {
         const relPath = relative(this.rootDir, fullPath)
+
+        if (!this.shouldInclude(relPath)) continue
+
         const slug = this.filePathToSlug(relPath)
 
         try {
@@ -189,6 +221,9 @@ export class FilesystemSource implements ContentSource {
         entry.name !== 'README.md' &&
         entry.name !== 'readme.md'
       ) {
+        const relPath = relative(this.rootDir, fullPath)
+        if (!this.shouldInclude(relPath)) continue
+
         const raw = await readFile(fullPath, 'utf-8')
         const parsed = parseFrontmatter(raw)
 

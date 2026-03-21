@@ -65,7 +65,11 @@ export class CloudflareAdapter implements DeploymentAdapter {
         ref: this.env.GITHUB_REF,
         token: this.env.GITHUB_TOKEN
       }
-      return new GitHubSource(ghConfig)
+      return new GitHubSource({
+        ...ghConfig,
+        include: config.include,
+        exclude: config.exclude
+      })
     }
 
     // R2 source: explicit CONTENT_SOURCE=r2 or CONTENT_BUCKET binding present

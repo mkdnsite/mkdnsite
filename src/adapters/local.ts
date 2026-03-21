@@ -18,9 +18,16 @@ export class LocalAdapter implements DeploymentAdapter {
 
   createContentSource (config: MkdnSiteConfig): ContentSource {
     if (config.github != null) {
-      return new GitHubSource(config.github)
+      return new GitHubSource({
+        ...config.github,
+        include: config.include,
+        exclude: config.exclude
+      })
     }
-    return new FilesystemSource(config.contentDir)
+    return new FilesystemSource(config.contentDir, {
+      include: config.include,
+      exclude: config.exclude
+    })
   }
 
   async createRenderer (config: MkdnSiteConfig): Promise<MarkdownRenderer> {
@@ -154,8 +161,10 @@ export class LocalAdapter implements DeploymentAdapter {
 
     row('Runtime', `local (${this.name})`)
     if (config.github != null) {
-      const ref = config.github.ref ?? 'main'
-      row('GitHub', `${config.github.owner}/${config.github.repo}@${ref}`)
+      const owner: string = config.github.owner
+      const repo: string = config.github.repo
+      const ref: string = config.github.ref ?? 'main'
+      row('GitHub', `${owner}/${repo}@${ref}`)
     } else {
       row('Content', config.contentDir)
     }

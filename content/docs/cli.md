@@ -44,6 +44,8 @@ mkdnsite --config docs.config.ts --color-scheme dark
 |------|------|---------|-------------|
 | `[directory]` | positional | `./content` | Path to directory containing `.md` files |
 | `--static <dir>` | path | — | Directory for static assets (images, CSS, fonts) |
+| `--include <pattern>` | glob | — | Only serve files matching this pattern (repeatable) |
+| `--exclude <pattern>` | glob | — | Skip files matching this pattern (repeatable) |
 
 ```bash
 mkdnsite ./docs --static ./public
@@ -52,6 +54,20 @@ mkdnsite ./docs --static ./public
 Static assets are served at the root: `./public/logo.png` → `/logo.png`.
 
 > **Non-filesystem deployments** (Cloudflare Workers, Vercel Edge, etc.) cannot use `--static` / `staticDir` because the filesystem is unavailable. Use the programmatic `staticHandler` option in `createHandler()` instead — see [configuration reference](/docs/configuration#statichandler-programmatic-api-only).
+
+### Filtering content with `--include` / `--exclude`
+
+Use these flags to control which `.md` files are served. They are mutually exclusive — use one or the other.
+
+```bash
+# Only serve files under docs/ and guides/
+mkdnsite --include 'docs/**' --include 'guides/**'
+
+# Exclude draft files and a private directory
+mkdnsite --exclude '**/*.draft.md' --exclude 'private/**'
+```
+
+Patterns use [picomatch](https://github.com/micromatch/picomatch) glob syntax and are matched against paths relative to the content directory. These options map to the `include` and `exclude` config file keys.
 
 ## Server
 

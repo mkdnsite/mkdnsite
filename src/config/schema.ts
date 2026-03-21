@@ -42,6 +42,20 @@ export interface MkdnSiteConfig {
   /** Static files directory for images, videos, etc. */
   staticDir?: string
 
+  /**
+   * Glob patterns to include. Only matching files will be served.
+   * Mutually exclusive with `exclude` — define one or the other, not both.
+   * e.g. ['docs', 'guides/*.md']
+   */
+  include?: string[]
+
+  /**
+   * Glob patterns to exclude. Matching files will not be served.
+   * Mutually exclusive with `include` — define one or the other, not both.
+   * e.g. ['private', '*.draft.md']
+   */
+  exclude?: string[]
+
   /** GitHub repository source (alternative to local contentDir) */
   github?: import('../content/types.ts').GitHubSourceConfig
 

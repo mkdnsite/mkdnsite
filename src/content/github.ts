@@ -1,3 +1,4 @@
+import picomatch from 'picomatch'
 import { parseFrontmatter } from './frontmatter.ts'
 import type {
   ContentSource,
@@ -37,11 +38,13 @@ interface ParsedFile {
  * - raw.githubusercontent.com: no documented rate limit (generous)
  */
 export class GitHubSource implements ContentSource {
-  private readonly config: Required<GitHubSourceConfig>
+  private readonly config: Required<Omit<GitHubSourceConfig, 'include' | 'exclude'>>
   private readonly pageCache = new Map<string, CacheEntry<ContentPage | null>>()
   private navCache: CacheEntry<NavNode> | null = null
   private treeCache: CacheEntry<GitHubTreeEntry[]> | null = null
   private prefetchPromise: Promise<void> | null = null
+  private readonly includeMatcher: picomatch.Matcher | null
+  private readonly excludeMatcher: picomatch.Matcher | null
 
   constructor (config: GitHubSourceConfig) {
     this.config = {
@@ -51,6 +54,20 @@ export class GitHubSource implements ContentSource {
       path: config.path ?? '',
       token: config.token ?? ''
     }
+    this.includeMatcher = config.include != null && config.include.length > 0
+      ? picomatch(config.include)
+      : null
+    this.excludeMatcher = config.exclude != null && config.exclude.length > 0
+      ? picomatch(config.exclude)
+      : null
+  }
+
+  /** Returns true if a relative file path should be served, based on include/exclude patterns. */
+  private shouldInclude (relPath: string): boolean {
+    const p = relPath.replace(/\\/g, '/')
+    if (this.includeMatcher != null) return this.includeMatcher(p)
+    if (this.excludeMatcher != null) return !this.excludeMatcher(p)
+    return true
   }
 
   async getPage (slug: string): Promise<ContentPage | null> {
@@ -119,7 +136,11 @@ export class GitHubSource implements ContentSource {
 
   private async prefetchAll (): Promise<void> {
     const tree = await this.fetchRepoTree()
-    const mdFiles = tree.filter(e => e.type === 'blob' && e.path.endsWith('.md'))
+    const mdFiles = tree.filter(e =>
+      e.type === 'blob' &&
+      e.path.endsWith('.md') &&
+      this.shouldInclude(e.path)
+    )
 
     // Fetch all file contents in parallel
     const fetched = await Promise.all(
@@ -167,6 +188,9 @@ export class GitHubSource implements ContentSource {
           ]
 
     for (const filePath of candidates) {
+      // Respect include/exclude patterns before fetching
+      if (!this.shouldInclude(filePath)) return null
+
       const raw = await this.fetchFile(filePath)
       if (raw != null) {
         const { meta, body } = parseFrontmatter(raw)
