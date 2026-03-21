@@ -13,7 +13,7 @@ const TTL_MS = 5 * 60 * 1000 // 5 minutes
 const GITHUB_HEADERS: Record<string, string> = {
   Accept: 'application/vnd.github.v3+json',
   'User-Agent': 'mkdnsite',
-  'X-GitHub-Api-Version': '2022-11-28'
+  'X-GitHub-Api-Version': '2026-03-10'
 }
 
 interface CacheEntry<T> {
