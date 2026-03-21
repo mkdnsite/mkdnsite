@@ -1,4 +1,5 @@
 import picomatch from 'picomatch'
+import { VERSION } from '../version.ts'
 import { parseFrontmatter } from './frontmatter.ts'
 import type {
   ContentSource,
@@ -9,6 +10,12 @@ import type {
 import { buildNavTree as sharedBuildNavTree } from './nav-builder.ts'
 
 const TTL_MS = 5 * 60 * 1000 // 5 minutes
+
+const GITHUB_HEADERS: Record<string, string> = {
+  Accept: 'application/vnd.github.v3+json',
+  'User-Agent': `mkdnsite/${VERSION}`,
+  'X-GitHub-Api-Version': '2026-03-10'
+}
 
 interface CacheEntry<T> {
   value: T
@@ -214,7 +221,7 @@ export class GitHubSource implements ContentSource {
     const fullPath = basePath !== '' ? `${basePath}/${filePath}` : filePath
     const url = `https://raw.githubusercontent.com/${owner}/${repo}/${ref}/${fullPath}`
 
-    const headers: Record<string, string> = {}
+    const headers: Record<string, string> = { 'User-Agent': `mkdnsite/${VERSION}` }
     if (this.config.token !== '') {
       headers.Authorization = `token ${this.config.token}`
     }
@@ -256,9 +263,7 @@ export class GitHubSource implements ContentSource {
     const { owner, repo, ref, path: basePath } = this.config
     const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${ref}?recursive=1`
 
-    const headers: Record<string, string> = {
-      Accept: 'application/vnd.github.v3+json'
-    }
+    const headers: Record<string, string> = { ...GITHUB_HEADERS }
     if (this.config.token !== '') {
       headers.Authorization = `token ${this.config.token}`
     }
