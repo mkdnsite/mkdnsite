@@ -23,7 +23,10 @@
     "test": "bun test",
     "lint": "ts-standard src/ test/",
     "lint:fix": "ts-standard src/ test/ --fix",
-    "tsc": "tsc --noEmit"
+    "tsc": "tsc --noEmit",
+    "version:generate": "bun run scripts/generate-version.ts",
+    "prepare": "bun run scripts/generate-version.ts",
+    "prepublishOnly": "bun run scripts/generate-version.ts"
   },
   "keywords": [
     "markdown",
