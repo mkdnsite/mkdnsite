@@ -533,14 +533,20 @@ body {
   .mkdn-table-wrapper {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    max-width: calc(100vw - 2rem);
   }
-  .mkdn-prose table { min-width: 500px; }
+  .mkdn-prose table {
+    width: max-content;
+    min-width: 100%;
+  }
+  .mkdn-prose th, .mkdn-prose td { white-space: nowrap; }
 
   /* Top padding so first article content isn't hidden behind fixed hamburger */
   .mkdn-article { padding-top: 0.5rem; }
 
   /* Heading anchor scroll offset accounts for fixed hamburger button height */
-  .mkdn-prose h1, .mkdn-prose h2, .mkdn-prose h3,
+  .mkdn-prose h1 { scroll-margin-top: 4.5rem; }
+  .mkdn-prose h2, .mkdn-prose h3,
   .mkdn-prose h4, .mkdn-prose h5, .mkdn-prose h6 {
     scroll-margin-top: 3.5rem;
   }
