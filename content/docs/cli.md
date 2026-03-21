@@ -51,6 +51,8 @@ mkdnsite ./docs --static ./public
 
 Static assets are served at the root: `./public/logo.png` → `/logo.png`.
 
+> **Non-filesystem deployments** (Cloudflare Workers, Vercel Edge, etc.) cannot use `--static` / `staticDir` because the filesystem is unavailable. Use the programmatic `staticHandler` option in `createHandler()` instead — see [configuration reference](/docs/configuration#statichandler-programmatic-api-only).
+
 ## Server
 
 | Flag | Short | Default | Description |
