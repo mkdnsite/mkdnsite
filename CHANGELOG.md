@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.4](https://github.com/mkdnsite/mkdnsite/compare/v1.1.3...v1.1.4) (2026-03-24)
+
+
+### Bug Fixes
+
+* Prevent caching empty search index ([#64](https://github.com/mkdnsite/mkdnsite/issues/64)) ([b3da0cc](https://github.com/mkdnsite/mkdnsite/commit/b3da0cc5a9d2d7e41913e741a1694d680d21ddc6))
+* prevent caching empty search index (mkdnio Issue [#100](https://github.com/mkdnsite/mkdnsite/issues/100)) ([b3da0cc](https://github.com/mkdnsite/mkdnsite/commit/b3da0cc5a9d2d7e41913e741a1694d680d21ddc6))
+
 ## [1.1.3](https://github.com/mkdnsite/mkdnsite/compare/v1.1.2...v1.1.3) (2026-03-21)
 
 
