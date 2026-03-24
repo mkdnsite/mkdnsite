@@ -21,6 +21,8 @@ export interface SearchIndex {
   serialize: () => string
   /** Restore index state from a previously serialized JSON string */
   deserialize: (data: string) => void
+  /** Number of documents currently in the index */
+  readonly size: number
 }
 
 /** Serialized format stored in cache / on disk */
@@ -270,7 +272,15 @@ export function createSearchIndex (): SearchIndex {
     }
   }
 
-  return { index, remove, search, rebuild, serialize, deserialize }
+  return {
+    index,
+    remove,
+    search,
+    rebuild,
+    serialize,
+    deserialize,
+    get size () { return docs.size }
+  }
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

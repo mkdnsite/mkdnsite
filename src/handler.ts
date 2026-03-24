@@ -84,13 +84,25 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
         if (cached != null && cached !== '') {
           try {
             si.deserialize(cached)
-            return si
+            if (si.size > 0) {
+              console.log(`Search index restored from cache (${si.size} docs)`)
+              return si
+            }
+            // Deserialized but empty — cache was stale/empty, rebuild
+            console.warn('Search index from cache is empty — rebuilding from source')
           } catch {
             // Corrupt / incompatible — fall through to rebuild
           }
         }
       }
       await si.rebuild(source)
+      console.log(`Search index built from source (${si.size} docs)`)
+      if (si.size === 0) {
+        // Source returned no pages (transient GitHub API failure, etc.)
+        // Do NOT cache the empty index — let the next cold start retry.
+        console.warn('Search index is empty after rebuild — skipping cache write')
+        return si
+      }
       // Persist to cache for next cold start
       if (contentCache != null) {
         try {

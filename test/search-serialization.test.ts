@@ -272,3 +272,121 @@ describe('Handler — search index caching', () => {
     expect(Array.isArray(body)).toBe(true)
   })
 })
+
+// ─── SearchIndex.size ─────────────────────────────────────────────────────────
+
+describe('SearchIndex.size', () => {
+  it('returns 0 for a fresh empty index', () => {
+    const si = createSearchIndex()
+    expect(si.size).toBe(0)
+  })
+
+  it('reflects number of docs after rebuild', async () => {
+    const si = createSearchIndex()
+    await si.rebuild(mockSource)
+    expect(si.size).toBe(PAGES.length)
+  })
+
+  it('decrements after remove()', async () => {
+    const si = createSearchIndex()
+    await si.rebuild(mockSource)
+    si.remove('/')
+    expect(si.size).toBe(PAGES.length - 1)
+  })
+
+  it('updates after deserialize', async () => {
+    const si = createSearchIndex()
+    await si.rebuild(mockSource)
+    const data = si.serialize()
+
+    const si2 = createSearchIndex()
+    expect(si2.size).toBe(0)
+    si2.deserialize(data)
+    expect(si2.size).toBe(PAGES.length)
+  })
+})
+
+// ─── Empty index cache guard ──────────────────────────────────────────────────
+
+describe('Handler — empty index not cached', () => {
+  const emptySource: ContentSource = {
+    getPage: async () => null,
+    getNavTree: async (): Promise<NavNode> => ({ title: 'Root', slug: '/', children: [], order: 0, isSection: true }),
+    listPages: async () => [], // simulates transient GitHub API failure
+    refresh: async () => {}
+  }
+
+  function makeHandlerWith (source: ContentSource, cache?: MemoryContentCache): ReturnType<typeof createHandler> {
+    const overrides = { client: { search: true } } as unknown as Parameters<typeof resolveConfig>[0]
+    const config = resolveConfig(overrides)
+    return createHandler({ source, renderer: stubRenderer, config, contentCache: cache })
+  }
+
+  it('does not write to cache when index builds empty', async () => {
+    const cache = new MemoryContentCache()
+    const handler = makeHandlerWith(emptySource, cache)
+
+    await handler(new Request('http://localhost/api/search?q=hello'))
+    // Cache should remain empty — empty index must NOT be persisted
+    expect(await cache.getSearchIndex()).toBeNull()
+  })
+
+  it('returns empty results (not an error) when index is empty', async () => {
+    const handler = makeHandlerWith(emptySource)
+    const res = await handler(new Request('http://localhost/api/search?q=hello'))
+    expect(res.status).toBe(200)
+    const body = await res.json() as unknown[]
+    expect(Array.isArray(body)).toBe(true)
+    expect(body).toHaveLength(0)
+  })
+
+  it('discards empty cached index and rebuilds from source', async () => {
+    const cache = new MemoryContentCache()
+    // Cache an empty (but valid) serialized index
+    const emptySi = createSearchIndex()
+    await cache.setSearchIndex(emptySi.serialize()) // {"v":1,"docs":{},"posting":{}}
+
+    let listCallCount = 0
+    const trackingSource: ContentSource = {
+      ...mockSource,
+      listPages: async () => {
+        listCallCount++
+        return PAGES
+      }
+    }
+
+    const overrides = { client: { search: true } } as unknown as Parameters<typeof resolveConfig>[0]
+    const config = resolveConfig(overrides)
+    const handler = createHandler({
+      source: trackingSource,
+      renderer: stubRenderer,
+      config,
+      contentCache: cache
+    })
+
+    const res = await handler(new Request('http://localhost/api/search?q=mkdnsite'))
+    expect(res.status).toBe(200)
+    const body = await res.json() as Array<{ slug: string }>
+    // Should have results — rebuilt from source, not the empty cache
+    expect(body.length).toBeGreaterThan(0)
+    // listPages should have been called to rebuild
+    expect(listCallCount).toBeGreaterThan(0)
+  })
+
+  it('caches a non-empty index after successful rebuild', async () => {
+    const cache = new MemoryContentCache()
+    const handler = makeHandlerWith(mockSource, cache)
+
+    // Trigger index build
+    await handler(new Request('http://localhost/api/search?q=markdown'))
+
+    // Cache should now contain the serialized index
+    const cached = await cache.getSearchIndex()
+    expect(cached).not.toBeNull()
+    expect(cached).not.toBe('')
+
+    // Verify it's a valid non-empty serialized index
+    const parsed = JSON.parse(cached as string) as SerializedSearchIndex
+    expect(Object.keys(parsed.docs).length).toBeGreaterThan(0)
+  })
+})
