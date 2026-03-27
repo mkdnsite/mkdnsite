@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises'
-import { extname } from 'node:path'
+import { extname, basename } from 'node:path'
 import type { MkdnSiteConfig } from './config/schema.ts'
 import type { ContentSource } from './content/types.ts'
 import type { MarkdownRenderer } from './render/types.ts'
@@ -297,7 +297,15 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
         if (staticResponse != null) return ok(staticResponse)
       }
       if (config.staticDir != null) {
-        return ok(await serveStatic(pathname, config.staticDir))
+        // Strip the staticDir basename prefix from the request path so that
+        // images referenced as /static/x.png (GitHub-compatible) resolve from
+        // staticDir correctly — e.g. /static/x.png → /x.png → static/x.png.
+        // Both /x.png and /static/x.png will work.
+        const staticBase = '/' + basename(config.staticDir)
+        const servedPathname = pathname.startsWith(staticBase + '/')
+          ? pathname.slice(staticBase.length)
+          : pathname
+        return ok(await serveStatic(servedPathname, config.staticDir))
       }
     }
 
