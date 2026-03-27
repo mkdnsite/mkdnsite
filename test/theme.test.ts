@@ -154,6 +154,32 @@ describe('renderPage', () => {
     expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
   })
 
+  it('renders site title as home link when no logo or logoText configured', () => {
+    const config = resolveConfig({ site: { title: 'My Docs' } })
+    const html = renderPage({ renderedContent: '', meta: baseMeta, config, nav: rootNav, currentSlug: '/' })
+    expect(html).toContain('class="mkdn-nav-header"')
+    expect(html).toContain('href="/"')
+    expect(html).toContain('<span class="mkdn-nav-title">My Docs</span>')
+  })
+
+  it('renders "Home" as home link when no logo, logoText, or site title configured', () => {
+    const config = resolveConfig({ site: { title: '' } })
+    const html = renderPage({ renderedContent: '', meta: baseMeta, config, nav: rootNav, currentSlug: '/' })
+    expect(html).toContain('class="mkdn-nav-header"')
+    expect(html).toContain('href="/"')
+    expect(html).toContain('<span class="mkdn-nav-title">Home</span>')
+  })
+
+  it('renders logo-only nav header without extra text when logo set but no logoText', () => {
+    const config = makeConfig({ logo: { src: '/logo.png', alt: 'Logo' } })
+    const html = renderPage({ renderedContent: '', meta: baseMeta, config, nav: rootNav, currentSlug: '/' })
+    expect(html).toContain('class="mkdn-nav-header"')
+    expect(html).toContain('href="/"')
+    expect(html).toContain('<img src="/logo.png"')
+    // No extra fallback text — image alone is the home link
+    expect(html).not.toContain('<span class="mkdn-nav-title">')
+  })
+
   it('emits customCssUrl as a <link rel="stylesheet"> tag', () => {
     const config = makeConfig({ customCssUrl: 'https://example.com/theme.css' })
     const html = renderPage({ renderedContent: '', meta: baseMeta, config, currentSlug: '/' })
