@@ -88,7 +88,7 @@ export function buildNavTree (files: FileEntry[], rootTitle = 'Root'): NavNode {
 
     const dirPath = dirParts.join('/')
     const section = getOrCreateSection(sections, dirPath, root)
-    if (file.meta.title != null) section.title = file.meta.title as string
+    if (file.meta.title != null) section.title = String(file.meta.title)
     if (file.meta.order != null) section.order = file.meta.order as number
   }
 
@@ -105,7 +105,7 @@ export function buildNavTree (files: FileEntry[], rootTitle = 'Root'): NavNode {
     const name = fileName.replace(/\.md$/, '')
     const slugPath = file.path.replace(/\.md$/, '')
     const node: NavNode = {
-      title: file.meta.title != null ? file.meta.title as string : titleCase(name),
+      title: file.meta.title != null ? String(file.meta.title) : titleCase(name),
       slug: '/' + slugPath,
       order: file.meta.order != null ? file.meta.order as number : 999,
       children: [],
