@@ -206,12 +206,13 @@ site: {
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `title` | `string` | `'mkdnsite'` | Site name, appears in `<title>` as `Page — Site` |
-| `description` | `string` | — | Meta description, also used in `/llms.txt` |
+| `description` | `string` | — | Meta description. Also used as the fallback description in `/llms.txt` when `llmsTxt.description` is not set. |
 | `url` | `string` | — | Base URL for absolute links and sitemaps |
 | `lang` | `string` | `'en'` | HTML `lang` attribute |
 | `og` | `OgConfig` | — | OpenGraph / social sharing configuration (see below) |
+| `favicon` | `{ src: string }` | — | Favicon path or URL (`.ico`, `.png`, `.svg`). `src` is the URL path or absolute URL. |
 
-CLI flags: `--title`, `--url`
+CLI flags: `--title`, `--url`, `--favicon <path>`
 
 ### `site.og` — OpenGraph / social meta tags
 
@@ -388,7 +389,7 @@ CLI flag: `--no-builtin-css`
 | `pageDate` | `boolean` | `false` | `--page-date` / `--no-page-date` | Render `date`/`updated` from frontmatter below page title |
 | `readingTime` | `boolean` | `false` | `--reading-time` / `--no-reading-time` | Show estimated reading time (238 wpm) |
 | `prevNext` | `boolean` | `false` | `--prev-next` / `--no-prev-next` | Show prev/next page navigation links at bottom |
-| `editUrl` | `string` | — | — | Edit URL template, e.g. `https://github.com/org/repo/edit/main/{path}` |
+| `editUrl` | `string` | — | — | Edit URL template, e.g. `https://github.com/org/repo/edit/main/{path}` *(Planned — not yet implemented)* |
 | `syntaxTheme` | `string` | `'github-light'` | — | Shiki light mode syntax theme |
 | `syntaxThemeDark` | `string` | `'github-dark'` | — | Shiki dark mode syntax theme |
 
@@ -433,8 +434,12 @@ llmsTxt: {
   enabled: true,
   description: 'Documentation for my project.',
   sections: {
-    'API Reference': 'Detailed API documentation',
-    'Guides': 'Step-by-step tutorials'
+    // Keys are the first path segment of each page's URL (i.e. the top-level
+    // directory name). Values are the section heading to use in /llms.txt.
+    // Without this override, section headings are derived from the directory
+    // name via title-case (e.g. 'docs' → 'Docs').
+    'docs': 'API Reference',   // /docs/* pages → "## API Reference"
+    'guides': 'Tutorials'      // /guides/* pages → "## Tutorials"
   }
 }
 ```
@@ -442,8 +447,8 @@ llmsTxt: {
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `enabled` | `boolean` | `true` | Generate `/llms.txt` |
-| `description` | `string` | — | Site description in the file |
-| `sections` | `Record<string, string>` | — | Custom section headers and descriptions |
+| `description` | `string` | — | Description line in the file. Falls back to `site.description` when not set. |
+| `sections` | `Record<string, string>` | — | Map of top-level directory names (URL path segments) to custom section titles in `/llms.txt`. Keys must match the first segment of page URLs (e.g. `'docs'` for `/docs/*`). Values are the `##` heading label used in the output. |
 
 CLI flag: `--no-llms-txt`
 
@@ -557,8 +562,9 @@ const config: Partial<MkdnSiteConfig> = {
     syntaxThemeDark: 'github-dark',
     showNav: true,
     showToc: true,
-    prevNext: true,
-    editUrl: 'https://github.com/myorg/myproject/edit/main/content/{path}'
+    prevNext: true
+    // editUrl: 'https://github.com/myorg/myproject/edit/main/content/{path}'
+    // ↑ Planned — not yet implemented
   },
 
   negotiation: {
