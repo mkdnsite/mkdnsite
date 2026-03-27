@@ -201,13 +201,13 @@ function buildReadingTimeHtml (body: string): string {
   return `<span class="mkdn-reading-time">${minutes} min read</span>`
 }
 
-function buildTocHtml (renderedContent: string): string {
+export function buildTocHtml (renderedContent: string): string {
   const headingRegex = /<h([2-4])\s[^>]*?id="([^"]+)"[^>]*>([\s\S]+?)<\/h[2-4]>/g
   const headings: Array<{ level: number, id: string, text: string }> = []
 
   let match = headingRegex.exec(renderedContent)
   while (match !== null) {
-    const text = match[3].replace(/<[^>]+>/g, '').trim()
+    const text = decodeHtmlEntities(match[3].replace(/<[^>]+>/g, '').trim())
     headings.push({ level: parseInt(match[1], 10), id: match[2], text })
     match = headingRegex.exec(renderedContent)
   }
@@ -360,4 +360,20 @@ function esc (str: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
+}
+
+/**
+ * Decode HTML entities in a string that has already been through renderToString().
+ * Used before re-escaping with esc() to prevent double-escaping.
+ */
+function decodeHtmlEntities (str: string): string {
+  return str
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(parseInt(dec, 10)))
 }
