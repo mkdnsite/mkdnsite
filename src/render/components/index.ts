@@ -44,12 +44,56 @@ function Heading ({ children, id, level }: HeadingProps): React.ReactElement {
 }
 
 /**
+ * Strip the .md extension from a relative link href so that generated HTML
+ * links to the canonical URL mkdnsite serves (without .md).
+ *
+ * Rules:
+ * - Only transforms relative hrefs (not http/https/# links).
+ * - index.md / README.md / readme.md → strip filename, keep trailing slash.
+ * - other-page.md → other-page (anchor and query string preserved).
+ * - Leaves absolute URLs and anchor-only links unchanged.
+ */
+export function stripMdExtension (href: string): string {
+  // Leave absolute URLs and anchor-only links alone
+  if (
+    href.startsWith('http://') ||
+    href.startsWith('https://') ||
+    href.startsWith('#')
+  ) return href
+
+  // Split off any anchor (#...) or query string (?...) suffix
+  const hashIdx = href.indexOf('#')
+  const queryIdx = href.indexOf('?')
+  let splitIdx = -1
+  if (hashIdx !== -1 && queryIdx !== -1) splitIdx = Math.min(hashIdx, queryIdx)
+  else if (hashIdx !== -1) splitIdx = hashIdx
+  else if (queryIdx !== -1) splitIdx = queryIdx
+
+  const path = splitIdx !== -1 ? href.slice(0, splitIdx) : href
+  const suffix = splitIdx !== -1 ? href.slice(splitIdx) : ''
+
+  // index.md / README.md / readme.md → keep directory path with trailing slash
+  if (/(?:^|\/)(?:index|README|readme)\.md$/.test(path)) {
+    const dir = path.replace(/(?:index|README|readme)\.md$/, '')
+    return (dir === '' ? './' : dir) + suffix
+  }
+
+  // Any other .md file → strip extension
+  if (path.endsWith('.md')) {
+    return path.slice(0, -3) + suffix
+  }
+
+  return href
+}
+
+/**
  * Default link component with external link detection.
  */
 function Link ({ children, href, title }: LinkProps): React.ReactElement {
-  const isExternal = href?.startsWith('http://') === true || href?.startsWith('https://') === true
+  const resolvedHref = href != null ? stripMdExtension(href) : href
+  const isExternal = resolvedHref?.startsWith('http://') === true || resolvedHref?.startsWith('https://') === true
   const props: Record<string, unknown> = {
-    href,
+    href: resolvedHref,
     title,
     className: 'mkdn-link'
   }
