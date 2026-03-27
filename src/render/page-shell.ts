@@ -129,14 +129,23 @@ export function render404 (config: MkdnSiteConfig): string {
 
 function renderNavHeader (config: MkdnSiteConfig): string {
   const { logo, logoText } = config.theme
-  if (logo == null && (logoText == null || logoText === '')) return ''
 
   const imgHtml = logo != null
     ? `<span class="mkdn-nav-logo"><img src="${esc(logo.src)}" alt="${esc(logo.alt ?? '')}" width="${logo.width ?? 32}" height="${logo.height ?? 32}"></span>`
     : ''
-  const textHtml = logoText != null && logoText !== ''
-    ? `<span class="mkdn-nav-title">${esc(logoText)}</span>`
-    : ''
+
+  // Determine text label for the header link.
+  // - logoText is configured → use it
+  // - logo configured but no logoText → no text (image serves as link)
+  // - neither logo nor logoText → fall back to site title, then "Home",
+  //   so the nav always has a clickable home link even with minimal config.
+  let textHtml = ''
+  if (logoText != null && logoText !== '') {
+    textHtml = `<span class="mkdn-nav-title">${esc(logoText)}</span>`
+  } else if (logo == null) {
+    const fallback = config.site.title !== '' ? config.site.title : 'Home'
+    textHtml = `<span class="mkdn-nav-title">${esc(fallback)}</span>`
+  }
 
   return `<a href="/" class="mkdn-nav-header">${imgHtml}${textHtml}</a>`
 }
