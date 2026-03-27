@@ -193,7 +193,7 @@ export class FilesystemSource implements ContentSource {
       try {
         const raw = await readFile(join(dir, name), 'utf-8')
         const parsed = parseFrontmatter(raw)
-        if (parsed.meta.title != null) dirTitle = parsed.meta.title
+        if (parsed.meta.title != null) dirTitle = String(parsed.meta.title)
         if (parsed.meta.order != null) dirOrder = parsed.meta.order
         break
       } catch {
@@ -233,7 +233,7 @@ export class FilesystemSource implements ContentSource {
         const slug = `${slugPrefix}${slugPrefix.endsWith('/') ? '' : '/'}${name}`
 
         children.push({
-          title: parsed.meta.title ?? titleCase(name),
+          title: parsed.meta.title != null ? String(parsed.meta.title) : titleCase(name),
           slug,
           order: parsed.meta.order ?? 999,
           children: [],
