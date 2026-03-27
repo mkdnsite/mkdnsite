@@ -336,6 +336,25 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
           }
         ))
       }
+      // Try to load a custom 404.md from the content source
+      const custom404 = slug !== '/404' ? await source.getPage('/404') : null
+      if (custom404 != null) {
+        const renderedHtml = renderer.renderToHtml(custom404.body, config.theme.components)
+        const nav404 = (config.theme.showNav || config.theme.prevNext === true)
+          ? await source.getNavTree()
+          : undefined
+        const html = renderPage({
+          renderedContent: renderedHtml,
+          meta: custom404.meta,
+          config,
+          nav: nav404,
+          currentSlug: '/404'
+        })
+        return ok(textResponse(html, {
+          status: 404,
+          headers: htmlHeadersWithCsp(config)
+        }))
+      }
       return ok(textResponse(render404(config), {
         status: 404,
         headers: htmlHeadersWithCsp(config)

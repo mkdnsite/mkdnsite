@@ -65,6 +65,8 @@ export function parseArgs (args: string[]): ParsedArgs {
       result.theme = { ...(result.theme as object ?? {}), showToc: false }
     } else if (arg === '--no-nav') {
       result.theme = { ...(result.theme as object ?? {}), showNav: false }
+    } else if (arg === '--no-footer') {
+      result.theme = { ...(result.theme as object ?? {}), showFooter: false }
     } else if (arg === '--no-mcp') {
       result.mcp = { ...(result.mcp ?? {}), enabled: false }
     } else if (arg === '--mcp-endpoint') {
@@ -217,6 +219,7 @@ ${flag('--prev-next / --no-prev-next', 'Show prev/next navigation links')}
 ${flag('--reading-time / --no-reading-time', 'Show estimated reading time')}
 ${flag('--no-toc', 'Disable table of contents sidebar')}
 ${flag('--no-nav', 'Disable navigation sidebar')}
+${flag('--no-footer', 'Hide "Powered by mkdnsite" footer')}
 ${section('Flags:')}
 ${flag('--no-client-js', 'Disable all client-side JavaScript')}
 ${flag('--no-theme-toggle', 'Disable light/dark theme toggle')}
