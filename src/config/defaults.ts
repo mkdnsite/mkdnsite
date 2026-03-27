@@ -19,6 +19,7 @@ export const DEFAULT_CONFIG: MkdnSiteConfig = {
     readingTime: false,
     showNav: true,
     showToc: true,
+    showFooter: true,
     colorScheme: 'system',
     syntaxTheme: 'github-light',
     syntaxThemeDark: 'github-dark'

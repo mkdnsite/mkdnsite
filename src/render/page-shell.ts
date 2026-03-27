@@ -106,9 +106,7 @@ export function renderPage (props: PageShellProps): string {
         ${renderedContent}
       </article>
       ${prevNextHtml}
-      <footer class="mkdn-footer">
-        <p>Powered by <a href="https://mkdn.site">mkdnsite</a></p>
-      </footer>
+      ${config.theme.showFooter !== false ? '<footer class="mkdn-footer"><p>Powered by <a href="https://mkdn.site">mkdnsite</a></p></footer>' : ''}
       ${hasToc ? '</div>' : ''}
       ${tocHtml}
     </main>

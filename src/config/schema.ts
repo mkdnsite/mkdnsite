@@ -276,6 +276,9 @@ export interface ThemeConfig {
   /** Show table of contents per page */
   showToc: boolean
 
+  /** Show "Powered by mkdnsite" footer. Default true. */
+  showFooter?: boolean
+
   /** Edit URL template (e.g. https://github.com/org/repo/edit/main/{path}) */
   editUrl?: string
 
