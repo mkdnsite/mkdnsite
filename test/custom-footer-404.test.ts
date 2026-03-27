@@ -4,7 +4,7 @@
  * 2. Custom 404.md support — renders 404.md content on missing pages
  */
 
-import { describe, it, expect } from 'bun:test'
+import { describe, it, expect, afterEach } from 'bun:test'
 import { resolve } from 'node:path'
 import { mkdir, writeFile, rm } from 'node:fs/promises'
 import { resolveConfig } from '../src/config/defaults.ts'
@@ -70,6 +70,9 @@ async function cleanup (): Promise<void> {
 }
 
 describe('custom 404.md support', () => {
+  // Always clean up the fixture directory after each test, even if assertions fail
+  afterEach(cleanup)
+
   it('uses custom 404.md content when available', async () => {
     const handler = await makeHandler(true)
     const res = await handler(new Request('http://localhost:3000/this-does-not-exist'))
@@ -77,14 +80,12 @@ describe('custom 404.md support', () => {
     const html = await res.text()
     expect(html).toContain('Custom 404')
     expect(html).toContain('Sorry, this page does not exist.')
-    await cleanup()
   })
 
   it('custom 404.md renders with status 404', async () => {
     const handler = await makeHandler(true)
     const res = await handler(new Request('http://localhost:3000/missing-page'))
     expect(res.status).toBe(404)
-    await cleanup()
   })
 
   it('falls back to default render404 when no 404.md exists', async () => {
@@ -95,7 +96,6 @@ describe('custom 404.md support', () => {
     // Default render404 text
     expect(html).toContain('404')
     expect(html).toContain('Page Not Found')
-    await cleanup()
   })
 
   it('does not recurse when /404 itself is requested and no 404.md exists', async () => {
@@ -103,7 +103,6 @@ describe('custom 404.md support', () => {
     const res = await handler(new Request('http://localhost:3000/404'))
     // /404 slug check prevents recursion — falls back to default 404
     expect(res.status).toBe(404)
-    await cleanup()
   })
 
   it('custom 404.md page renders HTML (not markdown) for text/html requests', async () => {
@@ -114,6 +113,5 @@ describe('custom 404.md support', () => {
     expect(res.status).toBe(404)
     const ct = res.headers.get('Content-Type') ?? ''
     expect(ct).toContain('text/html')
-    await cleanup()
   })
 })
