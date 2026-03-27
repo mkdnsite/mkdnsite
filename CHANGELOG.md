@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.2.0](https://github.com/mkdnsite/mkdnsite/compare/v1.1.4...v1.2.0) (2026-03-27)
+
+
+### Features
+
+* Add showFooter config option and custom 404.md support ([#85](https://github.com/mkdnsite/mkdnsite/issues/85)) ([e78f0df](https://github.com/mkdnsite/mkdnsite/commit/e78f0dfd9d2213286e6e600e12c201eccea7db6c))
+* Always show home link in nav menu ([#84](https://github.com/mkdnsite/mkdnsite/issues/84)) ([0edd5ec](https://github.com/mkdnsite/mkdnsite/commit/0edd5ec7287154f048ec722b5b946994d41003ce))
+
+
+### Bug Fixes
+
+* Coerce frontmatter title to string in nav tree builders ([#66](https://github.com/mkdnsite/mkdnsite/issues/66)) ([a482a83](https://github.com/mkdnsite/mkdnsite/commit/a482a830da4b98e5bcec63d8f6a24d25efa3e4c2))
+* Decode HTML entities in ToC heading text to prevent double-escaping ([#81](https://github.com/mkdnsite/mkdnsite/issues/81)) ([370f9fe](https://github.com/mkdnsite/mkdnsite/commit/370f9feffcb3a3e1056a3c0d4a02e8c8d2d136c1))
+* Handle URI schemes and mixed-case index files in link stripping ([#86](https://github.com/mkdnsite/mkdnsite/issues/86)) ([4c2517f](https://github.com/mkdnsite/mkdnsite/commit/4c2517f3d141a794c89946e78b44b8bb8953404d))
+* Resolve static dir prefix in request paths for GitHub compatibility ([#82](https://github.com/mkdnsite/mkdnsite/issues/82)) ([3a84d01](https://github.com/mkdnsite/mkdnsite/commit/3a84d011e5c78d4eff531505fbdfab49dac7cfec))
+* Strip .md extension from relative links in rendered HTML ([#80](https://github.com/mkdnsite/mkdnsite/issues/80)) ([b411fc0](https://github.com/mkdnsite/mkdnsite/commit/b411fc06a32b1175b761ef81820bb1be96dbef78))
+
 ## [1.1.4](https://github.com/mkdnsite/mkdnsite/compare/v1.1.3...v1.1.4) (2026-03-24)
 
 
