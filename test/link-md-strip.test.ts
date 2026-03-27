@@ -73,6 +73,40 @@ describe('stripMdExtension — absolute URLs are unchanged', () => {
   test('https URL without .md is not modified', () => {
     expect(stripMdExtension('https://example.com/page')).toBe('https://example.com/page')
   })
+
+  test('mailto: URI with .md in address is not modified', () => {
+    expect(stripMdExtension('mailto:user@example.md')).toBe('mailto:user@example.md')
+  })
+
+  test('ftp: URI with .md path is not modified', () => {
+    expect(stripMdExtension('ftp://files.example.com/doc.md')).toBe('ftp://files.example.com/doc.md')
+  })
+
+  test('tel: URI is not modified', () => {
+    expect(stripMdExtension('tel:+15555555555')).toBe('tel:+15555555555')
+  })
+
+  test('data: URI is not modified', () => {
+    expect(stripMdExtension('data:text/plain;base64,SGVsbG8=')).toBe('data:text/plain;base64,SGVsbG8=')
+  })
+})
+
+describe('stripMdExtension — mixed-case index/README files', () => {
+  test('Readme.md (capital R, rest lowercase) is treated as index file', () => {
+    expect(stripMdExtension('Readme.md')).toBe('./')
+  })
+
+  test('docs/ReadMe.md (mixed case) is treated as index file', () => {
+    expect(stripMdExtension('docs/ReadMe.md')).toBe('docs/')
+  })
+
+  test('docs/README.md (all caps) still works', () => {
+    expect(stripMdExtension('docs/README.md')).toBe('docs/')
+  })
+
+  test('INDEX.MD (fully uppercase) is treated as index file', () => {
+    expect(stripMdExtension('INDEX.MD')).toBe('./')
+  })
 })
 
 describe('stripMdExtension — anchor-only links are unchanged', () => {

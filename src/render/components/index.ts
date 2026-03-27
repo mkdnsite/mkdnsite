@@ -54,12 +54,9 @@ function Heading ({ children, id, level }: HeadingProps): React.ReactElement {
  * - Leaves absolute URLs and anchor-only links unchanged.
  */
 export function stripMdExtension (href: string): string {
-  // Leave absolute URLs and anchor-only links alone
-  if (
-    href.startsWith('http://') ||
-    href.startsWith('https://') ||
-    href.startsWith('#')
-  ) return href
+  // Leave all URI scheme links (http, https, mailto, ftp, tel, data, …) and
+  // anchor-only links alone — RFC 3986 scheme: [a-z][a-z0-9+.-]*:
+  if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith('#')) return href
 
   // Split off any anchor (#...) or query string (?...) suffix
   const hashIdx = href.indexOf('#')
@@ -72,9 +69,9 @@ export function stripMdExtension (href: string): string {
   const path = splitIdx !== -1 ? href.slice(0, splitIdx) : href
   const suffix = splitIdx !== -1 ? href.slice(splitIdx) : ''
 
-  // index.md / README.md / readme.md → keep directory path with trailing slash
-  if (/(?:^|\/)(?:index|README|readme)\.md$/.test(path)) {
-    const dir = path.replace(/(?:index|README|readme)\.md$/, '')
+  // index.md / readme.md (any case) → keep directory path with trailing slash
+  if (/(?:^|\/)(?:index|readme)\.md$/i.test(path)) {
+    const dir = path.replace(/(?:index|readme)\.md$/i, '')
     return (dir === '' ? './' : dir) + suffix
   }
 
