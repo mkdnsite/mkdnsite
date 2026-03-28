@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/mkdnsite/mkdnsite/compare/v1.4.0...v1.4.1) (2026-03-28)
+
+
+### Bug Fixes
+
+* Cache nav tree in handler and expand favicon logo fallback ([#96](https://github.com/mkdnsite/mkdnsite/issues/96)) ([b480286](https://github.com/mkdnsite/mkdnsite/commit/b480286b480da4574167ddca7f460d66df092620))
+
 ## [1.4.0](https://github.com/mkdnsite/mkdnsite/compare/v1.3.0...v1.4.0) (2026-03-28)
 
 
