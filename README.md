@@ -116,6 +116,11 @@ bun add -g mkdnsite     # Bun (recommended)
 npm i -g mkdnsite       # Node 22+
 ```
 
+**No JavaScript runtime?** No problem:
+
+- **Prebuilt binaries** — download a standalone executable from [GitHub Releases](https://github.com/mkdnsite/mkdnsite/releases) (Linux, macOS, Windows)
+- **Docker** — `docker run -v ./docs:/content -p 3000:3000 nexdrew/mkdnsite` ([Docker Hub](https://hub.docker.com/r/nexdrew/mkdnsite))
+
 ### Serve a directory
 
 ```bash
