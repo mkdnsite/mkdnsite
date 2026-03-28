@@ -23,8 +23,6 @@ mkdnsite serves a directory of Markdown files as a fully styled website — inst
 
 One source. Two audiences. Zero build steps.
 
-> **Requires:** Bun, Node 22+, or Deno
-
 ```bash
 # Install
 bun add -g mkdnsite     # or: npm i -g mkdnsite
@@ -113,10 +111,10 @@ Traditional SSGs earn their complexity through build-time optimizations — imag
 
 ```bash
 bun add -g mkdnsite     # Bun (recommended)
-npm i -g mkdnsite       # Node 22+
+npm i -g mkdnsite       # requires Node 22+
 ```
 
-**No JavaScript runtime?** No problem:
+**No JavaScript runtime installed?** No problem:
 
 - **Prebuilt binaries** — download a standalone executable from [GitHub Releases](https://github.com/mkdnsite/mkdnsite/releases) (Linux, macOS, Windows)
 - **Docker** — `docker run -v ./docs:/content -p 3000:3000 nexdrew/mkdnsite` ([Docker Hub](https://hub.docker.com/r/nexdrew/mkdnsite))
