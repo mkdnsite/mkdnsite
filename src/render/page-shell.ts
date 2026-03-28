@@ -281,6 +281,8 @@ function faviconMimeType (src: string): string {
   const lower = src.toLowerCase().split('?')[0]
   if (lower.endsWith('.svg')) return 'image/svg+xml'
   if (lower.endsWith('.png')) return 'image/png'
+  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg'
+  if (lower.endsWith('.webp')) return 'image/webp'
   if (lower.endsWith('.ico')) return 'image/x-icon'
   // Default fallback
   return 'image/x-icon'
@@ -293,7 +295,7 @@ function buildFaviconTags (config: MkdnSiteConfig): string {
     src = config.site.favicon.src
   } else if (config.theme.logo?.src != null) {
     const lower = config.theme.logo.src.toLowerCase().split('?')[0]
-    if (lower.endsWith('.svg') || lower.endsWith('.png')) {
+    if (lower.endsWith('.svg') || lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.webp')) {
       src = config.theme.logo.src
     }
   }
@@ -304,8 +306,8 @@ function buildFaviconTags (config: MkdnSiteConfig): string {
   const lines: string[] = []
 
   lines.push(`<link rel="icon" href="${safeSrc}" type="${type}">`)
-  // apple-touch-icon for PNG (requires raster image)
-  if (type === 'image/png') {
+  // apple-touch-icon for raster images (PNG, JPEG, WebP)
+  if (type === 'image/png' || type === 'image/jpeg' || type === 'image/webp') {
     lines.push(`<link rel="apple-touch-icon" href="${safeSrc}">`)
   }
   return lines.join('\n  ')

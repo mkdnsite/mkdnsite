@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { extname, basename } from 'node:path'
 import type { MkdnSiteConfig } from './config/schema.ts'
-import type { ContentSource } from './content/types.ts'
+import type { ContentSource, NavNode } from './content/types.ts'
 import type { MarkdownRenderer } from './render/types.ts'
 import { negotiateFormat } from './negotiate/accept.ts'
 import { markdownHeaders, htmlHeaders, estimateTokens } from './negotiate/headers.ts'
@@ -340,9 +340,19 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
       const custom404 = slug !== '/404' ? await source.getPage('/404') : null
       if (custom404 != null) {
         const renderedHtml = renderer.renderToHtml(custom404.body, config.theme.components)
-        const nav404 = (config.theme.showNav || config.theme.prevNext === true)
-          ? await source.getNavTree()
-          : undefined
+        let nav404: NavNode | undefined
+        if (config.theme.showNav || config.theme.prevNext === true) {
+          if (contentCache != null) {
+            const cached = await contentCache.getNav()
+            if (cached != null) nav404 = cached
+          }
+          if (nav404 == null) {
+            nav404 = await source.getNavTree()
+            if (contentCache != null && nav404 != null && nav404.children.length > 0) {
+              try { await contentCache.setNav(nav404) } catch { /* non-fatal */ }
+            }
+          }
+        }
         const html = renderPage({
           renderedContent: renderedHtml,
           meta: custom404.meta,
@@ -409,9 +419,19 @@ export function createHandler (opts: HandlerOptions): (request: Request) => Prom
 
     // ---- Render HTML via React SSR ----
     const renderedHtml = renderer.renderToHtml(page.body, config.theme.components)
-    const nav = (config.theme.showNav || config.theme.prevNext === true)
-      ? await source.getNavTree()
-      : undefined
+    let nav: NavNode | undefined
+    if (config.theme.showNav || config.theme.prevNext === true) {
+      if (contentCache != null) {
+        const cached = await contentCache.getNav()
+        if (cached != null) nav = cached
+      }
+      if (nav == null) {
+        nav = await source.getNavTree()
+        if (contentCache != null && nav != null && nav.children.length > 0) {
+          try { await contentCache.setNav(nav) } catch { /* non-fatal */ }
+        }
+      }
+    }
 
     const fullPage = renderPage({
       renderedContent: renderedHtml,

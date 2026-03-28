@@ -115,4 +115,39 @@ describe('favicon — MIME type detection', () => {
     const html = render({ site: { favicon: { src: '/favicon' } } })
     expect(html).toContain('type="image/x-icon"')
   })
+
+  it('detects image/jpeg for .jpg', () => {
+    const html = render({ site: { favicon: { src: '/f.jpg' } } })
+    expect(html).toContain('type="image/jpeg"')
+  })
+
+  it('detects image/jpeg for .jpeg', () => {
+    const html = render({ site: { favicon: { src: '/f.jpeg' } } })
+    expect(html).toContain('type="image/jpeg"')
+  })
+
+  it('detects image/webp for .webp', () => {
+    const html = render({ site: { favicon: { src: '/f.webp' } } })
+    expect(html).toContain('type="image/webp"')
+  })
+})
+
+describe('favicon — logo fallback extended formats', () => {
+  it('uses .jpg logo as favicon with apple-touch-icon', () => {
+    const html = render({ theme: { logo: { src: '/logo.jpg' } } })
+    expect(html).toContain('<link rel="icon" href="/logo.jpg" type="image/jpeg">')
+    expect(html).toContain('<link rel="apple-touch-icon" href="/logo.jpg">')
+  })
+
+  it('uses .jpeg logo as favicon with apple-touch-icon', () => {
+    const html = render({ theme: { logo: { src: '/logo.jpeg' } } })
+    expect(html).toContain('<link rel="icon" href="/logo.jpeg" type="image/jpeg">')
+    expect(html).toContain('<link rel="apple-touch-icon" href="/logo.jpeg">')
+  })
+
+  it('uses .webp logo as favicon with apple-touch-icon', () => {
+    const html = render({ theme: { logo: { src: '/logo.webp' } } })
+    expect(html).toContain('<link rel="icon" href="/logo.webp" type="image/webp">')
+    expect(html).toContain('<link rel="apple-touch-icon" href="/logo.webp">')
+  })
 })
