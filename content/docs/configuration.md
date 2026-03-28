@@ -384,7 +384,7 @@ CLI flag: `--no-builtin-css`
 | Option | Type | Default | CLI flag(s) | Description |
 |--------|------|---------|------------|-------------|
 | `showNav` | `boolean` | `true` | `--no-nav` | Show the navigation sidebar |
-| `showToc` | `boolean` | `true` | `--no-toc` | Show table of contents sidebar. Individual pages can override layout (including nav/ToC visibility) via the [`layout` frontmatter field](./frontmatter.md#layout). |
+| `showToc` | `boolean` | `true` | `--no-toc` | Show table of contents sidebar |
 | `pageTitle` | `boolean` | `false` | `--page-title` / `--no-page-title` | Render frontmatter `title` as `<h1>` above content |
 | `pageDate` | `boolean` | `false` | `--page-date` / `--no-page-date` | Render `date`/`updated` from frontmatter below page title |
 | `readingTime` | `boolean` | `false` | `--reading-time` / `--no-reading-time` | Show estimated reading time (238 wpm) |

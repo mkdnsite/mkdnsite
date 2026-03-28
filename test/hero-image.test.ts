@@ -1,7 +1,7 @@
 /**
  * Tests for hero image frontmatter support.
  *
- * Priority chain: hero_image → hero → og_image
+ * Priority chain: hero_image → hero
  * Renders a .mkdn-hero <img> above the article content.
  */
 
@@ -52,7 +52,7 @@ describe('hero image rendering', () => {
     expect(html).not.toContain('src="/hero2.jpg"')
   })
 
-  test('og_image used as fallback when neither hero_image nor hero set', () => {
+  test('no hero rendered when og_image only (not in fallback chain)', () => {
     const html = renderPage({
       renderedContent: '<p>body</p>',
       meta: { title: 'Page', og_image: '/og.png' },
@@ -60,11 +60,10 @@ describe('hero image rendering', () => {
       nav,
       currentSlug: '/'
     })
-    expect(html).toContain('class="mkdn-hero"')
-    expect(html).toContain('src="/og.png"')
+    expect(html).not.toContain('class="mkdn-hero"')
   })
 
-  test('no hero rendered when no hero or og_image fields', () => {
+  test('no hero rendered when no hero fields', () => {
     const html = renderPage({
       renderedContent: '<p>body</p>',
       meta: { title: 'Page' },
