@@ -7,6 +7,8 @@ import { createHandler } from '../src/handler.ts'
 import { FilesystemSource } from '../src/content/filesystem.ts'
 import { PortableRenderer } from '../src/render/portable.ts'
 import { resolveConfig } from '../src/config/defaults.ts'
+import { MemoryContentCache } from '../src/content/cache.ts'
+import type { NavNode } from '../src/content/types.ts'
 
 // ---- Content Negotiation ----
 
@@ -238,5 +240,79 @@ describe('staticHandler option', () => {
     const res = await handler(req)
     // No static handler, no staticDir — falls through to content routing → 404
     expect(res.status).toBe(404)
+  })
+})
+
+describe('nav contentCache', () => {
+  const config = resolveConfig({
+    contentDir: resolve(import.meta.dir, '../content'),
+    site: { title: 'Test Site' }
+  })
+  const renderer = new PortableRenderer()
+
+  it('stores nav in contentCache after first request', async () => {
+    const source = new FilesystemSource(config.contentDir)
+    const contentCache = new MemoryContentCache()
+
+    // Nav should not be cached yet
+    expect(await contentCache.getNav()).toBeNull()
+
+    const handler = createHandler({ source, renderer, config, contentCache })
+    await handler(new Request('http://localhost:3000/'))
+
+    // Nav should now be cached
+    const cached = await contentCache.getNav()
+    expect(cached).not.toBeNull()
+    expect(cached?.children.length).toBeGreaterThan(0)
+  })
+
+  it('serves nav from contentCache on subsequent requests (no getNavTree call)', async () => {
+    let getNavTreeCallCount = 0
+    const fakeNav: NavNode = {
+      title: 'cached-root',
+      slug: '/',
+      order: 0,
+      isSection: false,
+      children: [{ title: 'Cached Page', slug: '/cached', order: 1, isSection: false, children: [] }]
+    }
+
+    // Stub source with a spy on getNavTree
+    const source = new FilesystemSource(config.contentDir)
+    const origGetNavTree = source.getNavTree.bind(source)
+    source.getNavTree = async () => {
+      getNavTreeCallCount++
+      return await origGetNavTree()
+    }
+
+    const contentCache = new MemoryContentCache()
+    // Pre-populate cache with our fake nav
+    await contentCache.setNav(fakeNav)
+
+    const handler = createHandler({ source, renderer, config, contentCache })
+    const res = await handler(new Request('http://localhost:3000/'))
+    expect(res.status).toBe(200)
+
+    // getNavTree should NOT have been called because cache was warm
+    expect(getNavTreeCallCount).toBe(0)
+
+    // The rendered HTML should contain the cached nav label
+    const html = await res.text()
+    expect(html).toContain('Cached Page')
+  })
+
+  it('does not cache an empty nav tree', async () => {
+    // Source whose getNavTree returns empty nav
+    const emptySource = {
+      getPage: (new FilesystemSource(config.contentDir)).getPage.bind(new FilesystemSource(config.contentDir)),
+      getNavTree: async (): Promise<NavNode> => ({ title: '', slug: '/', order: 0, isSection: false, children: [] }),
+      listPages: async () => []
+    }
+
+    const contentCache = new MemoryContentCache()
+    const handler = createHandler({ source: emptySource as never, renderer, config, contentCache })
+    await handler(new Request('http://localhost:3000/'))
+
+    // Empty nav should not be cached
+    expect(await contentCache.getNav()).toBeNull()
   })
 })
