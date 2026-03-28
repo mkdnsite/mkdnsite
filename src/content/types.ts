@@ -10,6 +10,12 @@ export interface MarkdownMeta {
   order?: number
   tags?: string[]
   layout?: string
+  /** Hero / banner image URL. Also accepts `hero` as alias. Falls back to `og_image`. */
+  hero_image?: string
+  /** Alias for hero_image */
+  hero?: string
+  /** OpenGraph image — also used as hero fallback */
+  og_image?: string
   [key: string]: unknown
 }
 

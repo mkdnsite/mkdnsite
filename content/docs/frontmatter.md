@@ -120,6 +120,24 @@ layout: blog-post
 
 Layout template identifier. Planned feature — will allow different page templates. Currently not implemented.
 
+### `hero_image`
+
+```yaml
+hero_image: /static/hero-banner.jpg
+```
+
+Displays a full-width banner image above the page title. Supports any image URL or path relative to `staticDir`.
+
+**Fallback chain:** If `hero_image` is not set, falls back to `hero`, then to `og_image`. This means setting `og_image` gives you both a social sharing image and a hero banner without duplication.
+
+### `hero`
+
+```yaml
+hero: /static/hero.jpg
+```
+
+Alias for `hero_image`. If both are set, `hero_image` takes precedence.
+
 ### `og_image`
 
 ```yaml
@@ -127,6 +145,8 @@ og_image: https://example.com/this-page-image.png
 ```
 
 Overrides the site-level `og.image` config for this page. Use for pages that have a specific image (e.g. a blog post hero image, a product screenshot).
+
+Also used as a hero banner fallback — if neither `hero_image` nor `hero` is set, `og_image` is displayed as the page hero. This lets you set a single field for both social sharing and the visual banner.
 
 ### `og_type`
 
