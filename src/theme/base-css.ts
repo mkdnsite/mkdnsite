@@ -160,6 +160,10 @@ body {
 }
 .mkdn-footer a { color: var(--mkdn-link); }
 
+/* ---- Hero banner image ---- */
+.mkdn-hero { margin: -2rem -2.5rem 1.5rem; overflow: hidden; }
+.mkdn-hero img { width: 100%; height: auto; display: block; max-height: 400px; object-fit: cover; }
+
 /* ---- Page title (from frontmatter) ---- */
 .mkdn-page-title {
   font-size: 2.5rem; font-weight: 800;

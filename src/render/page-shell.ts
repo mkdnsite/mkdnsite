@@ -36,6 +36,12 @@ export function renderPage (props: PageShellProps): string {
 
   const pageMetaHtml = buildPageMetaHtml(meta, config, body)
 
+  // Hero banner: hero_image → hero → og_image fallback chain
+  const heroSrc = meta.hero_image ?? meta.hero ?? meta.og_image
+  const heroHtml = heroSrc != null && heroSrc !== ''
+    ? `<div class="mkdn-hero"><img src="${esc(String(heroSrc))}" alt="${esc(meta.title ?? '')}" loading="eager"></div>`
+    : ''
+
   const tocHtml = config.theme.showToc
     ? buildTocHtml(renderedContent)
     : ''
@@ -101,6 +107,7 @@ export function renderPage (props: PageShellProps): string {
     <main class="mkdn-main">
       ${hasToc ? '<div class="mkdn-content-area">' : ''}
       <article class="mkdn-article mkdn-prose">
+        ${heroHtml}
         ${pageTitleHtml}
         ${pageMetaHtml}
         ${renderedContent}
