@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.4.0](https://github.com/mkdnsite/mkdnsite/compare/v1.3.0...v1.4.0) (2026-03-28)
+
+
+### Features
+
+* Display frontmatter tags on rendered pages ([#94](https://github.com/mkdnsite/mkdnsite/issues/94)) ([90ed084](https://github.com/mkdnsite/mkdnsite/commit/90ed084d8d7d7363771db2ef91ec40cefa0b1674))
+* Support hero image from frontmatter with og_image fallback ([#93](https://github.com/mkdnsite/mkdnsite/issues/93)) ([6b9c4b0](https://github.com/mkdnsite/mkdnsite/commit/6b9c4b06d88fa63bec386d1660862cf2782746f3))
+* Support layout frontmatter field for page layout control ([#95](https://github.com/mkdnsite/mkdnsite/issues/95)) ([1e516d3](https://github.com/mkdnsite/mkdnsite/commit/1e516d3406e20cf2fd33537a4ad02892d38ee860))
+
+
+### Bug Fixes
+
+* Coerce esc() input to String to handle non-string frontmatter values ([#90](https://github.com/mkdnsite/mkdnsite/issues/90)) ([17950d8](https://github.com/mkdnsite/mkdnsite/commit/17950d8b45889925201a310bd81ae2219e730215))
+
 ## [1.3.0](https://github.com/mkdnsite/mkdnsite/compare/v1.2.0...v1.3.0) (2026-03-28)
 
 
