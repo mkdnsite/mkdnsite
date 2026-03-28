@@ -26,7 +26,15 @@ export function renderPage (props: PageShellProps): string {
   const description = meta.description ?? config.site.description ?? ''
   const lang = config.site.lang ?? 'en'
 
-  const navHtml = (config.theme.showNav && nav != null)
+  // Layout from frontmatter: 'default' | 'wide' | 'landing' | any custom value
+  // - default: nav + content + optional ToC
+  // - wide: nav visible, ToC hidden, content spans full width
+  // - landing: no nav, no ToC, content centered at larger max-width
+  const layout = typeof meta.layout === 'string' && meta.layout !== '' ? meta.layout : 'default'
+  const isWide = layout === 'wide'
+  const isLanding = layout === 'landing'
+
+  const navHtml = (config.theme.showNav && nav != null && !isLanding)
     ? renderNav(nav, currentSlug, config)
     : ''
 
@@ -36,13 +44,13 @@ export function renderPage (props: PageShellProps): string {
 
   const pageMetaHtml = buildPageMetaHtml(meta, config, body)
 
-  // Hero banner: hero_image → hero → og_image fallback chain
-  const heroSrc = meta.hero_image ?? meta.hero ?? meta.og_image
+  // Hero banner: hero_image → hero fallback chain
+  const heroSrc = meta.hero_image ?? meta.hero
   const heroHtml = heroSrc != null && heroSrc !== ''
     ? `<div class="mkdn-hero"><img src="${esc(String(heroSrc))}" alt="${esc(meta.title ?? '')}" loading="eager"></div>`
     : ''
 
-  const tocHtml = config.theme.showToc
+  const tocHtml = (config.theme.showToc && !isWide && !isLanding)
     ? buildTocHtml(renderedContent)
     : ''
 
@@ -102,7 +110,7 @@ export function renderPage (props: PageShellProps): string {
   ${searchTriggerHtml}
   ${themeToggleHtml}
   ${navHtml !== '' ? '<button class=\'mkdn-nav-toggle\' type=\'button\' aria-label=\'Toggle navigation\' aria-expanded=\'false\'><svg xmlns=\'http://www.w3.org/2000/svg\' width=\'18\' height=\'18\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M4 12h16\'/><path d=\'M4 6h16\'/><path d=\'M4 18h16\'/></svg></button><div class=\'mkdn-nav-backdrop\'></div>' : ''}
-  <div class="mkdn-layout">
+  <div class="mkdn-layout mkdn-layout-${esc(layout)}">
     ${navHtml !== '' ? `<nav class="mkdn-nav" aria-label="Site navigation">${navHtml}</nav>` : ''}
     <main class="mkdn-main">
       ${hasToc ? '<div class="mkdn-content-area">' : ''}

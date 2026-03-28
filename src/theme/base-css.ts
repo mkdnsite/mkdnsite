@@ -80,6 +80,16 @@ body {
 /* ---- Layout ---- */
 .mkdn-layout { display: flex; min-height: 100vh; }
 
+/* wide: full-width content, no ToC */
+.mkdn-layout-wide .mkdn-main { max-width: 100%; }
+.mkdn-layout-wide .mkdn-toc { display: none; }
+
+/* landing: no nav sidebar, content centered with generous max-width */
+.mkdn-layout-landing { display: block; }
+.mkdn-layout-landing .mkdn-nav { display: none; }
+.mkdn-layout-landing .mkdn-main { max-width: 900px; margin: 0 auto; }
+.mkdn-layout-landing .mkdn-toc { display: none; }
+
 .mkdn-nav {
   position: sticky; top: 0;
   width: var(--mkdn-nav-w); height: 100vh;
