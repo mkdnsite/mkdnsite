@@ -19,9 +19,11 @@
 
 ---
 
-mkdnsite serves a directory of Markdown files as a fully styled website — instantly, with zero build step. The same URL delivers rendered HTML to browsers and raw Markdown to AI agents, using standard HTTP content negotiation.
+mkdnsite serves a directory of Markdown files as a fully styled website — instantly, with no content build pipeline. The same URL delivers rendered HTML to browsers and raw Markdown to AI agents, using standard HTTP content negotiation.
 
 One source. Two audiences. Zero build steps.
+
+> **Requires:** Bun, Node 22+, or Deno
 
 ```bash
 # Install
@@ -55,14 +57,16 @@ Traditional:   Markdown → build step → HTML → reverse-convert → Markdown
 mkdnsite:      Markdown → serve it.
 ```
 
-mkdnsite skips the build step entirely. Your `.md` files are served directly — rendered as HTML for browsers, delivered as raw Markdown for agents. No SSG pipeline. No build artifacts. No HTML-to-Markdown conversion layer. Write Markdown, run a server, that's it.
+mkdnsite skips the content build pipeline. Your `.md` files are served directly — rendered as HTML for browsers, delivered as raw Markdown for agents. No static site generation. No build artifacts. No HTML-to-Markdown reconversion.
+
+Traditional SSGs earn their complexity through build-time optimizations — image processing, bundling, prefetching. mkdnsite trades that for radical simplicity and native AI agent support. If your content is Markdown and your audience includes both humans and machines, you don't need a build step in between.
 
 ### What this means in practice
 
-- **Edit a file, refresh the page.** No rebuild, no cache invalidation, no deploy pipeline.
-- **AI agents get clean Markdown**, not scraped-and-reconstructed approximations of your content.
-- **Your content stays portable.** It's Markdown files in a directory. Move them anywhere.
-- **Works with Git out of the box.** Point mkdnsite at a GitHub repo and serve it live.
+- **Edit a file, refresh the page.** Not just in dev — in production too. No rebuild, no redeploy.
+- **AI agents get your original Markdown**, not HTML converted back to Markdown.
+- **Your content stays portable.** Markdown files in a directory. Move them anywhere.
+- **Serve from GitHub.** Point mkdnsite at any public or private repo with `--github owner/repo`.
 
 ## Features
 
@@ -103,30 +107,13 @@ mkdnsite skips the build step entirely. Your `.md` files are served directly —
 - 🛡️ **Content Security Policy** — configurable CSP headers
 - 🔧 **Config parity** — every option works in `mkdnsite.config.ts` and as a CLI flag
 
-## Hosted Service — mkdn.io
-
-Don't want to self-host? **[mkdn.io](https://mkdn.io)** is a hosted platform that serves your GitHub repos as mkdnsite-powered websites — with custom domains, analytics, and zero infrastructure to manage.
-
-Think of it as a modern, agent-friendly alternative to GitHub Pages:
-
-| | GitHub Pages | mkdn.io |
-|---|---|---|
-| Build step | Jekyll/Actions required | None — serves Markdown directly |
-| AI agent support | Manual setup | Built-in content negotiation |
-| Content format | Ships HTML | Ships Markdown, renders HTML |
-| MCP server | No | Built-in |
-| LLMs.txt | Manual | Auto-generated |
-| Setup time | Minutes (with config) | Seconds (connect repo) |
-
-**[Get started free →](https://mkdn.io)**
-
 ## Quick Start
 
 ### Install
 
 ```bash
 bun add -g mkdnsite     # Bun (recommended)
-npm i -g mkdnsite       # Node
+npm i -g mkdnsite       # Node 22+
 ```
 
 ### Serve a directory
@@ -145,6 +132,12 @@ mkdnsite --github owner/repo --github-path docs
 ```
 
 Serve content directly from a public GitHub repository — no clone needed.
+
+Also works on Deno:
+
+```bash
+deno run --allow-read --allow-net src/cli.ts ./my-docs
+```
 
 ### Configuration
 
@@ -182,13 +175,28 @@ export default {
 Or use CLI flags — every config option has a corresponding flag:
 
 ```bash
-mkdnsite ./docs --port 8080 --title "My Docs" --preset docs
+mkdnsite ./docs --port 8080 --title "My Docs"
 mkdnsite ./docs --color-scheme dark --no-theme-toggle
 mkdnsite ./docs --logo /logo.png --logo-text "My Project"
 mkdnsite ./docs --no-math --no-mermaid --no-search
 ```
 
 See the full [configuration reference](https://mkdn.site/docs/configuration) for all options.
+
+## Hosted Service — mkdn.io
+
+Don't want to self-host? **[mkdn.io](https://mkdn.io)** is a hosted platform that serves your GitHub repos as mkdnsite-powered websites — with custom domains, analytics, and zero infrastructure to manage.
+
+| | GitHub Pages | mkdn.io |
+|---|---|---|
+| Content pipeline | Jekyll build or Actions | No build — serves Markdown directly |
+| AI agent support | Manual setup | Built-in content negotiation + MCP |
+| Content format | Builds and ships HTML | Serves Markdown, renders HTML |
+| LLMs.txt | Manual | Auto-generated |
+| Theme ecosystem | Thousands of Jekyll themes | Config-based theming (growing) |
+| Maturity | Battle-tested since 2008 | New project |
+
+mkdn.io is best for documentation sites and blogs where AI agent access and simplicity matter more than deep theme customization. [Get started free →](https://mkdn.io)
 
 ## Content Negotiation
 
@@ -223,6 +231,10 @@ const handler = createHandler({ source, renderer, config })
 // Works with any platform's serve API
 Bun.serve({ fetch: handler, port: 3000 })
 ```
+
+## Contributing
+
+Contributions are welcome! See [open issues](https://github.com/mkdnsite/mkdnsite/issues) for the roadmap and current priorities.
 
 ## Links
 
