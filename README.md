@@ -1,211 +1,236 @@
-# mkdnsite
+<p align="center">
+  <img src="static/mkdnsite-logo.png" alt="mkdnsite logo" width="128">
+</p>
 
-**Markdown for the web. HTML for humans, Markdown for agents.**
+<h1 align="center">mkdnsite</h1>
 
-mkdnsite turns a directory of Markdown files into a live website — with zero build step. The same URL serves beautifully rendered HTML to browsers and clean Markdown to AI agents, using standard HTTP content negotiation.
+<p align="center">
+  <strong>Your Markdown is your website. No build required.</strong>
+</p>
 
-```
-Cloudflare, Vercel, et al:   HTML → Markdown (for AI)
-mkdnsite:                    Markdown → HTML (for humans)
+<p align="center">
+  <a href="https://www.npmjs.com/package/mkdnsite"><img src="https://img.shields.io/npm/v/mkdnsite.svg" alt="npm version"></a>
+  <a href="https://github.com/mkdnsite/mkdnsite/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/mkdnsite.svg" alt="MIT License"></a>
+</p>
 
-Same content negotiation standard. Opposite direction.
-Markdown is the source of truth.
-```
+<p align="center">
+  <a href="https://mkdn.site">Docs</a> · <a href="https://mkdn.io">Hosted Service</a> · <a href="https://github.com/mkdnsite/mkdnsite">GitHub</a>
+</p>
 
-## Quick Start
+---
 
-```bash
-bun add -g mkdnsite
-mkdir my-site && echo "# Hello World" > my-site/index.md
-mkdnsite ./my-site
-```
+mkdnsite serves a directory of Markdown files as a fully styled website — instantly, with zero build step. The same URL delivers rendered HTML to browsers and raw Markdown to AI agents, using standard HTTP content negotiation.
 
-```bash
-curl http://localhost:3000                              # HTML for humans
-curl -H "Accept: text/markdown" http://localhost:3000   # Markdown for agents
-curl http://localhost:3000/llms.txt                      # AI content index
-```
-
-Also runs on Node and Deno:
+One source. Two audiences. Zero build steps.
 
 ```bash
-node src/cli.ts ./my-site
-deno run --allow-read --allow-net src/cli.ts ./my-site
+# Install
+bun add -g mkdnsite     # or: npm i -g mkdnsite
+
+# Serve any directory of .md files
+mkdnsite ./docs
+
+# That's it. Open http://localhost:3000
 ```
+
+```bash
+# For humans → beautiful HTML
+curl http://localhost:3000
+
+# For AI agents → raw Markdown
+curl -H "Accept: text/markdown" http://localhost:3000
+
+# Content index for LLMs
+curl http://localhost:3000/llms.txt
+```
+
+## Why mkdnsite?
+
+The web has a Markdown problem. Everyone writes in Markdown — docs, blogs, READMEs, notes — but to put it on the web, you feed it through a static site generator, wait for a build, and ship HTML. Then when AI agents come along, services like Cloudflare and Vercel convert that HTML *back* into Markdown.
+
+**That's a round trip that shouldn't exist.**
+
+```
+Traditional:   Markdown → build step → HTML → reverse-convert → Markdown (for AI)
+mkdnsite:      Markdown → serve it.
+```
+
+mkdnsite skips the build step entirely. Your `.md` files are served directly — rendered as HTML for browsers, delivered as raw Markdown for agents. No SSG pipeline. No build artifacts. No HTML-to-Markdown conversion layer. Write Markdown, run a server, that's it.
+
+### What this means in practice
+
+- **Edit a file, refresh the page.** No rebuild, no cache invalidation, no deploy pipeline.
+- **AI agents get clean Markdown**, not scraped-and-reconstructed approximations of your content.
+- **Your content stays portable.** It's Markdown files in a directory. Move them anywhere.
+- **Works with Git out of the box.** Point mkdnsite at a GitHub repo and serve it live.
 
 ## Features
 
-- **Zero build step** — runtime Markdown→HTML via React SSR
-- **Content negotiation** — `Accept: text/markdown` returns raw MD
-- **Beautiful by default** — shadcn/Radix-inspired typography with light/dark mode
-- **Theme toggle** — sun/moon button with animated circular reveal (View Transitions API)
-- **Syntax highlighting** — Shiki SSR with dual-theme support (light + dark)
-- **Math rendering** — KaTeX via `remark-math` + `rehype-katex` (SSR)
-- **GFM Alerts** — `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`
-- **GitHub-Flavored Markdown** — tables, task lists, strikethrough, autolinks
-- **Collapsible sections** — `<details>` and `<summary>` with HTML sanitization
-- **Mermaid diagrams** — rendered client-side from fenced code blocks
-- **Copy-to-clipboard** — on all code blocks
-- **Pluggable rendering** — custom React components per element
-- **Auto `/llms.txt`** — AI agents discover your content
-- **`x-markdown-tokens` header** — Cloudflare-compatible token count
-- **`Content-Signal` header** — AI consent signaling
-- **YAML frontmatter** — title, description, ordering, tags, drafts
-- **Filesystem routing** — directory structure = URL structure
-- **Auto-navigation** — sidebar from file tree
-- **Portable** — runs on Bun, Node 22+, and Deno
+**Rendering & Content**
+- 🚀 **Zero build step** — runtime Markdown → HTML via React SSR
+- 🤝 **Content negotiation** — `Accept: text/markdown` returns raw Markdown, `text/html` returns rendered pages
+- 📄 **GitHub-Flavored Markdown** — tables, task lists, strikethrough, autolinks
+- ⚠️ **GFM Alerts** — `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`
+- ➗ **Math rendering** — KaTeX via SSR (no client-side JS required)
+- 📊 **Mermaid diagrams** — rendered client-side from fenced code blocks
+- 📈 **Chart.js charts** — interactive charts from JSON in fenced code blocks
+- 🎨 **Syntax highlighting** — client-side via Prism.js (default) or server-side via Shiki
+- 📋 **Copy-to-clipboard** — on all code blocks
+- 🔍 **Full-text search** — ⌘K search modal with TF-IDF ranking and result highlighting
 
-## Architecture
+**Theming & Design**
+- ✨ **Beautiful by default** — shadcn/Radix-inspired typography with light/dark mode
+- 🌗 **Theme toggle** — sun/moon button with animated circular reveal (View Transitions API)
+- 🎨 **Custom colors, fonts, and CSS** — via config or external stylesheets
+- 🖼️ **Logo and branding** — configurable logo, logo text, and accent colors
+- 📑 **Auto-navigation** — sidebar built from your file/directory structure
+- 📖 **Table of contents** — per-page ToC from heading structure
+- ⏮️ **Previous/next links** — page-to-page navigation
 
+**AI & Interoperability**
+- 🤖 **Auto `/llms.txt`** — AI agents discover and index your content
+- 🔌 **Built-in MCP server** — Model Context Protocol endpoint for AI tools (Claude Desktop, Cursor, etc.)
+- 📊 **`x-markdown-tokens` header** — Cloudflare-compatible token count
+- 📡 **`Content-Signal` header** — AI training and indexing consent signals
+- 📄 **YAML frontmatter** — title, description, order, tags, draft status
+
+**Infrastructure**
+- 🌐 **Multi-runtime** — runs on Bun, Node 22+, and Deno
+- 📂 **Filesystem routing** — directory structure = URL structure
+- 🐙 **GitHub content source** — serve directly from a GitHub repo (public or private)
+- 🔒 **HTML sanitization** — safe HTML passthrough via rehype-sanitize
+- ⚙️ **Pluggable rendering** — custom React components per Markdown element
+- 🛡️ **Content Security Policy** — configurable CSP headers
+- 🔧 **Config parity** — every option works in `mkdnsite.config.ts` and as a CLI flag
+
+## Hosted Service — mkdn.io
+
+Don't want to self-host? **[mkdn.io](https://mkdn.io)** is a hosted platform that serves your GitHub repos as mkdnsite-powered websites — with custom domains, analytics, and zero infrastructure to manage.
+
+Think of it as a modern, agent-friendly alternative to GitHub Pages:
+
+| | GitHub Pages | mkdn.io |
+|---|---|---|
+| Build step | Jekyll/Actions required | None — serves Markdown directly |
+| AI agent support | Manual setup | Built-in content negotiation |
+| Content format | Ships HTML | Ships Markdown, renders HTML |
+| MCP server | No | Built-in |
+| LLMs.txt | Manual | Auto-generated |
+| Setup time | Minutes (with config) | Seconds (connect repo) |
+
+**[Get started free →](https://mkdn.io)**
+
+## Quick Start
+
+### Install
+
+```bash
+bun add -g mkdnsite     # Bun (recommended)
+npm i -g mkdnsite       # Node
 ```
-┌─────────────┐     ┌──────────────┐     ┌───────────────┐
-│   Request    │────▶│   Handler    │────▶│   Response    │
-│ Accept: ???  │     │ (portable)   │     │ HTML or MD    │
-└─────────────┘     └──────┬───────┘     └───────────────┘
-                           │
-              ┌────────────┼────────────┐
-              ▼            ▼            ▼
-        ┌──────────┐ ┌──────────┐ ┌──────────┐
-        │ Content  │ │ Renderer │ │ Negotiate│
-        │ Source   │ │ (React)  │ │          │
-        └──────────┘ └──────────┘ └──────────┘
-              │            │
-     ┌────────┼──┐   ┌────┴────┐
-     ▼        ▼  ▼   ▼         ▼
-  Local   GitHub R2  portable  bun-native
-  FS      API       (react-md) (Bun.md)
+
+### Serve a directory
+
+```bash
+mkdnsite ./my-docs
 ```
 
-### Deployment Adapters
+Any directory of `.md` files works. mkdnsite builds navigation from the file structure, renders pages on request, and serves static assets.
 
-mkdnsite ships adapter stubs for multiple platforms:
+### Serve a GitHub repo
 
-| Adapter | Status | Content Source |
-|---------|--------|----------------|
-| Local (Bun/Node/Deno) | Working | Filesystem |
-| Cloudflare Workers | Stub | R2 / GitHub |
-| Vercel Edge | Stub | Blob / GitHub |
-| Netlify | Stub | TBD |
-| Fly.io | Stub | Filesystem (volumes) |
+```bash
+mkdnsite --github owner/repo
+mkdnsite --github owner/repo --github-path docs
+```
 
-### Theme Modes
+Serve content directly from a public GitHub repository — no clone needed.
 
-- **prose** (default): Beautiful typography via CSS, zero-config
-- **components**: Full React component overrides with your own styling
+### Configuration
 
-## Configuration
-
-Create `mkdnsite.config.ts`:
+Create `mkdnsite.config.ts` for full control:
 
 ```typescript
 import type { MkdnSiteConfig } from 'mkdnsite'
 
 export default {
   contentDir: './docs',
+  staticDir: './static',
   site: {
     title: 'My Documentation',
+    description: 'Docs for my project.',
     url: 'https://docs.example.com'
   },
   theme: {
-    mode: 'prose',
-    showNav: true,
     colorScheme: 'system',
-    syntaxTheme: 'github-light',
-    syntaxThemeDark: 'github-dark'
+    logo: { src: '/logo.svg', alt: 'My Project' },
+    logoText: 'My Project',
+    showNav: true,
+    showToc: true,
+    prevNext: true
   },
   client: {
-    enabled: true,
     themeToggle: true,
     math: true,
     mermaid: true,
+    search: true,
     copyButton: true
-  },
-  renderer: 'portable'
+  }
 } satisfies Partial<MkdnSiteConfig>
 ```
 
-Or use CLI flags:
+Or use CLI flags — every config option has a corresponding flag:
 
 ```bash
-mkdnsite ./docs --port 8080 --title "My Docs"
+mkdnsite ./docs --port 8080 --title "My Docs" --preset docs
 mkdnsite ./docs --color-scheme dark --no-theme-toggle
-mkdnsite ./docs --no-math --no-client-js
-mkdnsite ./docs --renderer bun-native
+mkdnsite ./docs --logo /logo.png --logo-text "My Project"
+mkdnsite ./docs --no-math --no-mermaid --no-search
 ```
 
-### CLI Options
-
-| Flag | Description | Default |
-|------|-------------|---------|
-| `-p, --port <n>` | Port to listen on | `3000` |
-| `--title <text>` | Site title | `mkdnsite` |
-| `--url <url>` | Base URL for absolute links | — |
-| `--static <dir>` | Static assets directory | — |
-| `--color-scheme <val>` | `system`, `light`, or `dark` | `system` |
-| `--theme-mode <mode>` | `prose` or `components` | `prose` |
-| `--renderer <engine>` | `portable` or `bun-native` | `portable` |
-| `--no-nav` | Disable navigation sidebar | — |
-| `--no-llms-txt` | Disable /llms.txt generation | — |
-| `--no-negotiate` | Disable content negotiation | — |
-| `--no-client-js` | Disable all client-side JavaScript | — |
-| `--no-theme-toggle` | Disable light/dark theme toggle | — |
-| `--no-math` | Disable KaTeX math rendering | — |
+See the full [configuration reference](https://mkdn.site/docs/configuration) for all options.
 
 ## Content Negotiation
 
-Same pattern as Cloudflare Markdown for Agents and Vercel:
+mkdnsite implements the same content negotiation standard used by Cloudflare and Vercel — but in the opposite direction. Instead of converting HTML to Markdown for AI, mkdnsite starts with Markdown and renders HTML for humans.
 
-| Client | Accept Header | Response |
-|--------|--------------|----------|
-| Browser | `text/html` | React SSR rendered page |
-| Claude Code | `text/markdown, text/html, */*` | Raw Markdown |
-| Cursor | `text/markdown;q=1.0, text/html;q=0.7` | Raw Markdown |
-| curl (default) | `*/*` | Rendered HTML |
-| `.md` URL suffix | — | Raw Markdown |
+| Client | What it sends | What it gets |
+|---|---|---|
+| Browser | `Accept: text/html` | Rendered HTML page |
+| Claude Code | `Accept: text/markdown` | Raw Markdown |
+| Cursor | `Accept: text/markdown` | Raw Markdown |
+| Any URL + `.md` suffix | — | Raw Markdown |
+| `/llms.txt` | — | AI content index |
+| `/mcp` | — | MCP server endpoint |
 
-## Programmatic Usage
+## Programmatic API
+
+Use mkdnsite as a library in any JavaScript runtime:
 
 ```typescript
-import { createHandler, resolveConfig, FilesystemSource } from 'mkdnsite'
-import { createRenderer } from 'mkdnsite'
+import {
+  createHandler, resolveConfig,
+  FilesystemSource, createRenderer
+} from 'mkdnsite'
 
-const config = resolveConfig({ site: { title: 'My Site' } })
-const renderer = await createRenderer({
-  syntaxTheme: 'github-light',
-  syntaxThemeDark: 'github-dark'
+const config = resolveConfig({
+  site: { title: 'My Site' }
 })
-const handler = createHandler({
-  source: new FilesystemSource('./content'),
-  renderer,
-  config
-})
+const source = new FilesystemSource('./content')
+const renderer = await createRenderer('portable')
+const handler = createHandler({ source, renderer, config })
 
-// Use with any platform's serve API
+// Works with any platform's serve API
 Bun.serve({ fetch: handler, port: 3000 })
 ```
 
-## Roadmap
-
-- [x] Syntax highlighting via Shiki (server-side)
-- [x] Light/dark theme toggle with animation
-- [x] KaTeX math rendering (SSR)
-- [x] GFM alerts (NOTE, TIP, IMPORTANT, WARNING, CAUTION)
-- [x] HTML sanitization for safe raw HTML passthrough
-- [ ] Table of contents per page
-- [ ] Client-side search with pre-built index
-- [ ] GitHub content source (serve from repo)
-- [ ] Custom themes (CSS files or npm packages)
-- [ ] Hosted service at mkdn.io
-- [ ] RSS feed generation
-- [ ] OpenGraph meta tags
-- [ ] Human vs. AI traffic analytics
-
 ## Links
 
-- **Documentation**: [mkdn.site](https://mkdn.site)
-- **Hosted service**: [mkdn.io](https://mkdn.io) (coming soon)
-- **Repository**: [github.com/mkdnsite/mkdnsite](https://github.com/mkdnsite/mkdnsite)
+- **Documentation** — [mkdn.site](https://mkdn.site)
+- **Hosted service** — [mkdn.io](https://mkdn.io)
+- **GitHub** — [github.com/mkdnsite/mkdnsite](https://github.com/mkdnsite/mkdnsite)
+- **npm** — [npmjs.com/package/mkdnsite](https://www.npmjs.com/package/mkdnsite)
 
 ## License
 
-MIT
+[MIT](LICENSE)
