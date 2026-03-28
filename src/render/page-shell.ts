@@ -111,6 +111,9 @@ export function renderPage (props: PageShellProps): string {
         ${pageTitleHtml}
         ${pageMetaHtml}
         ${renderedContent}
+        ${Array.isArray(meta.tags) && meta.tags.length > 0
+          ? `<div class="mkdn-tags">${meta.tags.map(t => `<span class="mkdn-tag">${esc(String(t))}</span>`).join('')}</div>`
+          : ''}
       </article>
       ${prevNextHtml}
       ${config.theme.showFooter !== false ? '<footer class="mkdn-footer"><p>Powered by <a href="https://mkdn.site">mkdnsite</a></p></footer>' : ''}

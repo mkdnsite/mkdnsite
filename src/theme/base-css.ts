@@ -180,6 +180,10 @@ body {
 .mkdn-page-meta time { color: var(--mkdn-text-muted); }
 .mkdn-reading-time { color: var(--mkdn-text-muted); }
 
+/* ---- Frontmatter tags ---- */
+.mkdn-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--mkdn-border); }
+.mkdn-tag { font-size: 0.8rem; padding: 2px 10px; border-radius: 9999px; background: var(--mkdn-bg-alt); color: var(--mkdn-text-muted); border: 1px solid var(--mkdn-border); }
+
 /* ---- Prev/Next navigation ---- */
 .mkdn-prev-next {
   display: flex; justify-content: space-between; align-items: flex-start;
