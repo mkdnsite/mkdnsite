@@ -107,10 +107,19 @@ Last updated date. When `theme.pageDate` is enabled and both `date` and `updated
 ### `tags`
 
 ```yaml
-tags: [configuration, theming, advanced]
+tags: [javascript, tutorial, beginner]
 ```
 
-Tag array. Not currently used in navigation, but available for custom filtering and future tag-based pages.
+Tag array displayed as pill badges below the article content. Tags provide at-a-glance categorization for readers.
+
+```yaml
+tags:
+  - javascript
+  - tutorial
+  - beginner
+```
+
+Both inline and multi-line YAML array syntax are supported.
 
 ### `layout`
 
