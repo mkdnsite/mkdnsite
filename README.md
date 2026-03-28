@@ -4,9 +4,8 @@
 
 <h1 align="center">mkdnsite</h1>
 
-<p align="center">
-  <strong>Your Markdown is your website. No build required.</strong>
-</p>
+<p align="center"><em>"markdown site"</em> — a Markdown-first web server</p>
+<p align="center"><strong>Your Markdown is your website. No build required.</strong></p>
 
 <p align="center">
   <a href="https://www.npmjs.com/package/mkdnsite"><img src="https://img.shields.io/npm/v/mkdnsite.svg" alt="npm version"></a>
@@ -14,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="https://mkdn.site">Docs</a> · <a href="https://mkdn.io">Hosted Service</a> · <a href="https://github.com/mkdnsite/mkdnsite">GitHub</a>
+  <a href="https://mkdn.site">Docs</a> · <a href="https://mkdn.io">Hosted Service</a> · <a href="https://github.com/mkdnsite/mkdnsite">GitHub</a> · <a href="https://www.npmjs.com/package/mkdnsite">npm</a> · <a href="https://hub.docker.com/r/nexdrew/mkdnsite">Docker</a>
 </p>
 
 ---
@@ -188,7 +187,7 @@ See the full [configuration reference](https://mkdn.site/docs/configuration) for
 
 ## Hosted Service — mkdn.io
 
-Don't want to self-host? **[mkdn.io](https://mkdn.io)** is a hosted platform that serves your GitHub repos as mkdnsite-powered websites — with custom domains, analytics, and zero infrastructure to manage.
+Don't want to self-host? **[mkdn.io](https://mkdn.io)** runs mkdnsite for you — connect your GitHub repos, get a live site with custom domains, analytics, and zero infrastructure.
 
 | | GitHub Pages | mkdn.io |
 |---|---|---|
