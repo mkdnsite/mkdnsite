@@ -124,10 +124,18 @@ Both inline and multi-line YAML array syntax are supported.
 ### `layout`
 
 ```yaml
-layout: blog-post
+layout: wide
 ```
 
-Layout template identifier. Planned feature — will allow different page templates. Currently not implemented.
+Controls the page layout. Available layouts:
+
+| Layout | Nav | ToC | Description |
+|--------|-----|-----|-------------|
+| `default` | ✅ | ✅ | Standard layout with navigation sidebar and table of contents |
+| `wide` | ✅ | ❌ | Full-width content area, no ToC sidebar |
+| `landing` | ❌ | ❌ | Centered content, no nav or ToC — ideal for landing pages |
+
+If not specified, defaults to `default`.
 
 ### `hero_image`
 
