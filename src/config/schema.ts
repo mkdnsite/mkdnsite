@@ -340,6 +340,15 @@ export interface ClientConfig {
 
   /** Enable Chart.js chart rendering (default: true when client enabled) */
   charts: boolean
+
+  /**
+   * Syntax highlighting engine.
+   * - 'client': load Prism.js from CDN at runtime (works everywhere, default)
+   * - 'server': use Shiki for SSR highlighting (WASM — not supported in CF Workers)
+   * - false: disable syntax highlighting entirely
+   * Default: 'client'
+   */
+  syntaxHighlight?: 'client' | 'server' | false
 }
 
 /**
