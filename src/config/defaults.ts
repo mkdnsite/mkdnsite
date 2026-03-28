@@ -43,7 +43,8 @@ export const DEFAULT_CONFIG: MkdnSiteConfig = {
     themeToggle: true,
     math: true,
     search: true,
-    charts: true
+    charts: true,
+    syntaxHighlight: 'client'
   },
   renderer: 'portable',
   mcp: {

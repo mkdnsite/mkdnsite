@@ -110,6 +110,15 @@ export function parseArgs (args: string[]): ParsedArgs {
       result.client = { ...(result.client as object ?? {}), search: false }
     } else if (arg === '--no-charts') {
       result.client = { ...(result.client as object ?? {}), charts: false }
+    } else if (arg === '--syntax-highlight') {
+      const mode = args[++i]
+      if (mode !== 'client' && mode !== 'server' && mode !== 'false') {
+        console.error("Error: --syntax-highlight must be 'client', 'server', or 'false'")
+        process.exit(1)
+      }
+      result.client = { ...(result.client as object ?? {}), syntaxHighlight: mode === 'false' ? false : mode }
+    } else if (arg === '--no-syntax-highlight') {
+      result.client = { ...(result.client as object ?? {}), syntaxHighlight: false }
     } else if (arg === '--color-scheme') {
       result.theme = { ...(result.theme as object ?? {}), colorScheme: args[++i] }
     } else if (arg === '--theme-mode') {
@@ -226,6 +235,8 @@ ${flag('--no-theme-toggle', 'Disable light/dark theme toggle')}
 ${flag('--no-math', 'Disable KaTeX math rendering')}
 ${flag('--no-search', 'Disable search (UI + /api/search)')}
 ${flag('--no-charts', 'Disable Chart.js chart rendering')}
+${flag('--syntax-highlight <mode>', 'Syntax highlighting: client (default), server (Shiki SSR), or false')}
+${flag('--no-syntax-highlight', 'Disable syntax highlighting entirely')}
 ${flag('--no-mcp', 'Disable built-in MCP server')}
 ${flag('--mcp-endpoint <path>', 'Custom MCP endpoint path (default: /mcp)')}
 ${flag('--no-llms-txt', 'Disable /llms.txt generation')}

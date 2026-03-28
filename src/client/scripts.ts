@@ -33,6 +33,10 @@ export function CLIENT_SCRIPTS (client: ClientConfig): string {
     scripts.push(CHART_SCRIPT)
   }
 
+  if (client.syntaxHighlight === 'client') {
+    scripts.push(PRISM_SCRIPT)
+  }
+
   if (scripts.length === 0) return ''
 
   return `<script>${scripts.join('\n')}</script>`
@@ -504,5 +508,45 @@ const CHART_SCRIPT = `
     });
   };
   document.head.appendChild(s);
+})();
+`.trim()
+
+const PRISM_SCRIPT = `
+(function(){
+  var codeBlocks = document.querySelectorAll('pre code[class*="language-"]');
+  if (codeBlocks.length === 0) return;
+  // Skip if Shiki already highlighted (contains spans with inline color styles)
+  var firstCode = codeBlocks[0];
+  if (firstCode.querySelector('span[style]')) return;
+  // Load Prism CSS — light or dark theme matching the current data-theme
+  var link = document.createElement('link');
+  link.rel = 'stylesheet';
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  link.href = isDark
+    ? 'https://cdn.jsdelivr.net/npm/prismjs@1/themes/prism-tomorrow.min.css'
+    : 'https://cdn.jsdelivr.net/npm/prismjs@1/themes/prism.min.css';
+  document.head.appendChild(link);
+  // Load Prism core, then autoloader for per-language grammar files
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-core.min.js';
+  s.onload = function(){
+    var auto = document.createElement('script');
+    auto.src = 'https://cdn.jsdelivr.net/npm/prismjs@1/plugins/autoloader/prism-autoloader.min.js';
+    auto.onload = function(){ Prism.highlightAll(); };
+    document.head.appendChild(auto);
+  };
+  document.head.appendChild(s);
+  // Swap Prism theme when the user toggles light/dark mode
+  var observer = new MutationObserver(function(mutations){
+    mutations.forEach(function(m){
+      if (m.attributeName === 'data-theme') {
+        var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+        link.href = dark
+          ? 'https://cdn.jsdelivr.net/npm/prismjs@1/themes/prism-tomorrow.min.css'
+          : 'https://cdn.jsdelivr.net/npm/prismjs@1/themes/prism.min.css';
+      }
+    });
+  });
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 })();
 `.trim()

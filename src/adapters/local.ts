@@ -31,10 +31,11 @@ export class LocalAdapter implements DeploymentAdapter {
   }
 
   async createRenderer (config: MkdnSiteConfig): Promise<MarkdownRenderer> {
+    const useServerHighlight = config.client.syntaxHighlight === 'server'
     const renderer = await createRenderer({
       engine: config.renderer,
-      syntaxTheme: config.theme.syntaxTheme,
-      syntaxThemeDark: config.theme.syntaxThemeDark,
+      syntaxTheme: useServerHighlight ? config.theme.syntaxTheme : undefined,
+      syntaxThemeDark: useServerHighlight ? config.theme.syntaxThemeDark : undefined,
       math: config.client.math
     })
     this.rendererEngine = renderer.engine
