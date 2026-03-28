@@ -361,8 +361,8 @@ function coerceDateToString (val: unknown): string {
   return String(val)
 }
 
-function esc (str: string): string {
-  return str
+function esc (str: unknown): string {
+  return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
