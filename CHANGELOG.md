@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/mkdnsite/mkdnsite/compare/v1.2.0...v1.3.0) (2026-03-28)
+
+
+### Features
+
+* Add syntaxHighlight config with client-side Prism.js support ([#87](https://github.com/mkdnsite/mkdnsite/issues/87)) ([61e7cef](https://github.com/mkdnsite/mkdnsite/commit/61e7cef49ac03085fc72c5d61a82317b84f4ef78))
+
 ## [1.2.0](https://github.com/mkdnsite/mkdnsite/compare/v1.1.4...v1.2.0) (2026-03-27)
 
 
