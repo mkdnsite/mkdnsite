@@ -8,11 +8,45 @@ order: 1
 
 ## Install
 
+### Option 1: npm / Bun (recommended)
+
 ```bash
 bun add -g mkdnsite
+# or
+npm install -g mkdnsite
 ```
 
-Also works with Node 22+ and Deno 2.
+Works with Bun, Node 22+, and Deno 2.
+
+### Option 2: Standalone binary
+
+Download a pre-built binary from [GitHub Releases](https://github.com/mkdnsite/mkdnsite/releases/latest) — no runtime required:
+
+| Platform | Binary |
+|----------|--------|
+| macOS (Apple Silicon) | `mkdnsite-darwin-arm64` |
+| Linux (x64) | `mkdnsite-linux-x64` |
+| Windows (x64) | `mkdnsite-windows-x64.exe` |
+
+```bash
+# Example: macOS (Apple Silicon)
+curl -L -o /usr/local/bin/mkdnsite https://github.com/mkdnsite/mkdnsite/releases/latest/download/mkdnsite-darwin-arm64
+chmod +x /usr/local/bin/mkdnsite
+```
+
+> On macOS, you may need to clear the quarantine attribute so Gatekeeper allows the binary to run:
+>
+> ```bash
+> sudo xattr -dr com.apple.quarantine /usr/local/bin/mkdnsite
+> ```
+
+### Option 3: Docker
+
+```bash
+docker run -p 3000:3000 -v ./content:/site nexdrew/mkdnsite
+```
+
+No runtime, no install — just mount your content directory. See [Docker](/docs/docker) for more options.
 
 ## Quick start
 
@@ -94,6 +128,30 @@ mkdnsite ./content --accent "#e11d48"
 
 For full control — custom colors, fonts, logo, and external stylesheets — see [Theming](/docs/theming).
 
+## Coming from another tool?
+
+### GitHub Pages / Jekyll / Hugo / other SSGs
+
+If you're used to static site generators, mkdnsite is a different approach:
+
+- **No build step.** No `_site` directory, no `hugo build`, no CI pipeline to generate HTML. Your `.md` files are served directly at runtime.
+- **No templating language.** No Liquid, no Go templates, no shortcodes. Just Markdown, frontmatter, and CSS.
+- **No config ceremony.** Drop `.md` files in a directory and run `mkdnsite`. You get nav, dark mode, syntax highlighting, and search out of the box.
+- **AI-native.** AI agents get clean Markdown via content negotiation — no scraping, no conversion. Your docs are instantly usable as AI context.
+
+Already have a `docs/` folder with `.md` files? Try it now:
+
+```bash
+bun add -g mkdnsite
+mkdnsite ./docs
+```
+
+Your existing Markdown files (with standard YAML frontmatter) just work. If you want nav ordering, add `order: 1` to your frontmatter.
+
+### Want zero infrastructure?
+
+[mkdn.io](https://mkdn.io) is the hosted version of mkdnsite. Point it at a GitHub repo and your docs are live — custom domains, HTTPS, and CDN caching included. No server to manage.
+
 ## Next steps
 
 | | |
@@ -104,4 +162,8 @@ For full control — custom colors, fonts, logo, and external stylesheets — se
 | [Theming](/docs/theming) | Colors, fonts, logos, CSS overrides |
 | [Frontmatter](/docs/frontmatter) | Page metadata reference |
 | [Architecture](/docs/architecture) | Design and extension points |
+| [Search](/docs/search) | Built-in ⌘K search modal |
+| [MCP Server](/docs/mcp) | AI agent access via MCP |
+| [Charts](/docs/charts) | Chart.js charts from Markdown |
+| [Docker](/docs/docker) | Run in a container |
 | [Element Examples](/docs/elements) | Visual showcase of all Markdown elements |
