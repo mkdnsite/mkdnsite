@@ -8,11 +8,40 @@ order: 1
 
 ## Install
 
+### Option 1: npm / Bun (recommended)
+
 ```bash
 bun add -g mkdnsite
+# or
+npm install -g mkdnsite
 ```
 
-Also works with Node 22+ and Deno 2.
+Works with Bun, Node 22+, and Deno 2.
+
+### Option 2: Standalone binary
+
+Download a pre-built binary from [GitHub Releases](https://github.com/mkdnsite/mkdnsite/releases/latest) — no runtime required:
+
+| Platform | Binary |
+|----------|--------|
+| macOS (Apple Silicon) | `mkdnsite-darwin-arm64` |
+| Linux (x64) | `mkdnsite-linux-x64` |
+| Windows (x64) | `mkdnsite-windows-x64.exe` |
+
+```bash
+# Example: macOS
+curl -L -o mkdnsite https://github.com/mkdnsite/mkdnsite/releases/latest/download/mkdnsite-darwin-arm64
+chmod +x mkdnsite
+./mkdnsite ./content
+```
+
+### Option 3: Docker
+
+```bash
+docker run -p 3000:3000 -v ./content:/site nexdrew/mkdnsite
+```
+
+No runtime, no install — just mount your content directory. See [Docker](/docs/docker) for more options.
 
 ## Quick start
 
