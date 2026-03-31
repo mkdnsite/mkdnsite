@@ -5,7 +5,7 @@ description: Markdown for the web. HTML for humans, Markdown for agents.
 
 # mkdnsite
 
-**Markdown for the web.** HTML for humans, Markdown for agents — served from the same URL with zero build step.
+**Markdown-native websites.** HTML for humans, Markdown for agents — served from the same URL with zero build step.
 
 mkdnsite is the inverse of "HTML to Markdown for AI." Your source of truth is already Markdown. We just serve it correctly to whoever's asking.
 
