@@ -94,6 +94,30 @@ mkdnsite ./content --accent "#e11d48"
 
 For full control — custom colors, fonts, logo, and external stylesheets — see [Theming](/docs/theming).
 
+## Coming from another tool?
+
+### GitHub Pages / Jekyll / Hugo / other SSGs
+
+If you're used to static site generators, mkdnsite is a different approach:
+
+- **No build step.** No `_site` directory, no `hugo build`, no CI pipeline to generate HTML. Your `.md` files are served directly at runtime.
+- **No templating language.** No Liquid, no Go templates, no shortcodes. Just Markdown, frontmatter, and CSS.
+- **No config ceremony.** Drop `.md` files in a directory and run `mkdnsite`. You get nav, dark mode, syntax highlighting, and search out of the box.
+- **AI-native.** AI agents get clean Markdown via content negotiation — no scraping, no conversion. Your docs are instantly usable as AI context.
+
+Already have a `docs/` folder with `.md` files? Try it now:
+
+```bash
+bun add -g mkdnsite
+mkdnsite ./docs
+```
+
+Your existing Markdown files (with standard YAML frontmatter) just work. If you want nav ordering, add `order: 1` to your frontmatter.
+
+### Want zero infrastructure?
+
+[mkdn.io](https://mkdn.io) is the hosted version of mkdnsite. Point it at a GitHub repo and your docs are live — custom domains, HTTPS, and CDN caching included. No server to manage.
+
 ## Next steps
 
 | | |
