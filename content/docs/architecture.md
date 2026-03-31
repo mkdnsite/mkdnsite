@@ -179,7 +179,7 @@ Supports optional KV-backed caching (`KVContentCache`) for faster reads across W
 
 Reads `.md` files from Cloudflare Workers Static Assets (the `ASSETS` binding). This is the simplest Cloudflare deployment model — your content is bundled directly into the Worker as static assets.
 
-Requires either a `CONTENT_MANIFEST` env var (JSON array of `.md` file paths) or a `_manifest.json` in the assets for file discovery.
+The `CloudflareAdapter` reads `CONTENT_MANIFEST` from the Worker environment and passes it to `AssetsSource`. Alternatively, include a `_manifest.json` in your assets directory for automatic file discovery.
 
 ### Shared nav tree builder
 
