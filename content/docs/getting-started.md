@@ -29,11 +29,16 @@ Download a pre-built binary from [GitHub Releases](https://github.com/mkdnsite/m
 | Windows (x64) | `mkdnsite-windows-x64.exe` |
 
 ```bash
-# Example: macOS
-curl -L -o mkdnsite https://github.com/mkdnsite/mkdnsite/releases/latest/download/mkdnsite-darwin-arm64
-chmod +x mkdnsite
-./mkdnsite ./content
+# Example: macOS (Apple Silicon)
+curl -L -o /usr/local/bin/mkdnsite https://github.com/mkdnsite/mkdnsite/releases/latest/download/mkdnsite-darwin-arm64
+chmod +x /usr/local/bin/mkdnsite
 ```
+
+> On macOS, you may need to clear the quarantine attribute so Gatekeeper allows the binary to run:
+>
+> ```bash
+> sudo xattr -dr com.apple.quarantine /usr/local/bin/mkdnsite
+> ```
 
 ### Option 3: Docker
 
