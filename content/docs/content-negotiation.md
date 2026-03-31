@@ -159,11 +159,13 @@ llmsTxt: {
   enabled: true,
   description: 'Documentation for my project.',
   sections: {
-    'API Reference': 'Detailed endpoint documentation',
-    'Guides': 'Step-by-step tutorials'
+    'docs': 'API Reference',     // /docs/* pages → "## API Reference"
+    'guides': 'Tutorials'        // /guides/* pages → "## Tutorials"
   }
 }
 ```
+
+Keys are the first path segment of each page's URL (i.e. the top-level directory name). Values are the section heading used in `/llms.txt`. Without this override, section headings are derived from the directory name via title-case (e.g. `'docs'` → `'Docs'`).
 
 Disable with `--no-llms-txt` or `llmsTxt.enabled: false`.
 

@@ -71,6 +71,10 @@ curl http://localhost:3000/llms.txt
 | [Theming](/docs/theming) | Colors, fonts, logos, custom CSS |
 | [Frontmatter](/docs/frontmatter) | Page metadata reference |
 | [Architecture](/docs/architecture) | Design, interfaces, and extension points |
+| [Search](/docs/search) | Built-in full-text search with ⌘K modal |
+| [MCP Server](/docs/mcp) | AI agent access via Model Context Protocol |
+| [Charts](/docs/charts) | Interactive Chart.js charts from Markdown |
+| [Docker](/docs/docker) | Run mkdnsite in a container |
 | [Element Examples](/docs/elements) | Visual showcase of all supported Markdown |
 
 > **Open source** — [github.com/mkdnsite/mkdnsite](https://github.com/mkdnsite/mkdnsite)

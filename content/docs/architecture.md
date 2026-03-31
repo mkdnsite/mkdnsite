@@ -36,8 +36,9 @@ interface ContentSource {
 | Implementation | Status | Description |
 |----------------|--------|-------------|
 | `FilesystemSource` | ✅ Implemented | Local `.md` files (dev, self-hosted) |
-| `GitHubSource` | ⚠️ Planned | Public GitHub repo via API |
-| `R2Source` | ⚠️ Planned | Cloudflare R2 bucket |
+| `GitHubSource` | ✅ Implemented | Public/private GitHub repos via API (with 5-min TTL caching) |
+| `R2ContentSource` | ✅ Implemented | Cloudflare R2 bucket with optional KV caching |
+| `AssetsSource` | ✅ Implemented | Cloudflare Workers Static Assets binding |
 | `S3Source` | ⚠️ Planned | AWS S3 / compatible |
 
 ### `MarkdownRenderer`
@@ -80,10 +81,10 @@ interface DeploymentAdapter {
 | Implementation | Status | Description |
 |----------------|--------|-------------|
 | `LocalAdapter` | ✅ Implemented | Multi-runtime: Bun.serve / Deno.serve / node:http |
-| `CloudflareAdapter` | ⚠️ Stub | CF Workers (planned) |
+| `CloudflareAdapter` | ✅ Implemented | CF Workers with GitHub/R2/Assets sources, KV caching, Analytics Engine, R2 static files |
+| `FlyAdapter` | ✅ Implemented | Fly.io with FilesystemSource on persistent volumes |
 | `VercelAdapter` | ⚠️ Stub | Vercel Edge (planned) |
 | `NetlifyAdapter` | ⚠️ Stub | Netlify Edge Functions (planned) |
-| `FlyAdapter` | ⚠️ Stub | Fly.io (planned) |
 
 ### `ComponentOverrides`
 
@@ -150,6 +151,40 @@ Nav tree is built recursively. Directory sections get their title and order from
 
 Caches pages in memory. Call `source.refresh()` to invalidate (done automatically in watch mode).
 
+### `GitHubSource`
+
+Reads `.md` files from a public or private GitHub repository. Uses `raw.githubusercontent.com` for file content (fast, no API rate limits for public repos) and the GitHub Git Trees API for file listing (one call, recursive).
+
+```typescript
+github: {
+  owner: 'mkdnsite',
+  repo: 'mkdnsite',
+  ref: 'main',           // branch, tag, or commit SHA
+  path: 'content',       // subdirectory within the repo (optional)
+  token: process.env.GITHUB_TOKEN  // for private repos / higher rate limits
+}
+```
+
+On first request, all `.md` files are fetched in parallel and cached for 5 minutes. Unauthenticated requests are limited to 60 API calls/hour; a token raises this to 5,000.
+
+Respects `include` and `exclude` glob patterns for filtering files.
+
+### `R2ContentSource`
+
+Reads `.md` files from a Cloudflare R2 bucket. Used by the `CloudflareAdapter` when a `CONTENT_BUCKET` binding is present.
+
+Supports optional KV-backed caching (`KVContentCache`) for faster reads across Worker isolates. Falls back to in-memory caching when no KV binding is available.
+
+### `AssetsSource`
+
+Reads `.md` files from Cloudflare Workers Static Assets (the `ASSETS` binding). This is the simplest Cloudflare deployment model — your content is bundled directly into the Worker as static assets.
+
+Requires either a `CONTENT_MANIFEST` env var (JSON array of `.md` file paths) or a `_manifest.json` in the assets for file discovery.
+
+### Shared nav tree builder
+
+All content sources use a shared `buildNavTree()` function from `nav-builder.ts` to construct the navigation tree from parsed file entries. This ensures consistent nav behavior regardless of where content is stored.
+
 ## Key design decisions
 
 **No `.tsx` files** — Node's native TypeScript type-stripping doesn't handle `.tsx`. All React code uses `React.createElement()` instead of JSX syntax. This keeps the codebase compatible with all three runtimes without a build step.
@@ -169,14 +204,19 @@ src/
   index.ts                  Public API exports
   cli.ts                    CLI entry point (Bun/Node/Deno compatible)
   handler.ts                Core fetch handler — the important file
+  version.ts                Package version constant
   config/
     schema.ts               All TypeScript types and interfaces
     defaults.ts             Default config values + resolveConfig()
   content/
-    types.ts                ContentSource, ContentPage, NavNode interfaces
+    types.ts                ContentSource, ContentPage, NavNode, GitHubSourceConfig
     frontmatter.ts          YAML frontmatter parser
-    filesystem.ts           FilesystemSource implementation
-    github.ts               GitHubSource (planned)
+    filesystem.ts           FilesystemSource (local dev)
+    github.ts               GitHubSource (GitHub API + raw.githubusercontent.com)
+    r2.ts                   R2ContentSource (Cloudflare R2 bucket)
+    assets.ts               AssetsSource (Cloudflare Workers Static Assets)
+    cache.ts                ContentCache interface + KVContentCache + MemoryContentCache
+    nav-builder.ts          Shared nav tree builder (used by all content sources)
   render/
     types.ts                MarkdownRenderer interface + factory
     portable.ts             react-markdown renderer (default)
@@ -192,12 +232,31 @@ src/
     base-css.ts             Built-in CSS theme (BASE_THEME_CSS)
     build-css.ts            buildThemeCss() — assembles final CSS
   client/
-    scripts.ts              Client-side JS (theme toggle, copy, mermaid)
+    scripts.ts              Client-side JS (theme toggle, copy, mermaid, search, charts)
+  search/
+    index.ts                TF-IDF search index (server-side)
+  mcp/
+    server.ts               MCP HTTP server (Streamable HTTP transport)
+    stdio.ts                MCP stdio transport (mkdnsite mcp subcommand)
+    transport.ts            Shared MCP transport helpers
+  analytics/
+    types.ts                TrafficAnalytics interface + TrafficEvent
+    classify.ts             Request classification (human/ai_agent/bot/mcp)
+    console.ts              ConsoleAnalytics (JSON lines to stdout)
+    noop.ts                 NoopAnalytics (disabled placeholder)
+  cache/
+    response.ts             ResponseCache interface + CachedResponse type
+    kv.ts                   KVResponseCache (Cloudflare KV-backed)
+    memory.ts               MemoryResponseCache (in-memory with TTL)
+  security/
+    csp.ts                  Content Security Policy header builder
   adapters/
     types.ts                DeploymentAdapter interface + runtime detection
     local.ts                Multi-runtime local adapter
-    cloudflare.ts           CF Workers adapter (stub)
+    cloudflare.ts           Cloudflare Workers adapter (GitHub/R2/Assets, analytics, caching)
     vercel.ts               Vercel Edge adapter (stub)
+    netlify.ts              Netlify adapter (stub)
+    fly.ts                  Fly.io adapter (FilesystemSource on persistent volumes)
 ```
 
 ## Extending mkdnsite

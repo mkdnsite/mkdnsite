@@ -86,6 +86,7 @@ mkdnsite --port 4000
 |------|-------------|
 | `--title <text>` | Site title (shown in `<title>` as `Page — Site`) |
 | `--url <url>` | Base URL for absolute links |
+| `--favicon <path>` | Favicon path or URL (`.ico`, `.png`, `.svg`) |
 
 ```bash
 mkdnsite --title "My Docs" --url "https://docs.example.com"
@@ -344,6 +345,7 @@ mkdnsite ./posts \
 |------|-------------|
 | `--no-nav` | Disable the navigation sidebar |
 | `--no-toc` | Disable the table of contents sidebar |
+| `--no-footer` | Hide "Powered by mkdnsite" footer |
 
 ```bash
 mkdnsite --no-nav   # single-page or minimal sites
@@ -371,6 +373,8 @@ mkdnsite --no-negotiate --no-llms-txt
 | `--no-math` | Disable KaTeX math rendering |
 | `--no-search` | Disable the ⌘K search modal and `/api/search` endpoint |
 | `--no-charts` | Disable Chart.js chart rendering |
+| `--syntax-highlight <mode>` | Syntax highlighting: `client` (default), `server` (Shiki SSR), or `false` |
+| `--no-syntax-highlight` | Disable syntax highlighting entirely |
 
 ```bash
 # Maximum performance / accessibility
@@ -384,6 +388,49 @@ mkdnsite --no-search
 ```
 
 > **Note:** `--no-client-js` disables everything including Mermaid diagrams, copy buttons, and the theme toggle. For granular control, use individual flags.
+
+## Analytics
+
+| Flag | Description |
+|------|-------------|
+| `--ga-measurement-id <id>` | Google Analytics 4 measurement ID (e.g. `G-XXXXXXXXXX`) |
+| `--traffic-analytics` | Enable server-side traffic analytics |
+| `--traffic-console` | Log traffic events as JSON lines to stdout |
+
+```bash
+# Add Google Analytics
+mkdnsite --ga-measurement-id G-XXXXXXXXXX
+
+# Debug traffic classification locally
+mkdnsite --traffic-analytics --traffic-console
+```
+
+## Caching
+
+| Flag | Description |
+|------|-------------|
+| `--cache` | Enable in-memory response caching (default: off) |
+| `--no-cache` | Disable response caching |
+| `--cache-max-age <seconds>` | `Cache-Control` max-age for HTML (default: 300) |
+| `--cache-max-age-markdown <seconds>` | `Cache-Control` max-age for markdown (default: 300) |
+| `--cache-swr <seconds>` | `stale-while-revalidate` seconds (default: 0, meaning omitted) |
+| `--cache-version <tag>` | Version tag for `ETag` header (e.g. `v1.0.0` or git SHA) |
+
+```bash
+# Enable caching with custom TTL
+mkdnsite --cache --cache-max-age 600
+
+# Cache with stale-while-revalidate for CDN
+mkdnsite --cache --cache-max-age 300 --cache-swr 60 --cache-version v1.4.1
+```
+
+## Security
+
+| Flag | Description |
+|------|-------------|
+| `--no-csp` | Disable the `Content-Security-Policy` header |
+
+The CSP header is enabled by default on all HTML responses. Use `--no-csp` to disable it, or configure additional allowed sources via the config file (see [Configuration — csp](/docs/configuration#csp)).
 
 ## Renderer
 
@@ -504,3 +551,17 @@ Every CLI flag maps to a field in `mkdnsite.config.ts`. CLI flags take precedenc
 | `--no-math` | `client.math: false` |
 | `--no-search` | `client.search: false` |
 | `--no-charts` | `client.charts: false` |
+| `--syntax-highlight` | `client.syntaxHighlight` |
+| `--no-syntax-highlight` | `client.syntaxHighlight: false` |
+| `--favicon` | `site.favicon.src` |
+| `--no-footer` | `theme.showFooter: false` |
+| `--ga-measurement-id` | `analytics.googleAnalytics.measurementId` |
+| `--traffic-analytics` | `analytics.traffic.enabled: true` |
+| `--traffic-console` | `analytics.traffic.console: true` |
+| `--cache` | `cache.enabled: true` |
+| `--no-cache` | `cache.enabled: false` |
+| `--cache-max-age` | `cache.maxAge` |
+| `--cache-max-age-markdown` | `cache.maxAgeMarkdown` |
+| `--cache-swr` | `cache.staleWhileRevalidate` |
+| `--cache-version` | `cache.versionTag` |
+| `--no-csp` | `csp.enabled: false` |

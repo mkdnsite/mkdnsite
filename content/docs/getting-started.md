@@ -104,4 +104,8 @@ For full control — custom colors, fonts, logo, and external stylesheets — se
 | [Theming](/docs/theming) | Colors, fonts, logos, CSS overrides |
 | [Frontmatter](/docs/frontmatter) | Page metadata reference |
 | [Architecture](/docs/architecture) | Design and extension points |
+| [Search](/docs/search) | Built-in ⌘K search modal |
+| [MCP Server](/docs/mcp) | AI agent access via MCP |
+| [Charts](/docs/charts) | Chart.js charts from Markdown |
+| [Docker](/docs/docker) | Run in a container |
 | [Element Examples](/docs/elements) | Visual showcase of all Markdown elements |

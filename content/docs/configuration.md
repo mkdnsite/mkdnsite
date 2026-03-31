@@ -385,6 +385,7 @@ CLI flag: `--no-builtin-css`
 |--------|------|---------|------------|-------------|
 | `showNav` | `boolean` | `true` | `--no-nav` | Show the navigation sidebar |
 | `showToc` | `boolean` | `true` | `--no-toc` | Show table of contents sidebar |
+| `showFooter` | `boolean` | `true` | `--no-footer` | Show "Powered by mkdnsite" footer |
 | `pageTitle` | `boolean` | `false` | `--page-title` / `--no-page-title` | Render frontmatter `title` as `<h1>` above content |
 | `pageDate` | `boolean` | `false` | `--page-date` / `--no-page-date` | Render `date`/`updated` from frontmatter below page title |
 | `readingTime` | `boolean` | `false` | `--reading-time` / `--no-reading-time` | Show estimated reading time (238 wpm) |
@@ -478,6 +479,7 @@ client: {
 | `copyButton` | `true` | — |
 | `search` | `true` | `--no-search` |
 | `charts` | `true` | `--no-charts` |
+| `syntaxHighlight` | `'client'` | `--syntax-highlight <mode>` / `--no-syntax-highlight` |
 
 ### `client.search`
 
@@ -488,6 +490,24 @@ When `true` (default), enables:
 - **Result highlighting** — navigating to a page via a search result appends `?q=<query>` to the URL. On load, matched terms are highlighted in the page body and the page scrolls to the first match. Highlights fade after 8 seconds.
 
 The search index is built server-side using TF-IDF with 3× boost for title, 2× for description and tags. See the [search guide](/docs/search) for details.
+
+### `client.syntaxHighlight`
+
+Controls the syntax highlighting engine for code blocks.
+
+| Value | Description |
+|-------|-------------|
+| `'client'` | Load Prism.js from CDN at runtime (default, works everywhere) |
+| `'server'` | Use Shiki for SSR highlighting (WASM — not supported in CF Workers) |
+| `false` | Disable syntax highlighting entirely |
+
+```typescript
+client: {
+  syntaxHighlight: 'server'  // SSR highlighting via Shiki
+}
+```
+
+CLI flags: `--syntax-highlight <mode>`, `--no-syntax-highlight`
 
 > **Note:** `--no-client-js` disables everything. Individual `--no-*` flags disable specific features while leaving others enabled.
 
@@ -514,6 +534,105 @@ When enabled, AI clients (Claude Desktop, Cursor, etc.) can connect at `http://l
 CLI flags: `--no-mcp`, `--mcp-endpoint <path>`
 
 See the [MCP guide](/docs/mcp) for full details.
+
+---
+
+## `analytics`
+
+Analytics configuration for tracking traffic and usage.
+
+```typescript
+analytics: {
+  googleAnalytics: {
+    measurementId: 'G-XXXXXXXXXX'  // GA4 measurement ID
+  },
+  traffic: {
+    enabled: false,   // enable server-side traffic logging
+    console: false    // log events as JSON lines to stdout
+  }
+}
+```
+
+### `analytics.googleAnalytics`
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `measurementId` | `string` | Google Analytics 4 measurement ID (e.g. `G-XXXXXXXXXX`) |
+
+When set, the GA4 tracking script is injected into HTML pages automatically.
+
+### `analytics.traffic`
+
+Server-side traffic analytics for classifying and logging requests.
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enabled` | `boolean` | `false` | Enable server-side traffic analytics |
+| `console` | `boolean` | `false` | Log each request as a JSON line to stdout |
+
+When enabled, each request is classified as `human`, `ai_agent`, `bot`, or `mcp` based on the User-Agent and request characteristics.
+
+CLI flags: `--ga-measurement-id <id>`, `--traffic-analytics`, `--traffic-console`
+
+---
+
+## `csp`
+
+Content Security Policy configuration. When enabled, mkdnsite adds a `Content-Security-Policy` header to all HTML responses.
+
+```typescript
+csp: {
+  enabled: true,          // default: true
+  extraScriptSrc: [],     // additional script-src sources
+  extraStyleSrc: [],      // additional style-src sources
+  extraImgSrc: [],        // additional img-src sources
+  extraConnectSrc: [],    // additional connect-src sources
+  extraFontSrc: [],       // additional font-src sources
+  reportUri: undefined    // CSP violation report URI
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enabled` | `boolean` | `true` | Enable the CSP header on HTML responses |
+| `extraScriptSrc` | `string[]` | `[]` | Additional `script-src` sources (e.g. analytics domains) |
+| `extraStyleSrc` | `string[]` | `[]` | Additional `style-src` sources (e.g. Google Fonts) |
+| `extraImgSrc` | `string[]` | `[]` | Additional `img-src` sources |
+| `extraConnectSrc` | `string[]` | `[]` | Additional `connect-src` sources |
+| `extraFontSrc` | `string[]` | `[]` | Additional `font-src` sources |
+| `reportUri` | `string` | — | URI for CSP violation reports |
+
+The default policy allows inline styles (required for Shiki syntax highlighting), same-origin resources, and CDN domains used by client-side features (Mermaid, KaTeX, Chart.js). Use the `extra*` arrays to whitelist additional domains.
+
+CLI flag: `--no-csp`
+
+---
+
+## `cache`
+
+Response caching and CDN header configuration. Opt-in — disabled by default.
+
+```typescript
+cache: {
+  enabled: false,              // opt-in
+  maxAge: 300,                 // Cache-Control max-age for HTML (seconds)
+  maxAgeMarkdown: 300,         // Cache-Control max-age for markdown
+  staleWhileRevalidate: 0,     // stale-while-revalidate (0 = omitted)
+  versionTag: undefined        // version tag for ETag / cache busting
+}
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enabled` | `boolean` | `false` | Enable response caching |
+| `maxAge` | `number` | `300` | `Cache-Control` max-age in seconds for HTML responses |
+| `maxAgeMarkdown` | `number` | `300` | `Cache-Control` max-age in seconds for markdown responses |
+| `staleWhileRevalidate` | `number` | `0` | `stale-while-revalidate` in seconds (0 means omitted) |
+| `versionTag` | `string` | — | Version tag for `ETag` header and CDN cache busting (e.g. `'v1.2.3'` or a git SHA) |
+
+When enabled locally, uses an in-memory cache (`MemoryResponseCache`). The `CloudflareAdapter` uses a KV-backed cache (`KVResponseCache`) when a `CACHE_KV` binding is present.
+
+CLI flags: `--cache`, `--no-cache`, `--cache-max-age <seconds>`, `--cache-max-age-markdown <seconds>`, `--cache-swr <seconds>`, `--cache-version <tag>`
 
 ---
 
@@ -591,7 +710,22 @@ const config: Partial<MkdnSiteConfig> = {
     search: true
   },
 
-  renderer: 'portable'
+  renderer: 'portable',
+
+  analytics: {
+    googleAnalytics: {
+      measurementId: 'G-XXXXXXXXXX'
+    }
+  },
+
+  csp: {
+    enabled: true,
+    extraScriptSrc: ['https://www.googletagmanager.com']
+  },
+
+  cache: {
+    enabled: false
+  }
 }
 
 export default config
