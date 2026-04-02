@@ -377,3 +377,116 @@ describe('--github-path (subdirectory)', () => {
     restoreFetch()
   })
 })
+
+// ─── tokenFn (dynamic token provider) ────────────────────────────────────────
+
+describe('GitHubSource tokenFn', () => {
+  afterEach(restoreFetch)
+
+  it('tokenFn is called on each API request cycle', async () => {
+    let callCount = 0
+    const capturedAuthHeaders: string[] = []
+
+    globalThis.fetch = (async (url: string, init?: RequestInit): Promise<Response> => {
+      const auth = (init?.headers as Record<string, string> | undefined)?.Authorization ?? ''
+      if (auth !== '') capturedAuthHeaders.push(auth)
+
+      if (TREE_URL_RE.test(url)) {
+        const tree = [{ path: 'index.md', type: 'blob', sha: 'abc', size: 10 }]
+        return new Response(JSON.stringify({ tree }), { status: 200 })
+      }
+      if (RAW_URL_RE.test(url)) {
+        return new Response('---\ntitle: Home\n---\nHello', { status: 200 })
+      }
+      return new Response('Not Found', { status: 404 })
+    }) as unknown as typeof fetch
+
+    const source = new GitHubSource({
+      owner: 'o',
+      repo: 'r',
+      tokenFn: () => {
+        callCount++
+        return `token-${callCount}`
+      }
+    })
+
+    // Force a fresh prefetch by calling getNavTree
+    await source.getNavTree()
+
+    // tokenFn should have been called at least once (tree fetch + file fetches)
+    expect(callCount).toBeGreaterThan(0)
+    // All captured auth headers should use the dynamic token
+    expect(capturedAuthHeaders.length).toBeGreaterThan(0)
+    capturedAuthHeaders.forEach(h => {
+      expect(h).toMatch(/^token token-\d+$/)
+    })
+  })
+
+  it('tokenFn takes precedence over static token', async () => {
+    const capturedAuthHeaders: string[] = []
+
+    globalThis.fetch = (async (url: string, init?: RequestInit): Promise<Response> => {
+      const auth = (init?.headers as Record<string, string> | undefined)?.Authorization ?? ''
+      if (auth !== '') capturedAuthHeaders.push(auth)
+
+      if (TREE_URL_RE.test(url)) {
+        const tree = [{ path: 'index.md', type: 'blob', sha: 'abc', size: 10 }]
+        return new Response(JSON.stringify({ tree }), { status: 200 })
+      }
+      if (RAW_URL_RE.test(url)) {
+        return new Response('---\ntitle: Home\n---\nHello', { status: 200 })
+      }
+      return new Response('Not Found', { status: 404 })
+    }) as unknown as typeof fetch
+
+    const source = new GitHubSource({
+      owner: 'o',
+      repo: 'r',
+      token: 'static-token',
+      tokenFn: () => 'dynamic-token'
+    })
+
+    await source.getNavTree()
+
+    // All auth headers should use the dynamic token, never the static one
+    expect(capturedAuthHeaders.length).toBeGreaterThan(0)
+    capturedAuthHeaders.forEach(h => {
+      expect(h).toBe('token dynamic-token')
+      expect(h).not.toContain('static-token')
+    })
+  })
+
+  it('tokenFn supports async providers', async () => {
+    const capturedAuthHeaders: string[] = []
+
+    globalThis.fetch = (async (url: string, init?: RequestInit): Promise<Response> => {
+      const auth = (init?.headers as Record<string, string> | undefined)?.Authorization ?? ''
+      if (auth !== '') capturedAuthHeaders.push(auth)
+
+      if (TREE_URL_RE.test(url)) {
+        const tree = [{ path: 'index.md', type: 'blob', sha: 'abc', size: 10 }]
+        return new Response(JSON.stringify({ tree }), { status: 200 })
+      }
+      if (RAW_URL_RE.test(url)) {
+        return new Response('---\ntitle: Home\n---\nHello', { status: 200 })
+      }
+      return new Response('Not Found', { status: 404 })
+    }) as unknown as typeof fetch
+
+    const source = new GitHubSource({
+      owner: 'o',
+      repo: 'r',
+      tokenFn: async () => {
+        await new Promise<void>(resolve => setTimeout(resolve, 1))
+        return 'async-token'
+      }
+    })
+
+    await source.getNavTree()
+
+    expect(capturedAuthHeaders.length).toBeGreaterThan(0)
+    capturedAuthHeaders.forEach(h => {
+      expect(h).toBe('token async-token')
+    })
+  })
+})

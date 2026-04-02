@@ -89,6 +89,8 @@ export interface GitHubSourceConfig {
   path?: string
   /** GitHub personal access token (for private repos or higher rate limits) */
   token?: string
+  /** Dynamic token provider called on each API request. Takes precedence over static `token`. */
+  tokenFn?: () => string | Promise<string>
   /**
    * Glob patterns to include. Only matching files will be served.
    * Mutually exclusive with `exclude`.
