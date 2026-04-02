@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.2](https://github.com/mkdnsite/mkdnsite/compare/v1.4.1...v1.4.2) (2026-04-02)
+
+
+### Bug Fixes
+
+* Support dynamic token provider in GitHubSource ([#102](https://github.com/mkdnsite/mkdnsite/issues/102)) ([cc31a2b](https://github.com/mkdnsite/mkdnsite/commit/cc31a2bfe710dca2c4f6f4989c8763279a75bc62))
+
 ## [1.4.1](https://github.com/mkdnsite/mkdnsite/compare/v1.4.0...v1.4.1) (2026-03-28)
 
 
