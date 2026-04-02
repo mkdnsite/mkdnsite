@@ -45,7 +45,8 @@ interface ParsedFile {
  * - raw.githubusercontent.com: no documented rate limit (generous)
  */
 export class GitHubSource implements ContentSource {
-  private readonly config: Required<Omit<GitHubSourceConfig, 'include' | 'exclude'>>
+  private readonly config: Required<Omit<GitHubSourceConfig, 'include' | 'exclude' | 'tokenFn'>>
+  private readonly tokenFn: (() => string | Promise<string>) | undefined
   private readonly pageCache = new Map<string, CacheEntry<ContentPage | null>>()
   private navCache: CacheEntry<NavNode> | null = null
   private treeCache: CacheEntry<GitHubTreeEntry[]> | null = null
@@ -61,6 +62,7 @@ export class GitHubSource implements ContentSource {
       path: config.path ?? '',
       token: config.token ?? ''
     }
+    this.tokenFn = config.tokenFn
     this.includeMatcher = config.include != null && config.include.length > 0
       ? picomatch(config.include)
       : null
@@ -216,14 +218,23 @@ export class GitHubSource implements ContentSource {
     return null
   }
 
+  /** Resolves the auth token: calls tokenFn() if provided, else falls back to static token. */
+  private async resolveToken (): Promise<string> {
+    if (this.tokenFn != null) {
+      return await this.tokenFn()
+    }
+    return this.config.token
+  }
+
   private async fetchFile (filePath: string): Promise<string | null> {
     const { owner, repo, ref, path: basePath } = this.config
     const fullPath = basePath !== '' ? `${basePath}/${filePath}` : filePath
     const url = `https://raw.githubusercontent.com/${owner}/${repo}/${ref}/${fullPath}`
 
+    const token = await this.resolveToken()
     const headers: Record<string, string> = { 'User-Agent': `mkdnsite/${VERSION}` }
-    if (this.config.token !== '') {
-      headers.Authorization = `token ${this.config.token}`
+    if (token !== '') {
+      headers.Authorization = `token ${token}`
     }
 
     try {
@@ -263,9 +274,10 @@ export class GitHubSource implements ContentSource {
     const { owner, repo, ref, path: basePath } = this.config
     const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${ref}?recursive=1`
 
+    const token = await this.resolveToken()
     const headers: Record<string, string> = { ...GITHUB_HEADERS }
-    if (this.config.token !== '') {
-      headers.Authorization = `token ${this.config.token}`
+    if (token !== '') {
+      headers.Authorization = `token ${token}`
     }
 
     try {
