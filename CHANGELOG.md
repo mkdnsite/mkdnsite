@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.3](https://github.com/mkdnsite/mkdnsite/compare/v1.4.2...v1.4.3) (2026-04-03)
+
+
+### Bug Fixes
+
+* Retry GitHub API requests without auth on 401 ([#104](https://github.com/mkdnsite/mkdnsite/issues/104)) ([f75876c](https://github.com/mkdnsite/mkdnsite/commit/f75876c6a507b8fc461688de47ba46931860e5a0))
+
 ## [1.4.2](https://github.com/mkdnsite/mkdnsite/compare/v1.4.1...v1.4.2) (2026-04-02)
 
 
