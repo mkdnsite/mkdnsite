@@ -239,8 +239,17 @@ export class GitHubSource implements ContentSource {
 
     try {
       const response = await fetch(url, { headers })
-      if (!response.ok) return null
-      return await response.text()
+      if (response.ok) return await response.text()
+
+      // If token was provided but GitHub returned 401, the token may be
+      // expired/revoked. Retry without auth — the repo may be public.
+      if (response.status === 401 && token !== '') {
+        console.warn('GitHubSource: file fetch returned 401, retrying without auth')
+        const retryHeaders: Record<string, string> = { 'User-Agent': `mkdnsite/${VERSION}` }
+        const retryResp = await fetch(url, { headers: retryHeaders })
+        if (retryResp.ok) return await retryResp.text()
+      }
+      return null
     } catch {
       return null
     }
@@ -270,8 +279,24 @@ export class GitHubSource implements ContentSource {
     return entries
   }
 
+  /** Parse a successful tree API response into filtered GitHubTreeEntry[]. */
+  private async parseTreeResponse (response: Response): Promise<GitHubTreeEntry[]> {
+    const { path: basePath } = this.config
+    const data = await response.json() as { tree: GitHubTreeEntry[] }
+    return data.tree
+      .filter(entry =>
+        entry.type === 'blob' &&
+        entry.path.endsWith('.md') &&
+        (basePath === '' || entry.path.startsWith(basePath + '/'))
+      )
+      .map(entry => ({
+        ...entry,
+        path: basePath !== '' ? entry.path.slice(basePath.length + 1) : entry.path
+      }))
+  }
+
   private async fetchTreeOnce (): Promise<GitHubTreeEntry[]> {
-    const { owner, repo, ref, path: basePath } = this.config
+    const { owner, repo, ref } = this.config
     const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${ref}?recursive=1`
 
     const token = await this.resolveToken()
@@ -282,23 +307,28 @@ export class GitHubSource implements ContentSource {
 
     try {
       const response = await fetch(url, { headers })
-      if (!response.ok) {
-        const body = await response.text().catch(() => '')
-        console.error('GitHubSource: tree API returned', response.status, body)
-        return []
+      if (response.ok) return await this.parseTreeResponse(response)
+
+      // If token was provided but GitHub returned 401, the token may be
+      // expired/revoked. Retry without auth — the repo may be public.
+      if (response.status === 401 && token !== '') {
+        console.warn('GitHubSource: tree API returned 401, retrying without auth')
+        const retryHeaders: Record<string, string> = { ...GITHUB_HEADERS }
+        try {
+          const retryResp = await fetch(url, { headers: retryHeaders })
+          if (retryResp.ok) return await this.parseTreeResponse(retryResp)
+          const body = await retryResp.text().catch(() => '')
+          console.error('GitHubSource: tree API returned', retryResp.status, body)
+          return []
+        } catch (retryErr) {
+          console.error('GitHubSource: failed to fetch repo tree on retry:', retryErr instanceof Error ? retryErr.message : retryErr)
+          return []
+        }
       }
 
-      const data = await response.json() as { tree: GitHubTreeEntry[] }
-      return data.tree
-        .filter(entry =>
-          entry.type === 'blob' &&
-          entry.path.endsWith('.md') &&
-          (basePath === '' || entry.path.startsWith(basePath + '/'))
-        )
-        .map(entry => ({
-          ...entry,
-          path: basePath !== '' ? entry.path.slice(basePath.length + 1) : entry.path
-        }))
+      const body = await response.text().catch(() => '')
+      console.error('GitHubSource: tree API returned', response.status, body)
+      return []
     } catch (err) {
       console.error('GitHubSource: failed to fetch repo tree:', err instanceof Error ? err.message : err)
       return []

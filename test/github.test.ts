@@ -490,3 +490,124 @@ describe('GitHubSource tokenFn', () => {
     })
   })
 })
+
+// ─── 401 retry without auth ───────────────────────────────────────────────────
+
+describe('GitHubSource 401 retry without auth', () => {
+  afterEach(restoreFetch)
+
+  it('fetchTreeOnce retries without auth when token returns 401', async () => {
+    const callCount = { value: 0 }
+    const capturedAuthHeaders: Array<string | undefined> = []
+
+    globalThis.fetch = (async (url: string, init?: RequestInit): Promise<Response> => {
+      callCount.value++
+      const auth = (init?.headers as Record<string, string> | undefined)?.Authorization
+      capturedAuthHeaders.push(auth)
+
+      if (TREE_URL_RE.test(url)) {
+        // First call (with token) → 401; second call (no token) → 200
+        if (auth != null) {
+          return new Response('{"message":"Bad credentials"}', { status: 401 })
+        }
+        const tree = SIMPLE_TREE.map(path => ({ path, type: 'blob', sha: 'abc', size: 100 }))
+        return new Response(JSON.stringify({ tree }), { status: 200 })
+      }
+      const m = RAW_URL_RE.exec(url)
+      if (m != null) {
+        const filePath = m[4]
+        return filePath in SIMPLE_FILES
+          ? new Response(SIMPLE_FILES[filePath], { status: 200 })
+          : new Response('Not Found', { status: 404 })
+      }
+      return new Response('Not Found', { status: 404 })
+    }) as unknown as typeof fetch
+
+    const source = new GitHubSource({ owner: 'o', repo: 'r', token: 'expired-token' })
+    const nav = await source.getNavTree()
+
+    // Should have retried — 2 tree fetches (401 + retry without auth) + file fetches
+    expect(callCount.value).toBeGreaterThan(1)
+    // First tree fetch used the token
+    expect(capturedAuthHeaders[0]).toBe('token expired-token')
+    // Retry had no Authorization header
+    expect(capturedAuthHeaders[1]).toBeUndefined()
+    // Navigation tree was built successfully from the retry
+    expect(nav).not.toBeNull()
+    expect(nav.children.length).toBeGreaterThan(0)
+  })
+
+  it('fetchFile retries without auth when token returns 401', async () => {
+    const capturedAuthHeaders: Array<string | undefined> = []
+
+    globalThis.fetch = (async (url: string, init?: RequestInit): Promise<Response> => {
+      const auth = (init?.headers as Record<string, string> | undefined)?.Authorization
+      capturedAuthHeaders.push(auth)
+
+      if (TREE_URL_RE.test(url)) {
+        const tree = ['index.md'].map(path => ({ path, type: 'blob', sha: 'abc', size: 100 }))
+        return new Response(JSON.stringify({ tree }), { status: 200 })
+      }
+      if (RAW_URL_RE.test(url)) {
+        // First fetch (with token) → 401; retry (no token) → 200
+        if (auth != null) {
+          return new Response('Unauthorized', { status: 401 })
+        }
+        return new Response('---\ntitle: Home\n---\nHello', { status: 200 })
+      }
+      return new Response('Not Found', { status: 404 })
+    }) as unknown as typeof fetch
+
+    const source = new GitHubSource({ owner: 'o', repo: 'r', token: 'expired-token' })
+    const page = await source.getPage('/')
+
+    // Page should be returned from the successful retry
+    expect(page).not.toBeNull()
+    expect(page?.meta.title).toBe('Home')
+
+    // Verify the retry happened: at least one fetch had auth, one didn't
+    const authHeaders = capturedAuthHeaders.filter(h => h != null)
+    const noAuthHeaders = capturedAuthHeaders.filter(h => h == null)
+    expect(authHeaders.length).toBeGreaterThan(0)
+    expect(noAuthHeaders.length).toBeGreaterThan(0)
+  })
+
+  it('returns [] when both authenticated and unauthenticated tree fetches fail', async () => {
+    globalThis.fetch = (async (_url: string, init?: RequestInit): Promise<Response> => {
+      const auth = (init?.headers as Record<string, string> | undefined)?.Authorization
+      if (TREE_URL_RE.test(_url)) {
+        // Both auth and unauth fail
+        return auth != null
+          ? new Response('{"message":"Bad credentials"}', { status: 401 })
+          : new Response('{"message":"Not Found"}', { status: 404 })
+      }
+      return new Response('Not Found', { status: 404 })
+    }) as unknown as typeof fetch
+
+    const source = new GitHubSource({ owner: 'o', repo: 'r', token: 'expired-token' })
+    // getNavTree triggers fetchTreeOnce internally; expect no crash and empty nav
+    const nav = await source.getNavTree()
+    expect(nav).not.toBeNull()
+    // Tree is empty so nav has no children (root only)
+    expect(nav.children).toEqual([])
+  })
+
+  it('does not add an auth-fallback retry when no token was used', async () => {
+    const capturedAuthHeaders: Array<string | undefined> = []
+    globalThis.fetch = (async (url: string, init?: RequestInit): Promise<Response> => {
+      if (TREE_URL_RE.test(url)) {
+        const auth = (init?.headers as Record<string, string> | undefined)?.Authorization
+        capturedAuthHeaders.push(auth)
+        return new Response('{"message":"Bad credentials"}', { status: 401 })
+      }
+      return new Response('Not Found', { status: 404 })
+    }) as unknown as typeof fetch
+
+    // No token provided — 401 should NOT trigger auth-fallback retry
+    const source = new GitHubSource({ owner: 'o', repo: 'r' })
+    await source.getNavTree()
+
+    // All fetches had no Authorization header (no auth to fall back from)
+    capturedAuthHeaders.forEach(h => expect(h).toBeUndefined())
+  })
+})
