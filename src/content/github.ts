@@ -244,6 +244,8 @@ export class GitHubSource implements ContentSource {
       // If token was provided but GitHub returned 401, the token may be
       // expired/revoked. Retry without auth — the repo may be public.
       if (response.status === 401 && token !== '') {
+        // Consume the response body to free the connection (required in Workers)
+        await response.text().catch(() => {})
         console.warn('GitHubSource: file fetch returned 401, retrying without auth')
         const retryHeaders: Record<string, string> = { 'User-Agent': `mkdnsite/${VERSION}` }
         const retryResp = await fetch(url, { headers: retryHeaders })
@@ -312,6 +314,8 @@ export class GitHubSource implements ContentSource {
       // If token was provided but GitHub returned 401, the token may be
       // expired/revoked. Retry without auth — the repo may be public.
       if (response.status === 401 && token !== '') {
+        // Consume the response body to free the connection (required in Workers)
+        await response.text().catch(() => {})
         console.warn('GitHubSource: tree API returned 401, retrying without auth')
         const retryHeaders: Record<string, string> = { ...GITHUB_HEADERS }
         try {
