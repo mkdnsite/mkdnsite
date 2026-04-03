@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.4](https://github.com/mkdnsite/mkdnsite/compare/v1.4.3...v1.4.4) (2026-04-03)
+
+
+### Bug Fixes
+
+* Consume 401 response body before retry to prevent Workers deadlock ([#106](https://github.com/mkdnsite/mkdnsite/issues/106)) ([f27ed3f](https://github.com/mkdnsite/mkdnsite/commit/f27ed3fd290926c9976a904d3f1be522f487025b))
+
 ## [1.4.3](https://github.com/mkdnsite/mkdnsite/compare/v1.4.2...v1.4.3) (2026-04-03)
 
 
