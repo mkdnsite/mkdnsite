@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.5](https://github.com/mkdnsite/mkdnsite/compare/v1.4.4...v1.4.5) (2026-04-04)
+
+
+### Bug Fixes
+
+* Display error message when Search API returns non-200 response ([#110](https://github.com/mkdnsite/mkdnsite/issues/110)) ([1f343d5](https://github.com/mkdnsite/mkdnsite/commit/1f343d5e1a830b4cd4714fe286f2812ead059b02))
+
 ## [1.4.4](https://github.com/mkdnsite/mkdnsite/compare/v1.4.3...v1.4.4) (2026-04-03)
 
 
