@@ -210,15 +210,26 @@ const SEARCH_SCRIPT = `
     if (!q) { resultsEl.innerHTML = '<p class="mkdn-search-hint">Type to search\u2026</p>'; return; }
     resultsEl.innerHTML = '<p class="mkdn-search-hint mkdn-search-hint--loading">Searching\u2026</p>';
     var url = '/api/search?q=' + encodeURIComponent(q) + '&limit=10';
-    fetch(url).then(function(r){ return r.json(); }).then(function(results){
-      renderResults(results, q);
-    }).catch(function(){
+    fetch(url).then(function(r) {
+      if (!r.ok) {
+        return r.json().then(function(data) {
+          resultsEl.innerHTML = '<p class="mkdn-search-hint">' + escHtml(data.error || 'Search unavailable') + '</p>';
+          return null;
+        }).catch(function() {
+          resultsEl.innerHTML = '<p class="mkdn-search-hint">Search unavailable</p>';
+          return null;
+        });
+      }
+      return r.json();
+    }).then(function(results) {
+      if (results != null) renderResults(results, q);
+    }).catch(function() {
       resultsEl.innerHTML = '<p class="mkdn-search-hint">Search unavailable</p>';
     });
   }
 
   function renderResults(results, q) {
-    if (!results.length) {
+    if (!Array.isArray(results) || !results.length) {
       resultsEl.innerHTML = '<p class="mkdn-search-hint">No results found</p>';
       return;
     }
