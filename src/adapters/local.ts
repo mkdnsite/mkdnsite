@@ -63,13 +63,14 @@ export class LocalAdapter implements DeploymentAdapter {
     handler: (request: Request) => Promise<Response>,
     config: MkdnSiteConfig
   ): () => void {
-    const server = Bun.serve({
-      port: config.server.port,
-      hostname: config.server.hostname,
-      fetch: handler
-    })
-
-    this.printStartup(config, server.port ?? config.server.port)
+    const { port: preferred, hostname } = config.server
+    let server: ReturnType<typeof Bun.serve>
+    try {
+      server = Bun.serve({ port: preferred, hostname, fetch: handler })
+    } catch {
+      server = Bun.serve({ port: 0, hostname, fetch: handler })
+    }
+    this.printStartup(config, server.port ?? preferred)
     return () => { void server.stop() }
   }
 
@@ -77,14 +78,21 @@ export class LocalAdapter implements DeploymentAdapter {
     handler: (request: Request) => Promise<Response>,
     config: MkdnSiteConfig
   ): () => void {
-    const { port, hostname } = config.server
+    const { port: preferred, hostname } = config.server
 
-    // Deno.serve is available globally in Deno
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const DenoNs = (globalThis as any).Deno
-    const server = DenoNs.serve({ port, hostname }, handler)
+    let server
+    try {
+      server = DenoNs.serve({ port: preferred, hostname }, handler)
+    } catch {
+      server = DenoNs.serve({ port: 0, hostname }, handler)
+    }
 
-    this.printStartup(config, port)
+    // Deno assigns the actual port on server.addr
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const actualPort: number = server.addr?.port ?? preferred
+    this.printStartup(config, actualPort)
     return () => { void server.shutdown() }
   }
 
@@ -92,11 +100,11 @@ export class LocalAdapter implements DeploymentAdapter {
     handler: (request: Request) => Promise<Response>,
     config: MkdnSiteConfig
   ): Promise<() => void> {
-    const { port, hostname } = config.server
+    const { port: preferred, hostname } = config.server
     const { createServer } = await import('node:http')
 
     const server = createServer((req, res) => {
-      const host = req.headers.host ?? `${hostname}:${String(port)}`
+      const host = req.headers.host ?? `${hostname}:${String(preferred)}`
       const url = new URL(req.url ?? '/', `http://${host}`)
 
       const headers = new Headers()
@@ -132,16 +140,43 @@ export class LocalAdapter implements DeploymentAdapter {
         })
     })
 
-    await new Promise<void>((resolve) => {
-      server.listen(port, hostname, () => { resolve() })
-    })
+    const actualPort = await this.listenOnPort(server, preferred, hostname)
 
-    this.printStartup(config, port)
+    this.printStartup(config, actualPort)
     return () => { server.close() }
   }
 
-  private printStartup (config: MkdnSiteConfig, port: number): void {
-    const url = `http://localhost:${String(port)}`
+  /**
+   * Try preferred port; on EADDRINUSE, let the OS pick one.
+   */
+  private listenOnPort (
+    server: import('node:http').Server,
+    preferred: number,
+    hostname: string
+  ): Promise<number> {
+    return new Promise((resolve, reject) => {
+      server.once('error', (err: NodeJS.ErrnoException) => {
+        if (err.code === 'EADDRINUSE') {
+          // Remove this error listener, retry with port 0
+          server.removeAllListeners('error')
+          server.listen(0, hostname, () => {
+            const addr = server.address()
+            resolve(typeof addr === 'object' && addr != null ? addr.port : preferred)
+          })
+          server.on('error', reject)
+        } else {
+          reject(err)
+        }
+      })
+      server.listen(preferred, hostname, () => {
+        const addr = server.address()
+        resolve(typeof addr === 'object' && addr != null ? addr.port : preferred)
+      })
+    })
+  }
+
+  private printStartup (config: MkdnSiteConfig, actualPort: number): void {
+    const url = `http://localhost:${String(actualPort)}`
     const DIM_CYAN = '\x1b[2;36m'
     const BOLD_GREEN = '\x1b[1;32m'
     const DIM = '\x1b[2m'
@@ -154,6 +189,9 @@ export class LocalAdapter implements DeploymentAdapter {
     console.log(`▌▌▌▛▖▙▌▌▌▄▌▌▐▖▙▖${RESET}`)
     console.log('')
     console.log(`  ${BOLD_GREEN}\u2192 ${url}${RESET}`)
+    if (actualPort !== config.server.port) {
+      console.log(`  ${DIM}Port ${String(config.server.port)} was in use, using ${String(actualPort)}${RESET}`)
+    }
     console.log('')
 
     const row = (label: string, value: string): void => {
