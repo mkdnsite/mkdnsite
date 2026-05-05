@@ -33,8 +33,8 @@ jobs:
       - name: Test
         run: bun test
 
-      - name: Port fallback test (Bun)
-        run: bun run test/port-fallback.test.ts
+      - name: Port fallback smoke (Bun)
+        run: bun run test/port-fallback.smoke.ts
 
   # ── Job 2: Verify the CLI entry point loads on Node.js 22 ───────────────
   test-node:
@@ -63,8 +63,8 @@ jobs:
         # parses and imports correctly on Node 22.
         run: node --experimental-strip-types src/cli.ts --help
 
-      - name: Port fallback test (Node)
-        run: node --experimental-strip-types test/port-fallback.test.ts
+      - name: Port fallback smoke (Node)
+        run: node --experimental-strip-types test/port-fallback.smoke.ts
 
   # ── Job 3: Verify type compatibility on Deno 2 ──────────────────────────
   test-deno:
@@ -98,5 +98,5 @@ jobs:
         # permission prompts in CI.
         run: deno run --allow-read --allow-net --allow-env --allow-sys --unstable-sloppy-imports --no-prompt src/cli.ts --help
 
-      - name: Port fallback test (Deno)
-        run: deno run --allow-read --allow-net --unstable-sloppy-imports test/port-fallback.test.ts
+      - name: Port fallback smoke (Deno)
+        run: deno run --allow-read --allow-net --unstable-sloppy-imports test/port-fallback.smoke.ts
