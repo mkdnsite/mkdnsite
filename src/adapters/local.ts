@@ -149,12 +149,12 @@ export class LocalAdapter implements DeploymentAdapter {
   /**
    * Try preferred port; on EADDRINUSE, let the OS pick one.
    */
-  private listenOnPort (
+  private async listenOnPort (
     server: import('node:http').Server,
     preferred: number,
     hostname: string
   ): Promise<number> {
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       server.once('error', (err: NodeJS.ErrnoException) => {
         if (err.code === 'EADDRINUSE') {
           // Remove this error listener, retry with port 0
