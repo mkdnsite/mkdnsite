@@ -67,7 +67,8 @@ export class LocalAdapter implements DeploymentAdapter {
     let server: ReturnType<typeof Bun.serve>
     try {
       server = Bun.serve({ port: preferred, hostname, fetch: handler })
-    } catch {
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException)?.code !== 'EADDRINUSE') throw err
       server = Bun.serve({ port: 0, hostname, fetch: handler })
     }
     this.printStartup(config, server.port ?? preferred)
@@ -85,7 +86,8 @@ export class LocalAdapter implements DeploymentAdapter {
     let server
     try {
       server = DenoNs.serve({ port: preferred, hostname }, handler)
-    } catch {
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException)?.code !== 'EADDRINUSE') throw err
       server = DenoNs.serve({ port: 0, hostname }, handler)
     }
 
@@ -159,11 +161,11 @@ export class LocalAdapter implements DeploymentAdapter {
         if (err.code === 'EADDRINUSE') {
           // Remove this error listener, retry with port 0
           server.removeAllListeners('error')
+          server.on('error', reject)
           server.listen(0, hostname, () => {
             const addr = server.address()
             resolve(typeof addr === 'object' && addr != null ? addr.port : preferred)
           })
-          server.on('error', reject)
         } else {
           reject(err)
         }
@@ -189,7 +191,7 @@ export class LocalAdapter implements DeploymentAdapter {
     console.log(`▌▌▌▛▖▙▌▌▌▄▌▌▐▖▙▖${RESET}`)
     console.log('')
     console.log(`  ${BOLD_GREEN}\u2192 ${url}${RESET}`)
-    if (actualPort !== config.server.port) {
+    if (config.server.port !== 0 && actualPort !== config.server.port) {
       console.log(`  ${DIM}Port ${String(config.server.port)} was in use, using ${String(actualPort)}${RESET}`)
     }
     console.log('')
