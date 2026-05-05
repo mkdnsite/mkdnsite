@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/mkdnsite/mkdnsite/compare/v1.4.5...v1.5.0) (2026-05-05)
+
+
+### Features
+
+* fallback to random port when preferred port is occupied ([#114](https://github.com/mkdnsite/mkdnsite/issues/114)) ([1524794](https://github.com/mkdnsite/mkdnsite/commit/1524794e8711cb960d6036e690d6af92e29b5395))
+
 ## [1.4.5](https://github.com/mkdnsite/mkdnsite/compare/v1.4.4...v1.4.5) (2026-04-04)
 
 
