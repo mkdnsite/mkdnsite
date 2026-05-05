@@ -33,6 +33,9 @@ jobs:
       - name: Test
         run: bun test
 
+      - name: Port fallback test (Bun)
+        run: bun run test/port-fallback.test.ts
+
   # ── Job 2: Verify the CLI entry point loads on Node.js 22 ───────────────
   test-node:
     name: Verify on Node.js 22
@@ -59,6 +62,9 @@ jobs:
         # --help exits 0 after printing usage, confirming the module graph
         # parses and imports correctly on Node 22.
         run: node --experimental-strip-types src/cli.ts --help
+
+      - name: Port fallback test (Node)
+        run: node --experimental-strip-types test/port-fallback.test.ts
 
   # ── Job 3: Verify type compatibility on Deno 2 ──────────────────────────
   test-deno:
@@ -91,3 +97,6 @@ jobs:
         # graph loads and executes on Deno. --no-prompt prevents interactive
         # permission prompts in CI.
         run: deno run --allow-read --allow-net --allow-env --allow-sys --unstable-sloppy-imports --no-prompt src/cli.ts --help
+
+      - name: Port fallback test (Deno)
+        run: deno run --allow-read --allow-net --unstable-sloppy-imports test/port-fallback.test.ts
